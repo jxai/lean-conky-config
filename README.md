@@ -21,7 +21,7 @@ Now run
 ```
 You should see the Conky panel docked to the right side your desktop. If you have multiple monitors, the panel should appear on one of them.
 
-In order to automatically start Conky on boot, follow [this](https://linuxconfig.org/ubuntu-20-04-system-monitoring-with-conky-widgets#h2-enable-conky-to-start-at-boot) but replace the Command with `/home/<USER>/.config/conky/startup.sh`, where `<USER>` is your user name.
+In order to automatically start Conky on boot, follow [this](https://linuxconfig.org/ubuntu-20-04-system-monitoring-with-conky-widgets#h2-enable-conky-to-start-at-boot) but replace the Command with `/home/<USER>/.config/conky/start.sh`, where `<USER>` is your user name.
 
 ## More Information
 This config automatically discovers and displays the status of active network interfaces, which not only saves the trouble of manually specifying them, but also keeps the information up-to-date when they change (e.g. toggling WiFi). The trick is to [enumerate](https://superuser.com/a/1173532/95569) the interfaces and [dynamically show](https://matthiaslee.com/dynamically-changing-conky-network-interface/) those active.
