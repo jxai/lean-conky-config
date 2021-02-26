@@ -14,6 +14,7 @@ function render_ifaces(ifaces)
     return table.concat(rendered, '\n')
 end
 
+-- enumerate all network interfaces
 function enum_ifaces()
     return stdout_lines('basename -a /sys/class/net/*')
 end
@@ -32,8 +33,8 @@ function conky_disks()
     return conky_parse(render_disks(enum_disks()))
 end
 
-function enum_disks()
 -- enumerate all relevant mounted points
+function enum_disks()
     local mnt_fs = stdout_lines('findmnt -lno TARGET,FSTYPE')
     local mnts = {}
     for i, l in ipairs(mnt_fs) do
@@ -48,7 +49,7 @@ function enum_disks()
 end
 
 TPL_DISK =
-[[${if_mounted <MNT>}${color}${font :bold:size=8}<MNT>${font} ${alignc}${fs_used <MNT>} / ${fs_size <MNT>} ${alignr}${fs_used_perc <MNT>}%
+[[${if_mounted <MNT>}${color}${font :bold:size=8}<MNT>${font} ${alignc}${fs_used <MNT>} / ${fs_size <MNT>} [${fs_type <MNT>}] ${alignr}${fs_used_perc <MNT>}%
 ${fs_bar 5 <MNT>}$color${endif}]]
 
 function render_disks(disks)
