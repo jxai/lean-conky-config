@@ -1,14 +1,4 @@
-local _filesize = require 'filesize'
-function filesize(size)
-    return _filesize(size, {round=0, spacer='', base=2})
-end
-
-local HOME = os.getenv('HOME')
-local USER = os.getenv('USER')
-
-function conky_ifaces()
-    return conky_parse(render_ifaces(enum_ifaces()))
-end
+utils = require 'utils'
 
 -- dynamically show active ifaces
 -- see https://matthiaslee.com/dynamically-changing-conky-network-interface/
@@ -16,71 +6,38 @@ TPL_IFACE =
 [[${if_existing /sys/class/net/<IFACE>/operstate up}Down: ${downspeed <IFACE>}    ${alignc}${font :bold:size=8}<IFACE>${font} ${alignr}Up: ${upspeed <IFACE>}
 ${color lightgray}${downspeedgraph <IFACE> 32,130} ${alignr}${upspeedgraph <IFACE> 32,130 }$color${endif}]]
 
-function render_ifaces(ifaces)
+function conky_ifaces()
     local rendered = {}
-    for i, iface in ipairs(ifaces) do
+    for i, iface in ipairs(utils.enum_ifaces()) do
         rendered[i] = TPL_IFACE:gsub('<IFACE>', iface)
     end
-    return table.concat(rendered, '\n')
+    return conky_parse(table.concat(rendered, '\n'))
 end
 
--- enumerate all network interfaces, see https://superuser.com/a/1173532/95569
-function enum_ifaces()
-    return stdout_lines('basename -a /sys/class/net/*')
-end
-
-function stdout_lines(cmd)
-    local pipe = io.popen(cmd)
-    local lines = {}
-    for l in pipe:lines() do
-        table.insert(lines, l)
-    end
-    pipe:close()
-    return lines
-end
-
-function conky_disks()
-    return conky_parse(render_disks(enum_disks()))
-end
-
--- enumerate all relevant mounted points
-function enum_disks()
-    local cmd = 'findmnt -bPUno TARGET,FSTYPE,SIZE,USED -t fuseblk,ext2,ext3,ext4,ecryptfs,vfat'
-    local mnt_fs = stdout_lines(cmd)
-    local mnts = {}
-
-    for i, l in ipairs(mnt_fs) do
-        local mnt, type, size, used = l:match('^TARGET="(.+)"%s+FSTYPE="(.+)"%s+SIZE="(.+)"%s+USED="(.+)"$')
-        if mnt and not mnt:match('^/boot/') then
-            local name = mnt
-            local media = name:match('^/media/'..USER..'/(.+)$')
-            if media then
-                name = media
-            elseif mnt == HOME then
-                name = '${font :bold:size=11}⌂'
-            end
-            table.insert(mnts, {mnt, name, type, tonumber(size), tonumber(used)})
-        end
-    end
-    return mnts
-end
-
+-- dynamically show mounted disks
 TPL_DISK =
 [[${color}${font :bold:size=8}%s${font} ${alignc}%s / %s [%s] ${alignr}%s%%
 ${lua_bar 4 percent_ratio %s %s}$color]]
 
-function render_disks(disks)
+function conky_disks()
     local rendered = {}
-    for i, mnt in ipairs(disks) do
-        local mnt, name, type, size, used = unpack(mnt)
-        size_h = filesize(size) -- human readable size format
-        used_h = filesize(used)
+    for i, mnt in ipairs(utils.enum_disks()) do
+        local mnt, type, size, used = unpack(mnt)
+        local size_h = utils.filesize(size) -- human readable size format
+        local used_h = utils.filesize(used)
+
+        -- get succinct name for the mount
+        local name = mnt
+        local media = name:match('^/media/'..utils.env.USER..'/(.+)$')
+        if media then
+            name = media
+        elseif mnt == utils.env.HOME then
+            name = '${font :bold:size=11}⌂'
+        end
         rendered[i] = string.format(TPL_DISK, name, used_h, size_h, type,
-                                    conky_percent_ratio(used, size), used, size)
+                                    utils.percent_ratio(used, size), used, size)
     end
-    return table.concat(rendered, '\n')
+    return conky_parse(table.concat(rendered, '\n'))
 end
 
-function conky_percent_ratio(x, y)
-    return math.floor(100.0 * tonumber(x) / tonumber(y))
-end
+conky_percent_ratio = utils.percent_ratio
