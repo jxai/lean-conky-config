@@ -3,6 +3,9 @@ function filesize(size)
     return _filesize(size, {round=0, spacer='', base=2})
 end
 
+local HOME = os.getenv('HOME')
+local USER = os.getenv('USER')
+
 function conky_ifaces()
     return conky_parse(render_ifaces(enum_ifaces()))
 end
@@ -42,13 +45,21 @@ end
 
 -- enumerate all relevant mounted points
 function enum_disks()
-    cmd = 'findmnt -bPUno TARGET,FSTYPE,SIZE,USED -t fuseblk,ext2,ext3,ext4,ecryptfs,vfat'
+    local cmd = 'findmnt -bPUno TARGET,FSTYPE,SIZE,USED -t fuseblk,ext2,ext3,ext4,ecryptfs,vfat'
     local mnt_fs = stdout_lines(cmd)
     local mnts = {}
+
     for i, l in ipairs(mnt_fs) do
-        mnt, type, size, used = l:match('^TARGET="(.+)"%s+FSTYPE="(.+)"%s+SIZE="(.+)"%s+USED="(.+)"$')
+        local mnt, type, size, used = l:match('^TARGET="(.+)"%s+FSTYPE="(.+)"%s+SIZE="(.+)"%s+USED="(.+)"$')
         if mnt and not mnt:match('^/boot/') then
-            table.insert(mnts, {mnt, type, tonumber(size), tonumber(used)})
+            local name = mnt
+            local media = name:match('^/media/'..USER..'/(.+)$')
+            if media then
+                name = media
+            elseif mnt == HOME then
+                name = '${font :bold:size=11}⌂'
+            end
+            table.insert(mnts, {mnt, name, type, tonumber(size), tonumber(used)})
         end
     end
     return mnts
@@ -56,15 +67,15 @@ end
 
 TPL_DISK =
 [[${color}${font :bold:size=8}%s${font} ${alignc}%s / %s [%s] ${alignr}%s%%
-${lua_bar 5 percent_ratio %s %s}$color]]
+${lua_bar 4 percent_ratio %s %s}$color]]
 
 function render_disks(disks)
     local rendered = {}
     for i, mnt in ipairs(disks) do
-        mnt, type, size, used = unpack(mnt)
+        local mnt, name, type, size, used = unpack(mnt)
         size_h = filesize(size) -- human readable size format
         used_h = filesize(used)
-        rendered[i] = string.format(TPL_DISK, mnt, used_h, size_h, type,
+        rendered[i] = string.format(TPL_DISK, name, used_h, size_h, type,
                                     conky_percent_ratio(used, size), used, size)
     end
     return table.concat(rendered, '\n')
