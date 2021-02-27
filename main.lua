@@ -1,6 +1,6 @@
 local _filesize = require 'filesize'
 function filesize(size)
-    return _filesize(size, {round=0, spacer=''})
+    return _filesize(size, {round=0, spacer='', base=2})
 end
 
 function conky_ifaces()

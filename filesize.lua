@@ -1,11 +1,18 @@
 -- lua-filesize, generate a human readable string describing the file size
--- Copyright (c) 2016 Boris Nagaev
 -- See the LICENSE file for terms of use:
--- https://raw.githubusercontent.com/starius/lua-filesize/master/LICENSE
+-- https://github.com/starius/lua-filesize/blob/master/LICENSE
+-- AUTHORS: Boris Nagaev, Jason Xu
+
 
 local si = {
-    bits = {"b", "Kb", "Mb", "Gb", "Tb", "Pb", "Eb", "Zb", "Yb"},
-    bytes = {"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"},
+    base10 = {
+        bits = {"b", "Kb", "Mb", "Gb", "Tb", "Pb", "Eb", "Zb", "Yb"},
+        bytes = {"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"},
+    },
+    base2 = {
+        bits = {"b", "Kib", "Mib", "Gib", "Tib", "Pib", "Eib", "Zib", "Yib"},
+        bytes = {"B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"},
+    }, -- see https://docs.ukcloud.com/articles/other/other-ref-gib.html
 }
 
 local function isNan(num)
@@ -88,7 +95,8 @@ local function filesize(size, options)
             roundNumber(val, o.exponent > 0 and o.round or 0),
             (o.base == 10 and o.exponent == 1) and
                 (o.bits and "kb" or "kB") or
-                (si[o.bits and "bits" or "bytes"][o.exponent + 1]),
+                (si[o.base == 2 and 'base2' or 'base10']
+                   [o.bits and "bits" or "bytes"][o.exponent + 1]),
         }
 
         if o.unix then
