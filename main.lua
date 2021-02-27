@@ -21,21 +21,22 @@ ${lua_bar 4 percent_ratio %s %s}$color]]
 
 function conky_disks()
     local rendered = {}
-    for i, mnt in ipairs(utils.enum_disks()) do
-        local mnt, type, size, used = unpack(mnt)
-        local size_h = utils.filesize(size) -- human readable size format
-        local used_h = utils.filesize(used)
+    for i, disk in ipairs(utils.enum_disks()) do
+        -- human friendly size strings
+        local size_h = utils.filesize(disk.size)
+        local used_h = utils.filesize(disk.used)
 
         -- get succinct name for the mount
-        local name = mnt
+        local name = disk.mnt
         local media = name:match('^/media/'..utils.env.USER..'/(.+)$')
         if media then
             name = media
         elseif mnt == utils.env.HOME then
             name = '${font :bold:size=11}⌂'
         end
-        rendered[i] = string.format(TPL_DISK, name, used_h, size_h, type,
-                                    utils.percent_ratio(used, size), used, size)
+        rendered[i] = string.format(TPL_DISK, name, used_h, size_h, disk.type,
+                                    utils.percent_ratio(disk.used, disk.size),
+                                    disk.used, disk.size)
     end
     return conky_parse(table.concat(rendered, '\n'))
 end

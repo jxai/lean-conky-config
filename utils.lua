@@ -15,7 +15,12 @@ function enum_disks()
     for i, l in ipairs(mnt_fs) do
         local mnt, type, size, used = l:match('^TARGET="(.+)"%s+FSTYPE="(.+)"%s+SIZE="(.+)"%s+USED="(.+)"$')
         if mnt and not mnt:match('^/boot/') then
-            table.insert(mnts, {mnt, type, tonumber(size), tonumber(used)})
+            table.insert(mnts, {
+                mnt = mnt,
+                type = type,
+                size = tonumber(size),
+                used = tonumber(used),
+            })
         end
     end
     return mnts
