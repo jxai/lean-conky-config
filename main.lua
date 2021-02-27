@@ -1,3 +1,8 @@
+local _filesize = require 'filesize'
+function filesize(size)
+    return _filesize(size, {round=0, spacer=''})
+end
+
 function conky_ifaces()
     return conky_parse(render_ifaces(enum_ifaces()))
 end
@@ -35,27 +40,32 @@ end
 
 -- enumerate all relevant mounted points
 function enum_disks()
-    local mnt_fs = stdout_lines('findmnt -lno TARGET,FSTYPE')
+    local mnt_fs = stdout_lines('findmnt -bPUno TARGET,FSTYPE,SIZE,USED -t fuseblk,ext2,ext3,ext4,ecryptfs,vfat')
     local mnts = {}
     for i, l in ipairs(mnt_fs) do
-        for j, fs in ipairs({'fuseblk', 'ext[2-4]', 'ecryptfs', 'vfat'}) do
-            s = l:match('^(.-)%s*'..fs..'$')
-            if s and not s:match('^/boot/') then
-                table.insert(mnts, s)
-            end
+        mnt, type, size, used = l:match('^TARGET="(.+)"%s+FSTYPE="(.+)"%s+SIZE="(.+)"%s+USED="(.+)"$')
+        if mnt and not mnt:match('^/boot/') then
+            table.insert(mnts, {mnt, type, tonumber(size), tonumber(used)})
         end
     end
     return mnts
 end
 
 TPL_DISK =
-[[${if_mounted <MNT>}${color}${font :bold:size=8}<MNT>${font} ${alignc}${fs_used <MNT>} / ${fs_size <MNT>} [${fs_type <MNT>}] ${alignr}${fs_used_perc <MNT>}%
-${fs_bar 5 <MNT>}$color${endif}]]
+[[${color}${font :bold:size=8}%s${font} ${alignc}%s / %s [%s] ${alignr}%s
+${lua_bar 5 perc %s %s}$color]]
 
 function render_disks(disks)
     local rendered = {}
     for i, mnt in ipairs(disks) do
-        rendered[i] = TPL_DISK:gsub('<MNT>', mnt)
+        mnt, type, size, used = unpack(mnt)
+        size_h = filesize(size) -- human readable size format
+        used_h = filesize(used)
+        rendered[i] = string.format(TPL_DISK, mnt, used_h, size_h, type, conky_perc(used, size), used, size)
     end
     return table.concat(rendered, '\n')
+end
+
+function conky_perc(x, y)
+    return math.floor(100.0 * tonumber(x) / tonumber(y))
 end
