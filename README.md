@@ -24,7 +24,7 @@ You should see the Conky panel docked to the right side your desktop. If you hav
 In order to automatically start Conky on boot, follow [this](https://linuxconfig.org/ubuntu-20-04-system-monitoring-with-conky-widgets#h2-enable-conky-to-start-at-boot) but replace the Command with `/home/<USER>/.config/conky/start.sh`, where `<USER>` is your user name.
 
 ## More Information
-This config automatically discovers and displays the status of active network interfaces, which not only saves the trouble of manually specifying them, but also keeps the information up-to-date when they change (e.g. toggling WiFi). The trick is to [enumerate](https://superuser.com/a/1173532/95569) the interfaces and [dynamically show](https://matthiaslee.com/dynamically-changing-conky-network-interface/) those active.
+One notable feature of this config is that it automatically discovers system devices such as network interfaces and mounted disks. Unlike many other configs it works out-of-box, saving the trouble of manually specifying those devices. Also it keeps information up-to-date, for example when toggling WiFi the NETWORK section is dynamically updated. Similarly when you plug or unplug USB drives, DISK USAGE will reflect the change.
 
 To further customize the config, check Conky reference documentation:
 * [Settings](http://conky.sourceforge.net/config_settings.html)
