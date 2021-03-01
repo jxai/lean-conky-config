@@ -40,6 +40,7 @@ end
 
 -- pad string to `max_len`, `align` mode can be 'left', 'right' or 'center'
 function padding(str, max_len, align, char)
+    if not max_len then return str end
     local n = max_len - utf8_len(str)
     if n <= 0 then return str end
 

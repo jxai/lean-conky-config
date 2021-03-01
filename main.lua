@@ -2,7 +2,7 @@ utils = require 'utils'
 
 -- dynamically show active ifaces
 -- see https://matthiaslee.com/dynamically-changing-conky-network-interface/
-TPL_IFACE = 
+local TPL_IFACE =
 [[${if_existing /sys/class/net/<IFACE>/operstate up}Down: ${downspeed <IFACE>}    ${alignc}${font :bold:size=8}<IFACE>${font} ${alignr}Up: ${upspeed <IFACE>}
 ${color lightgray}${downspeedgraph <IFACE> 32,130} ${alignr}${upspeedgraph <IFACE> 32,130 }$color${endif}]]
 
@@ -15,7 +15,7 @@ function conky_ifaces()
 end
 
 -- dynamically show mounted disks
-TPL_DISK =
+local TPL_DISK =
 [[${color}${font :bold:size=8}%s${font} ${alignc}%s / %s [%s] ${alignr}%s%%
 ${lua_bar 4 percent_ratio %s %s}$color]]
 
@@ -41,19 +41,65 @@ function conky_disks()
     return conky_parse(table.concat(rendered, '\n'))
 end
 
+-- unified shortcut to all top_x variables, with optional padding
+function _top_val(ord, dev, type, max_len, align)
+    if dev == 'io' or dev == 'mem' or dev == 'time' then
+        dev = '_' .. dev
+    else
+        dev = ''
+    end
+    local rendered = conky_parse(
+        string.format('${top%s %s %d}', dev, type, ord)
+    )
+    rendered = rendered:match( "^%s*(.-)%s*$" )  -- strip spaces
+    return utils.padding(rendered, max_len, align, ' ')
+        -- NOTE: the padding character here is FIGURE SPACE (U+2007)
+        -- see https://en.wikipedia.org/wiki/Whitespace_character
+end
+
+-- render top (cpu) line
+function conky_top_cpu_line(ord)
+    local _H = '${font :bold:size=8}PROCESS ${goto 156}PID ${goto 194}MEM% ${alignr}CPU%${font}'
+    if ord == 'header' then return conky_parse(_H) end
+
+    local function _t(type, padding_len)
+        return _top_val(ord, 'cpu', type, padding_len, 'right')
+    end
+    return conky_parse(
+        string.format('%s ${goto 156}%s ${goto 196}%s ${alignr}%s',
+                      _t('name'), _t('pid'),
+                      _t('mem', 6), _t('cpu'))
+    )
+end
+
+-- render top_mem line
+function conky_top_mem_line(ord)
+    local _H = '${font :bold:size=8}PROCESS ${goto 156}PID ${goto 198}CPU%${alignr}MEM%${font}'
+    if ord == 'header' then return conky_parse(_H) end
+
+    local function _t(type, padding_len)
+        return _top_val(ord, 'mem', type, padding_len, 'right')
+    end
+    return conky_parse(
+        string.format('%s ${goto 156}%s ${goto 196}%s ${alignr}%s',
+                      _t('name'), _t('pid'),
+                      _t('cpu', 6), _t('mem'))
+    )
+end
+
 -- render top_io line
 function conky_top_io_line(ord)
-    function _top_io(type)
-        local rendered = conky_parse(
-            string.format('${top_io %s %d}', type, ord)
-        )
-        return rendered:match( "^%s*(.-)%s*$" )
+    local _H = '${font :bold:size=8}PROCESS ${goto 156}PID ${alignr}READ/WRITE${font}'
+    if ord == 'header' then return conky_parse(_H) end
+
+    local function _t(type)
+        return _top_val(ord, 'io', type)
     end
-    local rw = string.format('%s / %s', _top_io('io_read'), _top_io('io_write'))
-    return conky_parse('${font DejaVu Sans Mono::size=8}'
-                       .. _top_io('name')
-                       .. ' ${alignr}' .. _top_io('pid')
-                       .. utils.padding(rw, 15, 'right', ' '))
+    return conky_parse(
+        string.format('%s ${goto 156}%s ${alignr}%s / %s',
+                      _t('name'), _t('pid'),
+                      _t('io_read'), _t('io_write'))
+    )
 end
 
 conky_percent_ratio = utils.percent_ratio
