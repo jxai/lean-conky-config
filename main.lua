@@ -41,4 +41,19 @@ function conky_disks()
     return conky_parse(table.concat(rendered, '\n'))
 end
 
+-- render top_io line
+function conky_top_io_line(ord)
+    function _top_io(type)
+        local rendered = conky_parse(
+            string.format('${top_io %s %d}', type, ord)
+        )
+        return rendered:match( "^%s*(.-)%s*$" )
+    end
+    local rw = string.format('%s / %s', _top_io('io_read'), _top_io('io_write'))
+    return conky_parse('${font DejaVu Sans Mono::size=8}'
+                       .. _top_io('name')
+                       .. ' ${alignr}' .. _top_io('pid')
+                       .. utils.padding(rw, 15, 'right', ' '))
+end
+
 conky_percent_ratio = utils.percent_ratio
