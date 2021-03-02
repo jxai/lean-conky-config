@@ -51,8 +51,7 @@ function _top_val(ord, dev, type, max_len, align)
     local rendered = conky_parse(
         string.format('${top%s %s %d}', dev, type, ord)
     )
-    rendered = rendered:match( "^%s*(.-)%s*$" )  -- strip spaces
-    return utils.padding(rendered, max_len, align, ' ')
+    return utils.padding(utils.trim(rendered), max_len, align, ' ')
         -- NOTE: the padding character here is FIGURE SPACE (U+2007)
         -- see https://en.wikipedia.org/wiki/Whitespace_character
 end

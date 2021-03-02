@@ -59,6 +59,11 @@ function padding(str, max_len, align, char)
     end
 end
 
+-- strip surrounding whitespaces
+function trim(str)
+    return str:match("^%s*(.-)%s*$")
+end
+
 -- count characters in a utf-8 encoded string
 function utf8_len(str)
     local _, count = string.gsub(str, '[^\128-\193]', '')
@@ -90,4 +95,5 @@ return {
     padding = padding,
     percent_ratio = percent_ratio,
     stdout_lines = stdout_lines,
+    trim = trim,
 }
