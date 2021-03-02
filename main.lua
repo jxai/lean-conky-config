@@ -31,7 +31,7 @@ function conky_disks()
         local media = name:match('^/media/'..utils.env.USER..'/(.+)$')
         if media then
             name = media
-        elseif mnt == utils.env.HOME then
+        elseif name == utils.env.HOME then
             name = '${font :bold:size=11}⌂'
         end
         rendered[i] = string.format(TPL_DISK, name, used_h, size_h, disk.type,
