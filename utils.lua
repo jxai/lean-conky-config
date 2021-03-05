@@ -2,7 +2,11 @@
 
 -- enumerate network interfaces, see https://superuser.com/a/1173532/95569
 function enum_ifaces()
-    return stdout_lines('basename -a /sys/class/net/*')
+    local ifaces = {}
+    for i, l in ipairs(stdout_lines('basename -a /sys/class/net/*')) do
+        if l ~= 'lo' then table.insert(ifaces, l) end
+    end
+    return ifaces
 end
 
 -- enumerate mounted disks
