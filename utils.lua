@@ -3,8 +3,12 @@
 -- enumerate network interfaces, see https://superuser.com/a/1173532/95569
 function enum_ifaces()
     local ifaces = {}
-    for i, l in ipairs(stdout_lines('basename -a /sys/class/net/*')) do
-        if l ~= 'lo' then table.insert(ifaces, l) end
+    for i, l in ipairs(sys_call('basename -a /sys/class/net/*')) do
+        local p = sys_call('realpath /sys/class/net/' .. l, true)
+        -- skip virtual interfaces (including lo)
+        if not p:match('^/sys/devices/virtual/') then
+            table.insert(ifaces, l)
+        end
     end
     return ifaces
 end
@@ -13,7 +17,7 @@ end
 -- NOTE: only list most relevant mounts, e.g. boot partitions are ignored
 function enum_disks()
     local cmd = 'findmnt -bPUno TARGET,FSTYPE,SIZE,USED -t fuseblk,ext2,ext3,ext4,ecryptfs,vfat'
-    local mnt_fs = stdout_lines(cmd)
+    local mnt_fs = sys_call(cmd)
     local mnts = {}
 
     for i, l in ipairs(mnt_fs) do
@@ -79,15 +83,19 @@ function percent_ratio(x, y)
     return math.floor(100.0 * tonumber(x) / tonumber(y))
 end
 
--- run command and return stdout lines
-function stdout_lines(cmd)
+-- run system command and return stdout as lines or a string
+function sys_call(cmd, as_string)
     local pipe = io.popen(cmd)
     local lines = {}
     for l in pipe:lines() do
         table.insert(lines, l)
     end
     pipe:close()
-    return lines
+    if as_string then
+        return table.concat(lines, '\n')
+    else
+        return lines
+    end
 end
 
 
@@ -98,6 +106,6 @@ return {
     filesize = filesize,
     padding = padding,
     percent_ratio = percent_ratio,
-    stdout_lines = stdout_lines,
+    sys_call = sys_call,
     trim = trim,
 }
