@@ -5,8 +5,10 @@ function enum_ifaces()
     local ifaces = {}
     for i, l in ipairs(sys_call('basename -a /sys/class/net/*')) do
         local p = sys_call('realpath /sys/class/net/' .. l, true)
-        -- skip virtual interfaces (including lo)
-        if not p:match('^/sys/devices/virtual/') then
+        -- for regular host, skip virtual interfaces (including lo)
+        -- in container, return all interfaces except lo
+        if not p:match('^/sys/devices/virtual/')
+        or (_in_docker and l ~= 'lo') then
             table.insert(ifaces, l)
         end
     end
@@ -16,16 +18,16 @@ end
 -- enumerate mounted disks
 -- NOTE: only list most relevant mounts, e.g. boot partitions are ignored
 function enum_disks()
-    local cmd = 'findmnt -bPUno TARGET,FSTYPE,SIZE,USED -t fuseblk,ext2,ext3,ext4,ecryptfs,vfat,overlay'
+    local fs_types = 'fuseblk,ext2,ext3,ext4,ecryptfs,vfat'
+    if _in_docker then fs_types = fs_types .. ',overlay' end
+    local cmd = 'findmnt -bPUno TARGET,FSTYPE,SIZE,USED -t ' .. fs_types
     local entry_pattern = '^TARGET="(.+)"%s+FSTYPE="(.+)"%s+SIZE="(.+)"%s+USED="(.+)"$'
     local mnt_fs = sys_call(cmd)
     local mnts = {}
 
     for i, l in ipairs(mnt_fs) do
         local mnt, type, size, used = l:match(entry_pattern)
-        if mnt and is_dir(mnt)
-        and not mnt:match('^/boot/')
-        and not mnt:match('^/var/lib/docker/') then
+        if mnt and is_dir(mnt) and not mnt:match('^/boot/') then
             table.insert(mnts, {
                 mnt = mnt,
                 type = type,
@@ -35,12 +37,6 @@ function enum_disks()
         end
     end
     return mnts
-end
-
--- is dir or file
-function is_dir(p)
-    local s = sys_call('[ -d "' .. p .. '" ] && echo "true"', true)
-    return (#s > 3)
 end
 
 -- some environment variables
@@ -107,6 +103,22 @@ function sys_call(cmd, as_string)
     end
 end
 
+-- eval string as system call and check if result is true
+function is_true(expr)
+    local s = sys_call(expr .. ' && echo "true"', true)
+    return (#s > 3)
+end
+
+-- is dir or file
+function is_dir(p)
+    return is_true('[ -d "' .. p .. '" ]')
+end
+
+-- is running in a docker container
+function in_docker()
+    return is_true('[ -f /.dockerenv ] || grep -Eq "(lxc|docker)" /proc/1/cgroup')
+end
+local _in_docker = in_docker()  -- cached value
 
 return {
     enum_ifaces = enum_ifaces,
