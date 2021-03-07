@@ -2,6 +2,7 @@
 
 -- enumerate network interfaces, see https://superuser.com/a/1173532/95569
 function enum_ifaces()
+    local _in_docker = in_docker()
     local ifaces = {}
     for i, l in ipairs(sys_call('basename -a /sys/class/net/*')) do
         local p = sys_call('realpath /sys/class/net/' .. l, true)
@@ -19,7 +20,7 @@ end
 -- NOTE: only list most relevant mounts, e.g. boot partitions are ignored
 function enum_disks()
     local fs_types = 'fuseblk,ext2,ext3,ext4,ecryptfs,vfat'
-    if _in_docker then fs_types = fs_types .. ',overlay' end
+    if in_docker() then fs_types = fs_types .. ',overlay' end
     local cmd = 'findmnt -bPUno TARGET,FSTYPE,SIZE,USED -t ' .. fs_types
     local entry_pattern = '^TARGET="(.+)"%s+FSTYPE="(.+)"%s+SIZE="(.+)"%s+USED="(.+)"$'
     local mnt_fs = sys_call(cmd)
@@ -118,7 +119,6 @@ end
 function in_docker()
     return is_true('[ -f /.dockerenv ] || grep -Eq "(lxc|docker)" /proc/1/cgroup')
 end
-local _in_docker = in_docker()  -- cached value
 
 return {
     enum_ifaces = enum_ifaces,
