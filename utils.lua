@@ -16,13 +16,16 @@ end
 -- enumerate mounted disks
 -- NOTE: only list most relevant mounts, e.g. boot partitions are ignored
 function enum_disks()
-    local cmd = 'findmnt -bPUno TARGET,FSTYPE,SIZE,USED -t fuseblk,ext2,ext3,ext4,ecryptfs,vfat'
+    local cmd = 'findmnt -bPUno TARGET,FSTYPE,SIZE,USED -t fuseblk,ext2,ext3,ext4,ecryptfs,vfat,overlay'
+    local entry_pattern = '^TARGET="(.+)"%s+FSTYPE="(.+)"%s+SIZE="(.+)"%s+USED="(.+)"$'
     local mnt_fs = sys_call(cmd)
     local mnts = {}
 
     for i, l in ipairs(mnt_fs) do
-        local mnt, type, size, used = l:match('^TARGET="(.+)"%s+FSTYPE="(.+)"%s+SIZE="(.+)"%s+USED="(.+)"$')
-        if mnt and not mnt:match('^/boot/') then
+        local mnt, type, size, used = l:match(entry_pattern)
+        if mnt and is_dir(mnt)
+        and not mnt:match('^/boot/')
+        and not mnt:match('^/var/lib/docker/') then
             table.insert(mnts, {
                 mnt = mnt,
                 type = type,
@@ -32,6 +35,12 @@ function enum_disks()
         end
     end
     return mnts
+end
+
+-- is dir or file
+function is_dir(p)
+    local s = sys_call('[ -d "' .. p .. '" ] && echo "true"', true)
+    return (#s > 3)
 end
 
 -- some environment variables

@@ -13,7 +13,11 @@ function conky_ifaces()
     for i, iface in ipairs(utils.enum_ifaces()) do
         rendered[i] = TPL_IFACE:gsub('<IFACE>', iface)
     end
-    return conky_parse(table.concat(rendered, '\n'))
+    if #rendered > 0 then
+        return conky_parse(table.concat(rendered, '\n'))
+    else
+        return conky_parse("${font}(no active network interface found)")
+    end
 end
 
 -- dynamically show mounted disks
@@ -40,7 +44,11 @@ function conky_disks()
                                     utils.percent_ratio(disk.used, disk.size),
                                     disk.used, disk.size)
     end
-    return conky_parse(table.concat(rendered, '\n'))
+    if #rendered > 0 then
+        return conky_parse(table.concat(rendered, '\n'))
+    else
+        return conky_parse("${font}(no mounted disk found)")
+    end
 end
 
 -- unified shortcut to all top_x variables, with optional padding
