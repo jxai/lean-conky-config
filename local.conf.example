@@ -2,5 +2,5 @@
 
 -- override base config here
 local_config = {
-    -- e.g.: alignment = 'top_left',
+    alignment = 'top_left',  -- dock panel to left side
 }
