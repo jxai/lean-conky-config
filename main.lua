@@ -5,8 +5,8 @@ utils = require 'utils'
 -- dynamically show active ifaces
 -- see https://matthiaslee.com/dynamically-changing-conky-network-interface/
 local TPL_IFACE =
-[[${if_existing /sys/class/net/<IFACE>/operstate up}Down: ${downspeed <IFACE>}    ${alignc}${font :bold:size=8}<IFACE>${font} ${alignr}Up: ${upspeed <IFACE>}
-${color lightgray}${downspeedgraph <IFACE> 32,130} ${alignr}${upspeedgraph <IFACE> 32,130 }$color${endif}]]
+[[${if_existing /sys/class/net/<IFACE>/operstate up}${voffset 2}${font :size=7}▼${font}  ${downspeed <IFACE>} ${alignc}${font :bold:size=8}<IFACE>${font} ${alignr}${upspeed <IFACE>} ${voffset -2}${font :size=7}▲
+${font}${color lightgray}${downspeedgraph <IFACE> 32,130} ${alignr}${upspeedgraph <IFACE> 32,130 }$color${endif}]]
 
 function conky_ifaces()
     local rendered = {}
