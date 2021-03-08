@@ -25,12 +25,13 @@ to start Conky. In a moment you should see the panel showing up, docked to the r
 In order to autostart Conky, follow [this tutorial](https://linuxconfig.org/ubuntu-20-04-system-monitoring-with-conky-widgets#h2-enable-conky-to-start-at-boot) if you use Ubuntu, just replacing Command with the full path to the `start.sh` script. For other desktop environments, check the information [here](https://wiki.archlinux.org/index.php/Autostarting#On_desktop_environment_startup).
 
 ## More Information
-To further customize the config, take a look at Conky reference documentation:
-* [Settings](http://conky.sourceforge.net/config_settings.html)
-* [Variables](http://conky.sourceforge.net/variables.html)
+To further customize the config for your specific needs, create a `local.conf` file:
+``` bash
+cp local.conf.example local.conf
+```
+and make changes there, this way your customizations wouldn't get lost accidentally when updating to a newer version.
 
-or its man page:
+For reference of Conky setting variables, check its [documentation](http://conky.sourceforge.net/config_settings.html), or `man` page:
 ``` bash
 man -P "less -p 'CONFIGURATION SETTINGS'" conky 
-man -P "less -p 'OBJECTS/VARIABLES'" conky
 ```
