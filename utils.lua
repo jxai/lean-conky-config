@@ -52,6 +52,21 @@ function filesize(size)
     return _filesize(size, {round=0, spacer='', base=2})
 end
 
+-- call at interval, similar to Conky's `execi` but for functions
+local _interval_call_cache = {}
+function interval_call(interv, func, ...)
+    if _interval_call_cache[func] == nil then
+        _interval_call_cache[func] = {}
+    end
+    local cache = _interval_call_cache[func]
+    local now = os.time()
+    if cache.last == nil or (now - cache.last) >= interv then
+        cache.result = func(unpack(arg))
+        cache.last = now
+    end
+    return cache.result
+end
+
 -- pad string to `max_len`, `align` mode can be 'left', 'right' or 'center'
 function padding(str, max_len, align, char)
     if not max_len then return str end
@@ -130,6 +145,7 @@ return {
     enum_disks = enum_disks,
     env = env,
     filesize = filesize,
+    interval_call = interval_call,
     padding = padding,
     percent_ratio = percent_ratio,
     sys_call = sys_call,
