@@ -28,7 +28,7 @@ function enum_disks()
 
     for i, l in ipairs(mnt_fs) do
         local mnt, type, size, used = l:match(entry_pattern)
-        if mnt and is_dir(mnt) and not mnt:match('^/boot/') then
+        if mnt and is_dir(mnt) and is_readable(mnt) and not mnt:match('^/boot/') then
             table.insert(mnts, {
                 mnt = mnt,
                 type = type,
@@ -113,6 +113,11 @@ end
 -- is dir or file
 function is_dir(p)
     return is_true('[ -d "' .. p .. '" ]')
+end
+
+-- is path readable
+function is_readable(p)
+    return is_true('[ -r "' .. p .. '" ]')
 end
 
 -- is running in a docker container
