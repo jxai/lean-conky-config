@@ -3,10 +3,10 @@
 -- override base config here
 local_config = {
     alignment = 'top_left',  -- dock panel to left side
-	-- colors customization --
-	color0 = 'turquoise',  -- clock color
-	color1 = 'orange',  -- heading 1 color
-	color2 = 'dodgerblue',  -- heading 2 color
-	color3 = 'limegreen',  -- chart color
+    -- colors customization --
+    color0 = 'turquoise',  -- clock color
+    color1 = 'orange',  -- heading 1 color
+    color2 = 'dodgerblue',  -- heading 2 color
+    color3 = 'limegreen',  -- chart color
     default_color = 'white',  -- text color
 }
