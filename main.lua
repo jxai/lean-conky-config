@@ -2,6 +2,45 @@ local _dirname_ = debug.getinfo(1, 'S').source:sub(2):match('(.*[/\\])')
 package.path = _dirname_ .. '?.lua;' .. package.path
 utils = require 'utils'
 
+-- load conky config tables including font definitions
+if conky == nil then conky = {} end
+dofile(conky_config)
+
+-- remove unavailable fonts
+local function _check_fonts()
+    for k, v in pairs(conky.fonts) do
+        local font = conky.fonts[k]
+        local p = font:find(':')
+        if p then font = font:sub(1, p-1) end
+        font = utils.trim(font)
+        if #font > 0 then
+            local s = utils.sys_call('fc-list -f "%{family[0]}" "'..font..'"', true)
+            if #s < 1 then conky.fonts[k] = nil end
+        elseif not p then
+            conky.fonts[k] = nil
+        end
+    end
+end
+_check_fonts()
+
+-- render `text` in specified font if it is available on system, otherwise
+-- render `alt_text` with current font. if no `alt_text` is provided, it is
+-- assumed to be the same as `text`.
+function conky_font(font_key, text, alt_text)
+    text = utils.unbrace(text)
+    if alt_text == nil then
+        alt_text = text
+    else
+        alt_text = utils.unbrace(alt_text)
+    end
+    font = conky.fonts[font_key]
+    if font then
+        return conky_parse(string.format('${font %s}%s${font}', font, text))
+    else
+        return conky_parse(alt_text)
+    end
+end
+
 conky_percent_ratio = utils.percent_ratio
 
 -- unified shortcut to all top_x variables, with optional padding

@@ -1,6 +1,6 @@
 -- vim: ts=4 sw=4 noet ai cindent ft=lua
 
--- override base config here
+-- override `conky.config` here
 local_config = {
     alignment = 'top_left',  -- dock panel to left side
     -- colors customization --
@@ -9,4 +9,8 @@ local_config = {
     color2 = 'dodgerblue',  -- heading 2 color
     color3 = 'limegreen',  -- chart color
     default_color = 'white',  -- text color
+}
+
+-- override `conky.fonts` here
+local_fonts = {
 }

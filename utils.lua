@@ -93,6 +93,19 @@ function trim(str)
     return str:match("^%s*(.-)%s*$")
 end
 
+-- strip surrounding braces
+function unbrace(str)
+    local u
+    while true do
+        u = str:match("^{(.-)}$")
+        if u then
+            str = u
+        else
+            return str
+        end
+    end
+end
+
 -- count characters in a utf-8 encoded string
 function utf8_len(str)
     local _, count = string.gsub(str, '[^\128-\193]', '')
@@ -150,4 +163,5 @@ return {
     percent_ratio = percent_ratio,
     sys_call = sys_call,
     trim = trim,
+    unbrace = unbrace,
 }
