@@ -13,7 +13,9 @@ local function _check_fonts()
         local p = font:find(':')
         if p then font = font:sub(1, p-1) end
         font = utils.trim(font)
-        if #font > 0 then
+        if #font > 0
+        and font ~= 'sans-serif' and font ~= 'serif'
+        and font ~= 'courier' and font ~= 'monospace' then
             local s = utils.sys_call('fc-list -f "%{family[0]}" "'..font..'"', true)
             if #s < 1 then conky.fonts[k] = nil end
         elseif not p then
