@@ -13,4 +13,5 @@ local_config = {
 
 -- override `conky.fonts` here
 local_fonts = {
+    time = 'FreeSerif:bold:size=24',
 }
