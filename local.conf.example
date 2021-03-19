@@ -3,7 +3,7 @@
 -- override `conky.config` here
 local_config = {
     alignment = 'top_left',  -- dock panel to left side
-    -- colors customization --
+    -- COLORS --
     color0 = 'turquoise',  -- clock color
     color1 = 'orange',  -- heading 1 color
     color2 = 'dodgerblue',  -- heading 2 color

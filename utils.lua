@@ -95,9 +95,9 @@ end
 
 -- strip surrounding braces
 function unbrace(str)
-    local u
+    if not str then return str end
     while true do
-        u = str:match("^{(.-)}$")
+        local u = str:match("^{(.-)}$")
         if u then
             str = u
         else
