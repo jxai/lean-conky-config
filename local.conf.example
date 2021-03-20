@@ -1,4 +1,4 @@
--- vim: ts=4 sw=4 noet ai cindent ft=lua
+-- vim: ft=lua:ts=4:sw=4:et:ai:cin
 
 -- override `conky.config` here
 local_config = {
