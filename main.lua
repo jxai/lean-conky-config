@@ -37,7 +37,7 @@ function conky_font(font_key, text, alt_text)
     end
     font = conky.fonts[font_key]
     if font then
-        return conky_parse(string.format('${font %s}%s${font}', font, text))
+        return conky_parse(string.format('${font %s}%s', font, text))
     else
         return conky_parse(alt_text)
     end
@@ -62,7 +62,7 @@ end
 
 -- render top (cpu) line
 function conky_top_cpu_line(ord)
-    local _H = '${color2}${lua font h2 {PROCESS ${goto 156}PID ${goto 194}MEM% ${alignr}CPU%}}${color}'
+    local _H = '${color2}${lua font h2 {PROCESS ${goto 156}PID ${goto 194}MEM% ${alignr}CPU%}}${font}${color}'
     if ord == 'header' then return conky_parse(_H) end
 
     local function _t(type, padding_len)
@@ -77,7 +77,7 @@ end
 
 -- render top_mem line
 function conky_top_mem_line(ord)
-    local _H = '${color2}${lua font h2 {PROCESS ${goto 156}PID ${goto 198}CPU%${alignr}MEM%}}${color}'
+    local _H = '${color2}${lua font h2 {PROCESS ${goto 156}PID ${goto 198}CPU%${alignr}MEM%}}${font}${color}'
     if ord == 'header' then return conky_parse(_H) end
 
     local function _t(type, padding_len)
@@ -92,7 +92,7 @@ end
 
 -- render top_io line
 function conky_top_io_line(ord)
-    local _H = '${color2}${lua font h2 {PROCESS ${goto 156}PID ${alignr}READ/WRITE}}${color}'
+    local _H = '${color2}${lua font h2 {PROCESS ${goto 156}PID ${alignr}READ/WRITE}}${font}${color}'
     if ord == 'header' then return conky_parse(_H) end
 
     local function _t(type)
@@ -113,7 +113,7 @@ end
 -- see https://matthiaslee.com/dynamically-changing-conky-network-interface/
 local TPL_IFACE =
 [[${if_existing /sys/class/net/<IFACE>/operstate up}]] ..
-[[${voffset 2}${font :size=7}▼${font}  ${downspeed <IFACE>} ${alignc -22}${lua font h2 {<IFACE>}}]] ..
+[[${voffset 2}${font :size=7}▼${font}  ${downspeed <IFACE>} ${alignc -22}${lua font h2 {<IFACE>}}${font}]] ..
 [[${alignr}${upspeed <IFACE>} ${voffset -2}${font :size=7}▲${font}
 ${color3}${downspeedgraph <IFACE> 32,130} ${alignr}${upspeedgraph <IFACE> 32,130 }${color}]] ..
 [[${endif}]]
@@ -136,7 +136,7 @@ end
 
 -- dynamically show mounted disks
 local TPL_DISK =
-[[${lua font h2 {%s}} ${alignc -8}%s / %s [%s] ${alignr}%s%%
+[[${lua font h2 {%s}}${font} ${alignc -8}%s / %s [%s] ${alignr}%s%%
 ${color3}${lua_bar 4 percent_ratio %s %s}${color}]]
 
 local function _conky_disks()
@@ -152,7 +152,7 @@ local function _conky_disks()
         if media then
             name = media
         elseif name == utils.env.HOME then
-            name = '${font :bold:size=11}⌂'
+            name = '${voffset -4}${font :bold:size=11}⌂'
         end
         rendered[i] = string.format(TPL_DISK, name, used_h, size_h, disk.type,
                                     utils.percent_ratio(disk.used, disk.size),
