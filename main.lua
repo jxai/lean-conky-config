@@ -69,9 +69,8 @@ function conky_top_cpu_line(ord)
         return _top_val(ord, 'cpu', type, padding_len, 'right')
     end
     return conky_parse(
-        string.format('%s ${goto 156}%s ${goto 196}%s ${alignr}%s',
-                      _t('name'), _t('pid'),
-                      _t('mem', 6), _t('cpu'))
+        string.format('%s ${goto 156}%s${alignr}${offset -44}%s\n${voffset -13}${alignr}%s',
+                      _t('name'), _t('pid'), _t('mem'), _t('cpu'))
     )
 end
 
@@ -84,9 +83,8 @@ function conky_top_mem_line(ord)
         return _top_val(ord, 'mem', type, padding_len, 'right')
     end
     return conky_parse(
-        string.format('%s ${goto 156}%s ${goto 196}%s ${alignr}%s',
-                      _t('name'), _t('pid'),
-                      _t('cpu', 6), _t('mem'))
+        string.format('%s ${goto 156}%s${alignr}${offset -44}%s\n${voffset -13}${alignr}%s',
+                      _t('name'), _t('pid'), _t('cpu'), _t('mem'))
     )
 end
 
