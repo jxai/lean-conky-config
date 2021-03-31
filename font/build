@@ -1,0 +1,152 @@
+#!/usr/bin/fontforge -lang=py
+# vim: ft=python:ts=4:sw=4:et:ai:cin
+
+# Build LeanConkyConfig font - requiring FontForge to run
+
+import argparse
+import logging
+import sys
+import os.path as osp
+import tempfile
+from glob import glob
+from datetime import date
+import fontforge as ff
+import psMat
+
+
+FA_URL = "https://github.com/FortAwesome/Font-Awesome/releases/download/" + \
+         "5.15.3/fontawesome-free-5.15.3-desktop.zip"
+
+FA_DIR = osp.join(tempfile.gettempdir(), "lcc_fontawesome")
+
+FA_SUBSET = """
+f007    #user
+f013    #cog
+f015    #home
+f017    #clock
+f019    #download
+f01c    #inbox
+f073    #calendar
+f085    #cogs
+f093    #upload
+f0a0    #hdd
+f0ac    #globe
+f0e8    #sitemap
+f108    #desktop
+f1c0    #database
+f1eb    #wifi
+f233    #server
+f293    #bluetooth
+f2db    #microchip
+f381    #cloud-download-alt
+f382    #cloud-upload-alt
+f3c5    #map-marker-alt
+f538    #memory
+f56e    #file-export
+f56f    #file-import
+f6ff    #network-wired
+f7c2    #sd-card
+"""
+
+# parse command line
+parser = argparse.ArgumentParser(
+    description="Build LeanConkyConfig font file.")
+parser.add_argument('-verbose', help="output debug information",
+                    action='count', default=0)
+parser.add_argument('-lcd-font', help="lcd font file",
+                    default="TRS-Million-mod.otf")
+parser.add_argument('-output', help="output file",
+                    default="lean-conky-config.otf")
+args = parser.parse_args()
+
+# logger
+logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO,
+                    style='{', format="{asctime} {message}", stream=sys.stdout)
+logging.info("Start build custom font")
+
+
+def copy_attrs(src, dst, attrs):
+    for a in attrs:
+        v = getattr(src, a)
+        logging.debug("%s: %s => %s", a, getattr(dst, a), v)
+        setattr(dst, a, v)
+
+
+def merge_font(dst_font, src_font, selection=None):
+    if selection:
+        src_font.selection.select(*selection)
+        dst_font.selection.select(*selection)
+    else:
+        src_font.selection.all()
+        dst_font.selection.all()
+    src_font.copy()
+    dst_font.paste()
+
+
+# parse unicodes of FA subset
+fa_subset = []
+for l in FA_SUBSET.split('\n'):
+    x = l.split('#', maxsplit=1)[0].strip()
+    if x:
+        fa_subset.append(int(x, base=16))
+
+# fetch FA if needed
+if osp.isdir(FA_DIR):
+    logging.debug("FA font cache already exists: {}".format(FA_DIR))
+else:
+    fa_download = FA_DIR + ".zip"
+    if osp.isfile(fa_download):
+        logging.debug("FA font already downloaded: {}".format(fa_download))
+    else:
+        import urllib.request
+        urllib.request.urlretrieve(FA_URL, fa_download)
+        logging.info("Downloaded FA font: {}".format(fa_download))
+
+    import zipfile
+    with zipfile.ZipFile(fa_download, 'r') as z:
+        z.extractall(FA_DIR, [f for f in z.namelist() if f.endswith(".otf")])
+        logging.debug("Extracted .otf files from FA")
+
+# subset and merge fonts
+# FA solid
+fa = glob(osp.join(FA_DIR, "**/*Solid*"), recursive=True)
+if fa:
+    fa = ff.open(fa[0])
+else:
+    raise FileNotFoundError("FA-Solid font not found")
+
+nf = ff.font()
+nf.fontname = nf.familyname = nf.fullname = "LeanConkyConfig"
+nf.version = date.today().strftime('%Y%m%d')
+with open('./LICENSE', 'r') as f:
+    nf.copyright = f.read().strip()
+
+logging.info("Copy essential FA font attributes")
+copy_attrs(fa, nf, ['encoding', 'em', 'ascent', 'descent'])
+
+sel = [('unicode', 'singletons'), ] + fa_subset
+logging.info("Subset and merge FA-Solid font")
+merge_font(nf, fa, sel)
+
+# FA brands
+fa = glob(osp.join(FA_DIR, "**/*Brands*"), recursive=True)
+if fa:
+    logging.info("Subset and merge FA-Brands font")
+    fa = ff.open(fa[0])
+    merge_font(nf, fa, sel)
+else:
+    raise FileNotFoundError("FA-Brands font not found")
+
+# LCD font (modified TRS Million by default)
+logging.info("Subset and merge LCD font file: {}".format(args.lcd_font))
+cf = ff.open(args.lcd_font)
+cf.selection.all()
+cf.transform(psMat.scale(float(nf.em) / cf.em))
+merge_font(nf, cf, [' '])
+merge_font(nf, cf, [('more', 'ranges',), ".", ":"])  # 0-9 included
+merge_font(nf, cf, [('more', 'ranges'), "A", "Z"])
+merge_font(nf, cf, [('more', 'ranges'), "a", "z"])
+
+# save the final work
+nf.generate(args.output)
+logging.info("Generated font file: {}".format(args.output))

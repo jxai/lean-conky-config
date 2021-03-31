@@ -1,0 +1,19 @@
+#!/bin/sh
+# vim: ft=bash:ts=4:sw=4:et:ai:cin
+
+cd $(dirname $0)
+font_file="lean-conky-config.otf"
+font_dir="$HOME/.local/share/fonts"
+font_symlink="$font_dir/$font_file"
+
+# uninstall
+if [ "$1" = '-u' ] ; then
+    [ -e "$font_symlink" ] && rm "$font_symlink"
+    echo Uninstalled $font_symlink
+    exit 0
+fi
+
+# install
+[ ! -d "$font_dir" ] && mkdir -p "$font_dir"
+[ ! -e "$font_symlink" ] && ln -sf $(realpath ./$font_file) "$font_symlink"
+echo Installed custom font to $font_symlink
