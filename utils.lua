@@ -61,7 +61,7 @@ function interval_call(interv, func, ...)
     local cache = _interval_call_cache[func]
     local now = os.time()
     if cache.last == nil or (now - cache.last) >= interv then
-        cache.result = func(unpack(arg))
+        cache.result = func(...)
         cache.last = now
     end
     return cache.result

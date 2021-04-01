@@ -104,7 +104,7 @@ function conky_top_io_line(ord)
 end
 
 local function _interval_call(interv, ...)
-    return conky_parse(utils.interval_call(tonumber(interv or 0), unpack(arg)))
+    return conky_parse(utils.interval_call(tonumber(interv or 0), ...))
 end
 
 -- dynamically show active ifaces
