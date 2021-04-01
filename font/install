@@ -1,19 +1,35 @@
 #!/bin/sh
-# vim: ft=bash:ts=4:sw=4:et:ai:cin
+# vim: ft=sh:ts=4:sw=4:et:ai:cin
+
+# USAGE: install [OPTION]
+#   -u: uninstall font (remove symlink only)
+#   -f: force installation, overwrite existing file
 
 cd $(dirname $0)
 font_file="lean-conky-config.otf"
 font_dir="$HOME/.local/share/fonts"
-font_symlink="$font_dir/$font_file"
+dest="$font_dir/$font_file"
 
 # uninstall
-if [ "$1" = '-u' ] ; then
-    [ -e "$font_symlink" ] && rm "$font_symlink"
-    echo Uninstalled $font_symlink
+if [ "$1" = '-u' ]; then
+    if [ -L "$dest" ] && [ -f "$dest" ]; then
+        rm "$dest"
+        echo Uninstalled font: $dest
+    else
+        echo Unable to find symlink: $dest
+    fi
     exit 0
 fi
 
 # install
-[ ! -d "$font_dir" ] && mkdir -p "$font_dir"
-[ ! -e "$font_symlink" ] && ln -sf $(realpath ./$font_file) "$font_symlink"
-echo Installed custom font to $font_symlink
+if [ ! -e "$dest" ] || [ "$1" = '-f' ]; then
+    [ ! -d "$font_dir" ] && mkdir -p "$font_dir"
+    ln -sfT $(realpath ./$font_file) "$dest"
+    if [ $? -eq 0 ]; then
+        echo Installed font: $dest
+    else
+        echo Unable to create symlink: $dest
+    fi
+else
+    echo Font already exists, use -f flag to overwrite: $dest
+fi
