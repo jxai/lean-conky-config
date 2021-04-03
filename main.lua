@@ -25,19 +25,24 @@ local function _check_fonts()
 end
 _check_fonts()
 
--- render `text` in specified font if it is available on system, otherwise
--- render `alt_text` with current font. if no `alt_text` is provided, it is
--- assumed to be the same as `text`.
-function conky_font(font_key, text, alt_text)
+-- render `text` with the specified `font` if it is available on the system.
+-- if `font ` unavailable, render `alt_text` instead with `alt_font`.
+-- if `alt_font` is unavailable or not specified, render `alt_text` with the
+-- current font.
+-- if no `alt_text` is provided, it is assumed to be the same as `text`.
+function conky_font(font, text, alt_text, alt_font)
     text = utils.unbrace(text)
     if alt_text == nil then
         alt_text = text
     else
         alt_text = utils.unbrace(alt_text)
     end
-    font = conky.fonts[font_key]
+    if font then font = conky.fonts[font] end
+    if alt_font then alt_font = conky.fonts[alt_font] end
     if font then
         return conky_parse(string.format('${font %s}%s', font, text))
+    elseif alt_font then
+        return conky_parse(string.format('${font %s}%s', alt_font, alt_text))
     else
         return conky_parse(alt_text)
     end
