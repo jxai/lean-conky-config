@@ -83,6 +83,18 @@ def merge_font(dst_font, src_font, selection=None):
     dst_font.paste()
 
 
+def copy_glyphnames(dst_font, src_font, unicodes):
+    logging.debug("Copy glyphnames: {} -> {}".format(
+        src_font.fontname, dst_font.fontname))
+    logging.debug("---------------------")
+    common_codes = [k for k in unicodes if k in src_font and k in dst_font]
+    for k in common_codes:
+        src_name = src_font[k].glyphname
+        logging.debug("{} -> {}".format(src_name, dst_font[k].glyphname))
+        dst_font[k].glyphname = src_name
+    logging.debug("---------------------")
+
+
 # parse unicodes of FA subset
 fa_subset = []
 for l in FA_SUBSET.split('\n'):
@@ -127,6 +139,7 @@ copy_attrs(fa, nf, ['encoding', 'em', 'ascent', 'descent'])
 sel = [('unicode', 'singletons'), ] + fa_subset
 logging.info("Subset and merge FA-Solid font")
 merge_font(nf, fa, sel)
+copy_glyphnames(nf, fa, fa_subset)
 
 # FA brands
 fa = glob(osp.join(FA_DIR, "**/*Brands*"), recursive=True)
@@ -134,6 +147,7 @@ if fa:
     logging.info("Subset and merge FA-Brands font")
     fa = ff.open(fa[0])
     merge_font(nf, fa, sel)
+    copy_glyphnames(nf, fa, fa_subset)
 else:
     raise FileNotFoundError("FA-Brands font not found")
 
