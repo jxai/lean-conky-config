@@ -28,9 +28,19 @@ Now run
 ```
 to start Conky. In a moment you should see the panel showing up, docked to the right side your desktop. If you have multiple monitors, the panel should appear on one of them.
 
-You might not see the icons as shown in the screenshot above, which require [Font Awesome](https://fontawesome.com/). On Ubuntu the font can be installed via package `fonts-font-awesome`. It is optional though. LCC is designed to just work, it would fall back gracefully if the font is not found, instead of breaking the layout.
-
 In order to autostart Conky on Ubuntu, follow [this tutorial](https://linuxconfig.org/ubuntu-20-04-system-monitoring-with-conky-widgets#h2-enable-conky-to-start-at-boot), replacing Command with the full path to the `start.sh` script we just ran. For other desktop environments, check the information [here](https://wiki.archlinux.org/index.php/Autostarting#On_desktop_environment_startup).
+
+You might notice the icons and LCD-style time in the screenshot above. LCC renders them with a custom font named `LeanConkyConfig`, which is automatically installed in your local font directory (`~/.local/share/fonts`) when LCC starts. If you don't see the font in effect, likely your desktop environment doesn't load it properly. In this case you can manually install the font, located at `font/lean-conky-config.otf`. This is optional though. LCC is designed to just work, it would fall back gracefully instead of breaking the layout, even if the font is not loaded by the system.
+
+In case you prefer the plain font and simple layout, here's a workaround:
+``` bash
+/path/to/lean-conky-config/font/install -u && \
+touch ~/.local/share/fonts/lean-conky-config.otf
+```
+And to undo it:
+``` bash
+/path/to/lean-conky-config/font/install -f
+```
 
 ## Customization
 To further customize the config for your specific needs, create a `local.conf` file:
