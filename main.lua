@@ -115,11 +115,11 @@ end
 -- dynamically show active ifaces
 -- see https://matthiaslee.com/dynamically-changing-conky-network-interface/
 local TPL_IFACE =
-[[${if_existing /sys/class/net/<IFACE>/operstate up}]] ..
-[[${voffset 2}${font :size=7}▼${font}  ${downspeed <IFACE>} ${alignc -22}${lua font h2 {<IFACE>}}${font}]] ..
-[[${alignr}${upspeed <IFACE>} ${voffset -2}${font :size=7}▲${font}
-${color3}${downspeedgraph <IFACE> 32,130} ${alignr}${upspeedgraph <IFACE> 32,130 }${color}]] ..
-[[${endif}]]
+[[${if_existing /sys/class/net/<IFACE>/operstate up}#
+${lua font icon_s  ${voffset -1}${font :size=7}▼}${font}  ${downspeed <IFACE>} ${alignc -22}${lua font h2 {<IFACE>}}${font}#
+${alignr}${upspeed <IFACE>} ${lua font icon_s  ${voffset -2}${font :size=7}▲}${font}
+${color3}${downspeedgraph <IFACE> 32,130} ${alignr}${upspeedgraph <IFACE> 32,130 }${color}#
+${endif}]]
 
 local function _conky_ifaces()
     local rendered = {}
@@ -155,7 +155,7 @@ local function _conky_disks()
         if media then
             name = media
         elseif name == utils.env.HOME then
-            name = '${voffset -4}${font :bold:size=11}⌂'
+            name = '${lua font icon_s  ${voffset -4}${font :bold:size=11}⌂}'
         end
         rendered[i] = string.format(TPL_DISK, name, used_h, size_h, disk.type,
                                     utils.percent_ratio(disk.used, disk.size),
