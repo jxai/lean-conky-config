@@ -1,5 +1,19 @@
 -- utility functions and variables
 
+-- dump object, see https://stackoverflow.com/a/27028488/707516
+function dump_object(o)
+   if type(o) == 'table' then
+      local s = '{ '
+      for k,v in pairs(o) do
+         if type(k) ~= 'number' then k = '"'..k..'"' end
+         s = s .. '['..k..'] = ' .. dump_object(v) .. ','
+      end
+      return s .. '} '
+   else
+      return tostring(o)
+   end
+end
+
 -- enumerate network interfaces, see https://superuser.com/a/1173532/95569
 function enum_ifaces()
     local _in_docker = in_docker()
@@ -154,6 +168,7 @@ function in_docker()
 end
 
 return {
+    dump_object = dump_object,
     enum_ifaces = enum_ifaces,
     enum_disks = enum_disks,
     env = env,
