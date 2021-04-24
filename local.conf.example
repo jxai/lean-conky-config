@@ -2,16 +2,16 @@
 
 -- override `conky.config` here
 local_config = {
-    alignment = 'top_left',  -- dock panel to left side
+    alignment = "top_left", -- dock panel to left side
     -- COLORS --
-    color0 = 'turquoise',  -- clock color
-    color1 = 'orange',  -- heading 1 color
-    color2 = 'dodgerblue',  -- heading 2 color
-    color3 = 'limegreen',  -- chart color
-    default_color = 'white',  -- text color
+    color0 = "turquoise", -- clock color
+    color1 = "orange", -- heading 1 color
+    color2 = "dodgerblue", -- heading 2 color
+    color3 = "limegreen", -- chart color
+    default_color = "white" -- text color
 }
 
 -- override `conky.fonts` here
 local_fonts = {
-    date = 'serif:normal:size=18',
+    date = "serif:normal:size=18"
 }

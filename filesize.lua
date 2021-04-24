@@ -3,16 +3,15 @@
 -- https://github.com/starius/lua-filesize/blob/master/LICENSE
 -- AUTHORS: Boris Nagaev, Jason Xu
 
-
 local si = {
     base10 = {
         bits = {"b", "Kb", "Mb", "Gb", "Tb", "Pb", "Eb", "Zb", "Yb"},
-        bytes = {"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"},
+        bytes = {"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"}
     },
     base2 = {
         bits = {"b", "Kib", "Mib", "Gib", "Tib", "Pib", "Eib", "Zib", "Yib"},
-        bytes = {"B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"},
-    }, -- see https://docs.ukcloud.com/articles/other/other-ref-gib.html
+        bytes = {"B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"}
+    } -- see https://docs.ukcloud.com/articles/other/other-ref-gib.html
 }
 
 local function isNan(num)
@@ -27,7 +26,6 @@ local function roundNumber(num, digits)
 end
 
 local function filesize(size, options)
-
     -- copy options to o
     local o = {}
     for key, value in pairs(options or {}) do
@@ -63,7 +61,7 @@ local function filesize(size, options)
     if size == 0 then
         result = {
             0,
-            o.unix and "" or (o.bits and "b" or "B"),
+            o.unix and "" or (o.bits and "b" or "B")
         }
     else
         -- Determining the exponent
@@ -93,23 +91,20 @@ local function filesize(size, options)
 
         result = {
             roundNumber(val, o.exponent > 0 and o.round or 0),
-            (o.base == 10 and o.exponent == 1) and
-                (o.bits and "kb" or "kB") or
-                (si[o.base == 2 and 'base2' or 'base10']
-                   [o.bits and "bits" or "bytes"][o.exponent + 1]),
+            (o.base == 10 and o.exponent == 1) and (o.bits and "kb" or "kB") or
+                (si[o.base == 2 and "base2" or "base10"][o.bits and "bits" or "bytes"][o.exponent + 1])
         }
 
         if o.unix then
             result[2] = result[2]:sub(1, 1)
 
             if result[2] == "b" or result[2] == "B" then
-                result ={
+                result = {
                     math.floor(result[1]),
-                    "",
+                    ""
                 }
             end
         end
-
     end
 
     assert(result)
@@ -133,11 +128,11 @@ local function filesize(size, options)
     elseif o.output == "object" then
         return {
             value = result[1],
-            suffix = result[2],
+            suffix = result[2]
         }
     elseif o.output == "string" then
         local value = tostring(result[1])
-        value = value:gsub('%.0$', '')
+        value = value:gsub("%.0$", "")
         local suffix = result[2]
         return value .. o.spacer .. suffix
     end
