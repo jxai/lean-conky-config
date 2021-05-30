@@ -2,6 +2,7 @@ local _dirname_ = debug.getinfo(1, "S").source:sub(2):match("(.*[/\\])")
 package.path = _dirname_ .. "?.lua;" .. package.path
 utils = require "utils"
 
+
 -- load conky config tables including font definitions
 if conky == nil then
     conky = {}
@@ -73,7 +74,7 @@ end
 
 -- render top (cpu) line
 function conky_top_cpu_line(ord)
-    local _H = "${color2}${lua font h2 {PROCESS ${goto 156}PID ${goto 194}MEM% ${alignr}CPU%}}${font}${color}"
+    local _H = "${color2}${lua font h2 {PROCESS ${goto " .. conky.config.col_1_start .. "}PID ${goto " .. conky.config.col_2_start .. "}MEM% ${alignr}CPU%}}${font}${color}"
     if ord == "header" then
         return conky_parse(_H)
     end
@@ -83,7 +84,7 @@ function conky_top_cpu_line(ord)
     end
     return conky_parse(
         string.format(
-            "%s ${goto 156}%s${alignr}${offset -44}%s\n${voffset -13}${alignr}%s",
+            "%s ${goto " .. conky.config.col_1_start .. "}%s ${goto " .. conky.config.col_2_start .. "}%s ${alignr}%s",
             _t("name"),
             _t("pid"),
             _t("mem"),
@@ -94,7 +95,7 @@ end
 
 -- render top_mem line
 function conky_top_mem_line(ord)
-    local _H = "${color2}${lua font h2 {PROCESS ${goto 156}PID ${goto 198}CPU%${alignr}MEM%}}${font}${color}"
+    local _H = "${color2}${lua font h2 {PROCESS ${goto " .. conky.config.col_1_start .. "}PID ${goto " .. conky.config.col_2_start .. "}CPU% ${alignr}MEM%}}${font}${color}"
     if ord == "header" then
         return conky_parse(_H)
     end
@@ -104,7 +105,7 @@ function conky_top_mem_line(ord)
     end
     return conky_parse(
         string.format(
-            "%s ${goto 156}%s${alignr}${offset -44}%s\n${voffset -13}${alignr}%s",
+            "%s ${goto " .. conky.config.col_1_start .. "}%s ${goto " .. conky.config.col_2_start .. "}%s ${alignr}%s",
             _t("name"),
             _t("pid"),
             _t("cpu"),
@@ -115,7 +116,7 @@ end
 
 -- render top_io line
 function conky_top_io_line(ord)
-    local _H = "${color2}${lua font h2 {PROCESS ${goto 156}PID ${alignr}READ/WRITE}}${font}${color}"
+    local _H = "${color2}${lua font h2 {PROCESS ${goto " .. conky.config.col_1_start .. "}PID ${alignr}READ/WRITE}}${font}${color}"
     if ord == "header" then
         return conky_parse(_H)
     end
@@ -124,7 +125,7 @@ function conky_top_io_line(ord)
         return _top_val(ord, "io", type)
     end
     return conky_parse(
-        string.format("%s ${goto 156}%s ${alignr}%s / %s", _t("name"), _t("pid"), _t("io_read"), _t("io_write"))
+        string.format("%s ${goto " .. conky.config.col_1_start .. "}%s ${alignr}%s / %s", _t("name"), _t("pid"), _t("io_read"), _t("io_write"))
     )
 end
 
@@ -138,13 +139,13 @@ local TPL_IFACE =
     [[${if_existing /sys/class/net/<IFACE>/operstate up}#
 ${lua font icon_s  ${voffset -1}${font :size=7}▼}${font}  ${downspeed <IFACE>} ${alignc -22}${lua font h2 {<IFACE>}}${font}#
 ${alignr}${upspeed <IFACE>} ${lua font icon_s  ${voffset -2}${font :size=7}▲}${font}
-${color3}${downspeedgraph <IFACE> 32,130} ${alignr}${upspeedgraph <IFACE> 32,130 }${color}#
+${color3}${downspeedgraph <IFACE> <GRAPHHEIGHT>, <HALFGRAPHWIDTH>}${alignr}${upspeedgraph <IFACE> <GRAPHHEIGHT>, <HALFGRAPHWIDTH>}${color}#
 ${endif}]]
 
 local function _conky_ifaces()
     local rendered = {}
     for i, iface in ipairs(utils.enum_ifaces()) do
-        rendered[i] = TPL_IFACE:gsub("<IFACE>", iface)
+        rendered[i] = TPL_IFACE:gsub("<IFACE>", iface):gsub("<HALFGRAPHWIDTH>", conky.config.half_graph_width):gsub("<GRAPHHEIGHT>", conky.config.graph_height)
     end
     if #rendered > 0 then
         return table.concat(rendered, "\n")
@@ -198,4 +199,27 @@ end
 
 function conky_disks(interv)
     return _interval_call(interv, _conky_disks)
+end
+
+-- render the cpu graph using graph configuration variables
+function conky_make_cpu_graph()
+    return conky_parse(
+        string.format("${cpugraph cpu0 %d,%d}",
+        conky.config.graph_height,
+        conky.config.full_graph_width))
+end
+
+-- render the cpu graph using graph configuration variables
+function conky_make_diskio_read_graph()
+    return conky_parse(
+        string.format("${diskiograph_read  %d,%d}",
+        conky.config.graph_height,
+        conky.config.half_graph_width))
+end
+
+function conky_make_diskio_write_graph()
+    return conky_parse(
+        string.format("${diskiograph_write  %d,%d}",
+        conky.config.graph_height,
+        conky.config.half_graph_width))
 end

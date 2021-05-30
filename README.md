@@ -49,6 +49,8 @@ cp local.conf.example local.conf
 ```
 and make changes there, this way your custom settings wouldn't get lost when LCC itself is updated.
 
+For 4k displays, there is a local.conf.example-4k which has different default values in it which should display better on large screens.
+
 Colors can be customized through standard Conky settings.
 
 To make it easy to customize fonts, LCC implements a **named fonts** technique. The fonts for different elements are defined in the `conky.fonts` variable (not supported by Conky per se).

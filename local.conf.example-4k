@@ -1,0 +1,26 @@
+-- vim: ft=lua:ts=4:sw=4:et:ai:cin
+
+-- override `conky.config` here
+local_config = {
+    alignment = "top_left", -- dock panel to left side (default: "top_right")
+    maximum_width = 870, -- set width to 870 for a 4k display (default: 270)
+    minimum_width = 870, -- set width to 870 for a 4k display (default: 270) 
+    minimum_height = 1700, -- set height to 2300 for a 4k display (default: 320)
+    graph_height = 100, -- change height of the graphs (default: 32)
+    half_graph_width = 430, -- set the split graph width for storage & network (default: 130)
+    full_graph_width = 870, -- set the cpu graph width (default: 270)
+    col_1_start = 300, -- set the x position for the first data columns (PID) (default: 156)
+    col_2_start = 550, -- set the x position for the second data columns (MEM% and CPU%) (default: 194)
+    xinerama_head = 0, -- set which monitor conky appears on
+    -- COLORS --
+    color0 = "turquoise", -- clock color (default: "white")
+    color1 = "orange", -- heading 1 color (default: "white")
+    color2 = "dodgerblue", -- heading 2 color (default: "white")
+    color3 = "limegreen", -- chart color (default: "white")
+    default_color = "white" -- text color (default: "lightgray")
+}
+
+-- override `conky.fonts` here
+local_fonts = {
+    date = "serif:normal:size=18"
+}
