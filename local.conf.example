@@ -2,13 +2,18 @@
 
 -- override `conky.config` here
 local_config = {
-    alignment = "top_left", -- dock panel to left side
+    alignment = "top_left", -- dock panel to left side (default: "top_right")
+    graph_height = 32, -- change height of the graphs (default: 32)
+    half_graph_width = 130, -- set the split graph width for storage & network (default: 130)
+    full_graph_width = 270, -- set the cpu graph width (default: 270)
+    col_1_start = 156, -- set the x position for the first data columns (PID) (default: 156)
+    col_2_start = 194, -- set the x position for the second data columns (MEM% and CPU%) (default: 194)
     -- COLORS --
-    color0 = "turquoise", -- clock color
-    color1 = "orange", -- heading 1 color
-    color2 = "dodgerblue", -- heading 2 color
-    color3 = "limegreen", -- chart color
-    default_color = "white" -- text color
+    color0 = "turquoise", -- clock color (default: "white")
+    color1 = "orange", -- heading 1 color (default: "white")
+    color2 = "dodgerblue", -- heading 2 color (default: "white")
+    color3 = "limegreen", -- chart color (default: "white")
+    default_color = "white" -- text color (default: "lightgray")
 }
 
 -- override `conky.fonts` here
