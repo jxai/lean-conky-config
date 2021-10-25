@@ -34,7 +34,7 @@ end
 -- enumerate mounted disks
 -- NOTE: only list most relevant mounts, e.g. boot partitions are ignored
 function enum_disks()
-    local fs_types = "fuseblk,ext2,ext3,ext4,ecryptfs,vfat"
+    local fs_types = "fuseblk,ext2,ext3,ext4,ecryptfs,vfat,btrfs"
     if in_docker() then
         fs_types = fs_types .. ",overlay"
     end
