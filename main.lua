@@ -1,4 +1,4 @@
-local _dirname_ = debug.getinfo(1, "S").source:sub(2):match("(.*[/\\])")
+local _dirname_ = debug.getinfo(1, "S").source:sub(2):match("(.*[/\\])") or "./"
 package.path = _dirname_ .. "?.lua;" .. package.path
 utils = require "utils"
 
