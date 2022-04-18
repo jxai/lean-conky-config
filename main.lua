@@ -73,7 +73,7 @@ end
 
 -- render top (cpu) line
 function conky_top_cpu_line(ord)
-    local _H = "${color2}${lua font h2 {PROCESS ${goto 156}PID ${goto 194}MEM% ${alignr}CPU%}}${font}${color}"
+    local _H = T_"${color2}${lua font h2 {PROCESS ${goto $sr{156}}PID ${goto $sr{194}}MEM% ${alignr}CPU%}}${font}${color}"
     if ord == "header" then
         return conky_parse(_H)
     end
@@ -83,7 +83,7 @@ function conky_top_cpu_line(ord)
     end
     return conky_parse(
         string.format(
-            "%s ${goto 156}%s${alignr}${offset -44}%s\n${voffset -13}${alignr}%s",
+            T_"%s ${goto $sr{156}}%s${alignr}${offset $sr{-44}}%s\n${voffset $sr{-13}}${alignr}%s",
             _t("name"),
             _t("pid"),
             _t("mem"),
@@ -94,7 +94,7 @@ end
 
 -- render top_mem line
 function conky_top_mem_line(ord)
-    local _H = "${color2}${lua font h2 {PROCESS ${goto 156}PID ${goto 198}CPU%${alignr}MEM%}}${font}${color}"
+    local _H = T_"${color2}${lua font h2 {PROCESS ${goto $sr{156}}PID ${goto $sr{198}}CPU%${alignr}MEM%}}${font}${color}"
     if ord == "header" then
         return conky_parse(_H)
     end
@@ -104,7 +104,7 @@ function conky_top_mem_line(ord)
     end
     return conky_parse(
         string.format(
-            "%s ${goto 156}%s${alignr}${offset -44}%s\n${voffset -13}${alignr}%s",
+            T_"%s ${goto $sr{156}}%s${alignr}${offset $sr{-44}}%s\n${voffset $sr{-13}}${alignr}%s",
             _t("name"),
             _t("pid"),
             _t("cpu"),
@@ -115,7 +115,7 @@ end
 
 -- render top_io line
 function conky_top_io_line(ord)
-    local _H = "${color2}${lua font h2 {PROCESS ${goto 156}PID ${alignr}READ/WRITE}}${font}${color}"
+    local _H = T_"${color2}${lua font h2 {PROCESS ${goto $sr{156}}PID ${alignr}READ/WRITE}}${font}${color}"
     if ord == "header" then
         return conky_parse(_H)
     end
@@ -124,7 +124,7 @@ function conky_top_io_line(ord)
         return _top_val(ord, "io", type)
     end
     return conky_parse(
-        string.format("%s ${goto 156}%s ${alignr}%s / %s", _t("name"), _t("pid"), _t("io_read"), _t("io_write"))
+        string.format(T_"%s ${goto $sr{156}}%s ${alignr}%s / %s", _t("name"), _t("pid"), _t("io_read"), _t("io_write"))
     )
 end
 
@@ -135,10 +135,10 @@ end
 -- dynamically show active ifaces
 -- see https://matthiaslee.com/dynamically-changing-conky-network-interface/
 local TPL_IFACE =
-    [[${if_existing /sys/class/net/<IFACE>/operstate up}#
-${lua font icon_s  ${voffset -1}${font :size=7}▼}${font}  ${downspeed <IFACE>} ${alignc -22}${lua font h2 {<IFACE>}}${font}#
-${alignr}${upspeed <IFACE>} ${lua font icon_s  ${voffset -2}${font :size=7}▲}${font}
-${color3}${downspeedgraph <IFACE> 32,130} ${alignr}${upspeedgraph <IFACE> 32,130 }${color}#
+    T_[[${if_existing /sys/class/net/<IFACE>/operstate up}#
+${lua font icon_s  ${voffset $sr{-1}}${font :size=$sr{7}}▼}${font}  ${downspeed <IFACE>} ${alignc $sr{-22}}${lua font h2 {<IFACE>}}${font}#
+${alignr}${upspeed <IFACE>} ${lua font icon_s  ${voffset $sr{-2}}${font :size=$sr{7}}▲}${font}
+${color3}${downspeedgraph <IFACE> $sr{32},$sr{130}} ${alignr}${upspeedgraph <IFACE> $sr{32},$sr{130} }${color}#
 ${endif}]]
 
 local function _conky_ifaces()
@@ -159,8 +159,8 @@ end
 
 -- dynamically show mounted disks
 local TPL_DISK =
-    [[${lua font h2 {%s}}${font} ${alignc -8}%s / %s [%s] ${alignr}%s%%
-${color3}${lua_bar 4 percent_ratio %s %s}${color}]]
+    T_[[${lua font h2 {%s}}${font} ${alignc $sr{-8}}%s / %s [%s] ${alignr}%s%%
+${color3}${lua_bar $sr{4} percent_ratio %s %s}${color}]]
 
 local function _conky_disks()
     local rendered = {}
@@ -175,7 +175,7 @@ local function _conky_disks()
         if media then
             name = media
         elseif name == utils.env.HOME then
-            name = "${lua font icon_s  ${voffset -4}${font :bold:size=11}⌂}"
+            name = T_"${lua font icon_s  ${voffset $sr{-4}}${font :bold:size=$sr{11}}⌂}"
         end
         rendered[i] =
             string.format(

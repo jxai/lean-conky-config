@@ -1,5 +1,10 @@
 -- vim: ft=lua:ts=4:sw=4:et:ai:cin
 
+-- override `lcc.config` here
+local_lcc_config = {
+    scale = 1.5
+}
+
 -- override `conky.config` here
 local_config = {
     alignment = "top_left", -- dock panel to left side
