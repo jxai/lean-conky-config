@@ -77,8 +77,16 @@ Check `local.conf.example` to see how colors and fonts can be customized. For fu
 
 ## More Information
 
-For reference of Conky setting variables, check its [documentation](http://conky.sourceforge.net/config_settings.html), or `man` page:
+Check official Conky documentation:
+
+- [Configuration Settings](http://conky.sourceforge.net/config_settings.html)
+- [Objects/Variables](http://conky.sourceforge.net/variables.html)
+
+And here is a great [third-party reference](http://www.ifxgroup.net/conky.htm) with examples.
+
+Finally, the `man` page might provide more up-to-date information for the Conky version installed on your system:
 
 ```bash
 man -P "less -p 'CONFIGURATION SETTINGS'" conky
+man -P "less -p 'OBJECTS/VARIABLES'" conky
 ```
