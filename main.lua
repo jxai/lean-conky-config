@@ -160,7 +160,7 @@ end
 -- dynamically show mounted disks
 local TPL_DISK =
     T_[[${lua font h2 {%s}}${font} ${alignc $sc{-8}}%s / %s [%s] ${alignr}%s%%
-${color3}${lua_bar $sc{4} percent_ratio %s %s}${color}]]
+${color3}${lua_bar $sr{4} percent_ratio %s %s}${color}]]
 
 local function _conky_disks()
     local rendered = {}
