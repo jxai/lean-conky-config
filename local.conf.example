@@ -1,8 +1,8 @@
 -- vim: ft=lua:ts=4:sw=4:et:ai:cin
 
 -- override `lcc.config` here
-local_lcc_config = {
-    scale = 1.5
+lcc.config = {
+    scale = 1.5 -- magnify the panel by 1.5x
 }
 
 -- override `conky.config` here
