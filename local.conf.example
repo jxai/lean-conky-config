@@ -7,7 +7,7 @@ lcc.config = {
 
 -- override `conky.config` here
 local_config = {
-    alignment = "top_left", -- dock panel to left side
+    alignment = "top_left", -- dock panel to the left side
     -- COLORS --
     color0 = "turquoise", -- clock color
     color1 = "orange", -- heading 1 color
@@ -18,5 +18,5 @@ local_config = {
 
 -- override `conky.fonts` here
 local_fonts = {
-    date = "serif:normal:size=18"
+    date = T_ "serif:normal:size=$sc{18}" -- T_ and $sc{} auto-scale font size
 }
