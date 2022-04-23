@@ -16,6 +16,21 @@ function dump_object(o)
     end
 end
 
+-- update `dst` table by merging the other `src` table
+-- `overwrite`: if true (default), overwrite existing `dst` entries with values
+-- from `src`, otherwise only merge those not already existing
+function update_table(dst, src, overwrite)
+    if overwrite == nil then overwrite = true end
+    if src then
+        for k, v in pairs(src) do
+            if overwrite or dst[k] == nil then
+                dst[k] = v
+            end
+        end
+    end
+    return dst
+end
+
 -- enumerate network interfaces, see https://superuser.com/a/1173532/95569
 function enum_ifaces()
     local _in_docker = in_docker()
@@ -185,6 +200,7 @@ end
 
 return {
     dump_object = dump_object,
+    update_table = update_table,
     enum_ifaces = enum_ifaces,
     enum_disks = enum_disks,
     env = env,
