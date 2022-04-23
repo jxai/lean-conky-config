@@ -8,8 +8,9 @@ end
 -- e.g. "$sc{42}" would be replaced by the value of T_sc(42)
 function T_(s)
     local function _repl(f, args)
-        return assert(_load("return T_".. f .. "(" .. args .. ")"))()
+        return assert(_load("return T_" .. f .. "(" .. args .. ")"))()
     end
+
     return s:gsub("$([%w_]+){([^{}]*)}", _repl)
 end
 
@@ -21,11 +22,11 @@ end
 
 -- scale then round, for where only integers are allowed
 function T_sr(num, scale)
-    return math.floor(T_sc(num, scale)+0.5)
+    return math.floor(T_sc(num, scale) + 0.5)
 end
 
 -- scale then round to a multiple of 0.5
 -- might be useful for certain cases, e.g. font size
 function T_sh(num, scale)
-    return math.floor(T_sc(num*2, scale)+0.5)/2.0
+    return math.floor(T_sc(num * 2, scale) + 0.5) / 2.0
 end
