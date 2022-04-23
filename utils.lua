@@ -78,14 +78,14 @@ end
 
 -- some environment variables
 utils.env = {}
-for i, k in ipairs({"HOME", "USER"}) do
+for i, k in ipairs({ "HOME", "USER" }) do
     utils.env[k] = os.getenv(k)
 end
 
 -- human friendly file size
 local _filesize = require "filesize"
 function utils.filesize(size)
-    return _filesize(size, {round = 0, spacer = "", base = 2})
+    return _filesize(size, { round = 0, spacer = "", base = 2 })
 end
 
 -- call at interval, similar to Conky's `execi` but for functions

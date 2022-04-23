@@ -5,12 +5,12 @@
 
 local si = {
     base10 = {
-        bits = {"b", "Kb", "Mb", "Gb", "Tb", "Pb", "Eb", "Zb", "Yb"},
-        bytes = {"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"}
+        bits = { "b", "Kb", "Mb", "Gb", "Tb", "Pb", "Eb", "Zb", "Yb" },
+        bytes = { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" }
     },
     base2 = {
-        bits = {"b", "Kib", "Mib", "Gib", "Tib", "Pib", "Eib", "Zib", "Yib"},
-        bytes = {"B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"}
+        bits = { "b", "Kib", "Mib", "Gib", "Tib", "Pib", "Eib", "Zib", "Yib" },
+        bytes = { "B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB" }
     } -- see https://docs.ukcloud.com/articles/other/other-ref-gib.html
 }
 
@@ -37,6 +37,7 @@ local function filesize(size, options)
             o[name] = default
         end
     end
+
     setDefault("bits", false)
     setDefault("unix", false)
     setDefault("base", 2)
