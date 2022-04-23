@@ -1,14 +1,15 @@
 -- utility functions and variables
+local utils = {}
 
 -- dump object, see https://stackoverflow.com/a/27028488/707516
-function dump_object(o)
+function utils.dump_object(o)
     if type(o) == "table" then
         local s = "{ "
         for k, v in pairs(o) do
             if type(k) ~= "number" then
                 k = '"' .. k .. '"'
             end
-            s = s .. "[" .. k .. "] = " .. dump_object(v) .. ","
+            s = s .. "[" .. k .. "] = " .. utils.dump_object(v) .. ","
         end
         return s .. "} "
     else
@@ -19,7 +20,7 @@ end
 -- update `dst` table by merging the other `src` table
 -- `overwrite`: if true (default), overwrite existing `dst` entries with values
 -- from `src`, otherwise only merge those not already existing
-function update_table(dst, src, overwrite)
+function utils.update_table(dst, src, overwrite)
     if overwrite == nil then overwrite = true end
     if src then
         for k, v in pairs(src) do
@@ -32,11 +33,11 @@ function update_table(dst, src, overwrite)
 end
 
 -- enumerate network interfaces, see https://superuser.com/a/1173532/95569
-function enum_ifaces()
-    local _in_docker = in_docker()
+function utils.enum_ifaces()
+    local _in_docker = utils.in_docker()
     local ifaces = {}
-    for i, l in ipairs(sys_call("basename -a /sys/class/net/*")) do
-        local p = sys_call("realpath /sys/class/net/" .. l, true)
+    for i, l in ipairs(utils.sys_call("basename -a /sys/class/net/*")) do
+        local p = utils.sys_call("realpath /sys/class/net/" .. l, true)
         -- for regular host, skip virtual interfaces (including lo)
         -- in container, return all interfaces except lo
         if not p:match("^/sys/devices/virtual/") or (_in_docker and l ~= "lo") then
@@ -48,19 +49,19 @@ end
 
 -- enumerate mounted disks
 -- NOTE: only list most relevant mounts, e.g. boot partitions are ignored
-function enum_disks()
+function utils.enum_disks()
     local fs_types = "fuseblk,ext2,ext3,ext4,ecryptfs,vfat"
-    if in_docker() then
+    if utils.in_docker() then
         fs_types = fs_types .. ",overlay"
     end
     local cmd = "findmnt -bPUno TARGET,FSTYPE,SIZE,USED -t " .. fs_types
     local entry_pattern = '^TARGET="(.+)"%s+FSTYPE="(.+)"%s+SIZE="(.+)"%s+USED="(.+)"$'
-    local mnt_fs = sys_call(cmd)
+    local mnt_fs = utils.sys_call(cmd)
     local mnts = {}
 
     for i, l in ipairs(mnt_fs) do
         local mnt, type, size, used = l:match(entry_pattern)
-        if mnt and is_dir(mnt) and is_readable(mnt) and not mnt:match("^/boot/") then
+        if mnt and utils.is_dir(mnt) and utils.is_readable(mnt) and not mnt:match("^/boot/") then
             table.insert(
                 mnts,
                 {
@@ -76,20 +77,20 @@ function enum_disks()
 end
 
 -- some environment variables
-local env = {}
+utils.env = {}
 for i, k in ipairs({"HOME", "USER"}) do
-    env[k] = os.getenv(k)
+    utils.env[k] = os.getenv(k)
 end
 
 -- human friendly file size
 local _filesize = require "filesize"
-function filesize(size)
+function utils.filesize(size)
     return _filesize(size, {round = 0, spacer = "", base = 2})
 end
 
 -- call at interval, similar to Conky's `execi` but for functions
 local _interval_call_cache = {}
-function interval_call(interv, func, ...)
+function utils.interval_call(interv, func, ...)
     if _interval_call_cache[func] == nil then
         _interval_call_cache[func] = {}
     end
@@ -103,11 +104,11 @@ function interval_call(interv, func, ...)
 end
 
 -- pad string to `max_len`, `align` mode can be 'left', 'right' or 'center'
-function padding(str, max_len, align, char)
+function utils.padding(str, max_len, align, char)
     if not max_len then
         return str
     end
-    local n = max_len - utf8_len(str)
+    local n = max_len - utils.utf8_len(str)
     if n <= 0 then
         return str
     end
@@ -118,7 +119,7 @@ function padding(str, max_len, align, char)
     if not char then
         char = " "
     end
-    assert(utf8_len(char) == 1, "padding `char` must be a single character.")
+    assert(utils.utf8_len(char) == 1, "padding `char` must be a single character.")
 
     local srep = string.rep
     if align == "center" then
@@ -132,12 +133,12 @@ function padding(str, max_len, align, char)
 end
 
 -- strip surrounding whitespaces
-function trim(str)
+function utils.trim(str)
     return str:match("^%s*(.-)%s*$")
 end
 
 -- strip surrounding braces
-function unbrace(str)
+function utils.unbrace(str)
     if not str then
         return str
     end
@@ -152,18 +153,18 @@ function unbrace(str)
 end
 
 -- count characters in a utf-8 encoded string
-function utf8_len(str)
+function utils.utf8_len(str)
     local _, count = string.gsub(str, "[^\128-\193]", "")
     return count
 end
 
 -- calculate ratio as percentage
-function percent_ratio(x, y)
+function utils.percent_ratio(x, y)
     return math.floor(100.0 * tonumber(x) / tonumber(y))
 end
 
 -- run system command and return stdout as lines or a string
-function sys_call(cmd, as_string)
+function utils.sys_call(cmd, as_string)
     local pipe = io.popen(cmd)
     local lines = {}
     for l in pipe:lines() do
@@ -178,37 +179,24 @@ function sys_call(cmd, as_string)
 end
 
 -- eval string as system call and check if result is true
-function is_true(expr)
-    local s = sys_call(expr .. ' && echo "true"', true)
+function utils.is_true(expr)
+    local s = utils.sys_call(expr .. ' && echo "true"', true)
     return (#s > 3)
 end
 
 -- is dir or file
-function is_dir(p)
-    return is_true('[ -d "' .. p .. '" ]')
+function utils.is_dir(p)
+    return utils.is_true('[ -d "' .. p .. '" ]')
 end
 
 -- is path readable
-function is_readable(p)
-    return is_true('[ -r "' .. p .. '" ]')
+function utils.is_readable(p)
+    return utils.is_true('[ -r "' .. p .. '" ]')
 end
 
 -- is running in a docker container
-function in_docker()
-    return is_true('[ -f /.dockerenv ] || grep -Eq "(lxc|docker)" /proc/1/cgroup')
+function utils.in_docker()
+    return utils.is_true('[ -f /.dockerenv ] || grep -Eq "(lxc|docker)" /proc/1/cgroup')
 end
 
-return {
-    dump_object = dump_object,
-    update_table = update_table,
-    enum_ifaces = enum_ifaces,
-    enum_disks = enum_disks,
-    env = env,
-    filesize = filesize,
-    interval_call = interval_call,
-    padding = padding,
-    percent_ratio = percent_ratio,
-    sys_call = sys_call,
-    trim = trim,
-    unbrace = unbrace
-}
+return utils
