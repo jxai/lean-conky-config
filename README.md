@@ -63,15 +63,26 @@ and make changes there (instead of directly in `conky.conf`), this way your cust
 
 ### Scale to fit your screen
 
-In a plain Conky config geometric parameters for interface layout are usually hard-coded, making it very difficult to adapt to monitors of varying resolutions. You may find a config you downloaded from the web simply too large or too small on your desktop, and have to manually change those parameters, which is obviously rather tedious work. To address this issue, LCC is built with a special mechanism to make scaling extremely easy.
+In a plain Conky config, layout parameters (`voffset` and `goto` values, font sizes etc.) are hard-coded, making it difficult to adapt to different screen resolutions. When you try a new config from the web, you might find it to appear too large or too small on your desktop, and have to manually adjust many parameters, rather tedious work.
 
-To globally scale the whole interface while **preserving the layout**, simply change the `lcc.config.scale` variable, a larger value makes LCC appear bigger and fit monitors of a higher resolution.
+LCC addresses this issue gracefully. To globally scale the panel while **preserving the layout**, simply change the `lcc.config.scale` variable in your `local.conf`, a value larger than 1 magnifies the LCC panel to fit a monitor of higher resolution.
+
+Under the hood, LCC achieves this by offering several transform functions (defined in `tform.lua`), which you can apply to numerical values that need to be changed on-the-fly:
+
+- `T_sc`: scale to a precise floating-point number, suitable for scaling a font size
+- `T_sr`: scale then round to the nearest integer, suitable for use cases where an integer value is required
+
+For values embedded in a string, wrap them with `$sc{}`/`$sr{}` and tranform the whole string with function `T_`, e.g.:
+
+```lua
+font = T_ "sans-serif:normal:size=$sc{8}"
+```
 
 ### Pick your favorite colors and fonts
 
 Colors can be customized through standard Conky settings.
 
-To make it easy to customize fonts, LCC implements a **named fonts** technique. The fonts for different elements are defined in the `conky.fonts` variable (not supported by Conky per se).
+To make it easy to customize fonts, LCC implements a **named fonts** mechanism. Fonts for different elements are defined in the `conky.fonts` variable (not supported by Conky per se).
 
 Check `local.conf.example` to see how colors and fonts can be customized. For full reference, dig `conky.conf`.
 
