@@ -5,8 +5,18 @@ lcc.config = {
     scale = 1.5 -- magnify the panel by 1.5x
 }
 
+-- override `lcc.fonts` here
+-- !! NOTICE !! `local_fonts` used by older versions will be deprecated in
+-- a future release, please modify your local.conf accordingly
+lcc.fonts = {
+    date = T_ "serif:normal:size=$sc{18}" -- T_ and $sc{} auto-scale font size
+}
+
+
 -- override `conky.config` here
-local_config = {
+-- !! NOTICE !! `local_config` used by older versions will be deprecated in
+-- a future release, please modify your local.conf accordingly
+conky.config = {
     alignment = "top_left", -- dock panel to the left side
     -- COLORS --
     color0 = "turquoise", -- clock color
@@ -14,9 +24,4 @@ local_config = {
     color2 = "dodgerblue", -- heading 2 color
     color3 = "limegreen", -- chart color
     default_color = "white" -- text color
-}
-
--- override `conky.fonts` here
-local_fonts = {
-    date = T_ "serif:normal:size=$sc{18}" -- T_ and $sc{} auto-scale font size
 }

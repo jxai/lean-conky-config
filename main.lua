@@ -9,8 +9,8 @@ dofile(conky_config)
 
 -- remove unavailable fonts
 local function _check_fonts()
-    for k, v in pairs(conky.fonts) do
-        local font = conky.fonts[k]
+    for k, v in pairs(lcc.fonts) do
+        local font = lcc.fonts[k]
         local p = font:find(":")
         if p then
             font = font:sub(1, p - 1)
@@ -19,10 +19,10 @@ local function _check_fonts()
         if #font > 0 and font ~= "sans-serif" and font ~= "serif" and font ~= "courier" and font ~= "monospace" then
             local s = utils.sys_call('fc-list -f "%{family[0]}" "' .. font .. '"', true)
             if #s < 1 then
-                conky.fonts[k] = nil
+                lcc.fonts[k] = nil
             end
         elseif not p then
-            conky.fonts[k] = nil
+            lcc.fonts[k] = nil
         end
     end
 end
@@ -42,10 +42,10 @@ function conky_font(font, text, alt_text, alt_font)
         alt_text = utils.unbrace(alt_text)
     end
     if font then
-        font = conky.fonts[font]
+        font = lcc.fonts[font]
     end
     if alt_font then
-        alt_font = conky.fonts[alt_font]
+        alt_font = lcc.fonts[alt_font]
     end
     if font then
         return conky_parse(string.format("${font %s}%s", font, text))
