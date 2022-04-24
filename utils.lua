@@ -32,6 +32,26 @@ function utils.update_table(dst, src, overwrite)
     return dst
 end
 
+-- load Lua file in a separate env to prevent polluting global env
+function utils.load_in_env(path, env)
+    local _env = env or {}
+    if not env then
+        setmetatable(_env, { __index = _G }) -- global fallback
+    end
+
+    if _VERSION <= "Lua 5.1" then
+        local f = loadfile(path)
+        if not f then return {} end
+        assert(pcall(setfenv(f, _env)))
+    else
+        local f = loadfile(path, 't', _env)
+        if not f then return {} end
+        assert(pcall(f))
+    end
+    if not env then setmetatable(_env, nil) end
+    return _env
+end
+
 -- enumerate network interfaces, see https://superuser.com/a/1173532/95569
 function utils.enum_ifaces()
     local _in_docker = utils.in_docker()
