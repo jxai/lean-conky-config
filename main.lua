@@ -1,15 +1,11 @@
-local _dirname_ = debug.getinfo(1, "S").source:sub(2):match("(.*[/\\])") or "./"
-utils = require("utils")
+local utils = require("utils")
 
--- load conky config tables including font definitions
-if conky == nil then
-    conky = {}
-end
-dofile(conky_config)
+-- load conky and lcc settings, lcc is then globally accessible
+local conf = utils.load_in_env(conky_config)
 
 -- remove unavailable fonts
 local function _check_fonts()
-    for k, v in pairs(lcc.fonts) do
+    for k, _ in pairs(lcc.fonts) do
         local font = lcc.fonts[k]
         local p = font:find(":")
         if p then
