@@ -65,14 +65,15 @@ and make changes there (instead of directly in `conky.conf`), this way your cust
 
 In a plain Conky config, layout parameters (`voffset` and `goto` values, font sizes etc.) are hard-coded, making it difficult to adapt to different screen resolutions. When you try a new config from the web, you might find it to appear too large or too small on your desktop, and have to manually adjust many parameters, rather tedious work.
 
-LCC addresses this issue gracefully. To globally scale the panel while **preserving the layout**, simply change the `lcc.config.scale` variable in your `local.conf`, a value larger than 1 magnifies the LCC panel to fit a monitor of higher resolution.
+LCC addresses this issue elegantly. To globally scale the panel while **preserving the layout**, simply change the `lcc.config.scale` variable in your `local.conf`, a value larger than 1 magnifies the LCC panel to fit a monitor of higher resolution.
 
-Under the hood, LCC achieves this by offering several transform functions (defined in `tform.lua`), which you can apply to numerical values that need to be changed on-the-fly:
+Under the hood, LCC achieves this by offering a few transform functions (defined in `tform.lua`), which you can apply to numerical values that need to be changed on-the-fly:
 
-- `T_sc`: scale to a precise floating-point number, suitable for scaling a font size
-- `T_sr`: scale then round to the nearest integer, suitable for use cases where an integer value is required
+- `T_sr`: **s**cale and **r**ound to the nearest integer, suitable for most use cases where an integer value is required.
+- `T_sc`: **sc**ale to a floating-point number, suitable for situations where precise sizing is desired, e.g. font size.
+- `T_sh`: **s**cale to a multiple of 0.5 (**h**alf), _might_ be useful in case such an option is needed.
 
-For values embedded in a string, wrap them with `$sc{}`/`$sr{}` and tranform the whole string with function `T_`, e.g.:
+For values embedded in a string, wrap them with `$sr{}`/`$sc{}` and tranform the whole string with the `T_` function, e.g.:
 
 ```lua
 font = T_ "sans-serif:normal:size=$sc{8}"
@@ -82,9 +83,9 @@ font = T_ "sans-serif:normal:size=$sc{8}"
 
 Colors can be customized through standard Conky settings.
 
-To make it easy to customize fonts, LCC implements a **named fonts** mechanism. Fonts for different elements are defined in the `conky.fonts` variable (not supported by Conky per se).
+To make it easy to customize fonts, LCC implements a **named fonts** mechanism. Fonts for different elements are defined in the `lcc.fonts` table.
 
-Check `local.conf.example` to see how colors and fonts can be customized. For full reference, dig `conky.conf`.
+Check `local.conf.example` to see how various settings can be customized. For a full reference, dig `conky.conf`.
 
 ## More Information
 
@@ -93,11 +94,11 @@ Check official Conky documentation:
 - [Configuration Settings](http://conky.sourceforge.net/config_settings.html)
 - [Objects/Variables](http://conky.sourceforge.net/variables.html)
 
-And here is a great [third-party reference](http://www.ifxgroup.net/conky.htm) with examples.
-
-Finally, the `man` page might provide more up-to-date information for the Conky version installed on your system:
+In fact, the `man` page might provide more up-to-date information for the Conky version installed on your system:
 
 ```bash
 man -P "less -p 'CONFIGURATION SETTINGS'" conky
 man -P "less -p 'OBJECTS/VARIABLES'" conky
 ```
+
+Also, here is a great [third-party reference](http://www.ifxgroup.net/conky.htm) with examples.
