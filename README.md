@@ -1,4 +1,4 @@
-# Lean Conky Config (v0.7.0)
+# Lean Conky Config (v0.7.1)
 
 Lean Conky Config (LCC) is, well, a lean [Conky](https://github.com/brndnmtthws/conky/wiki) config that just works.
 
