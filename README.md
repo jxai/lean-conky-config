@@ -31,7 +31,7 @@ If `~/.config/conky` doesn't exist yet, you may simply use that path which is fo
 Start Conky/LCC by:
 
 ```bash
-/path/to/lean-conky-config/start.sh
+/path/to/lean-conky-config/start-lcc.sh
 ```
 
 In a few seconds you should see the panel showing up, docked to the right side your desktop. If you have multiple monitors, the panel should appear on one of them.
@@ -43,12 +43,12 @@ If there are Conky instances running already, the LCC script will terminate them
 You might have installed Conky [as an AppImage](https://github.com/brndnmtthws/conky#quickstart) or built it from source, and the binary is not in the standard location. No worries, start LCC this way to use your specific Conky:
 
 ```bash
-/path/to/lean-conky-config/start.sh -p /path/to/your/conky
+/path/to/lean-conky-config/start-lcc.sh -p /path/to/your/conky
 ```
 
 ### Auto-start
 
-In order to auto-start Conky on Ubuntu, follow [this tutorial](https://linuxconfig.org/ubuntu-20-04-system-monitoring-with-conky-widgets#h2-enable-conky-to-start-at-boot), replacing Command with the full path to the `start.sh` script we just ran. For other desktop environments, check the information [here](https://wiki.archlinux.org/index.php/Autostarting#On_desktop_environment_startup).
+In order to auto-start Conky on Ubuntu, follow [this tutorial](https://linuxconfig.org/ubuntu-20-04-system-monitoring-with-conky-widgets#h2-enable-conky-to-start-at-boot), replacing Command with the `start-lcc.sh` command line you have run successfully. For other desktop environments, check the information [here](https://wiki.archlinux.org/index.php/Autostarting#On_desktop_environment_startup).
 
 ### Enable/disable LCC font
 
