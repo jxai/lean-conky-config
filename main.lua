@@ -1,3 +1,5 @@
+local _dir_ = debug.getinfo(1, "S").source:sub(2):match("(.*[/\\])") or "./"
+if not string.find(package.path, _dir_ .. "?.lua;", 1, true) then package.path = _dir_ .. "?.lua;" .. package.path end
 local utils = require("utils")
 
 -- load conky and lcc settings, lcc is then globally accessible
