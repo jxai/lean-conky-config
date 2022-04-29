@@ -103,7 +103,7 @@ for i, k in ipairs({ "HOME", "USER" }) do
 end
 
 -- human friendly file size
-local _filesize = require "filesize"
+local _filesize = require "external.filesize"
 function utils.filesize(size)
     return _filesize(size, { round = 0, spacer = "", base = 2 })
 end
