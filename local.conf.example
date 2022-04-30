@@ -21,7 +21,7 @@ conky.config = {
     alignment = "top_left", -- dock panel to the left side
     gap_x = 32, -- horizontal gap from screen edge (default: 0)
     gap_y = 0, -- vertical gap from screen edge (default: 0)
-    minimum_height = T_sr(2500), -- in case you want the panel to cover full height of screen
+    minimum_height = T_.sr(2500), -- in case you want the panel to cover full height of screen
     -- FONT --
     font = T_ "serif:bold:size=$sc{8}", -- change default font here
     -- COLORS --

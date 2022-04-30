@@ -85,9 +85,9 @@ LCC addresses this issue elegantly. To globally scale the panel while **preservi
 
 Under the hood, LCC achieves this by offering a few transform functions (defined in `tform.lua`), which you can apply to numerical values that need to be changed on-the-fly:
 
-- `T_sr`: **s**cale and **r**ound to the nearest integer, suitable for most use cases where an integer value is required.
-- `T_sc`: **sc**ale to a floating-point number, suitable for situations where precise sizing is desired, e.g. font size.
-- `T_sh`: **s**cale to a multiple of 0.5 (**h**alf), _might_ be useful in case such an option is needed.
+- `T_.sr`: **s**cale and **r**ound to the nearest integer, suitable for most use cases where an integer value is required.
+- `T_.sc`: **sc**ale to a floating-point number, suitable for situations where precise sizing is desired, e.g. font size.
+- `T_.sh`: **s**cale to a multiple of 0.5 (**h**alf), _might_ be useful in case such an option is needed.
 
 For values embedded in a string, wrap them with `$sr{}`/`$sc{}` and tranform the whole string with the `T_` function, e.g.:
 
