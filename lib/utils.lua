@@ -103,7 +103,7 @@ for i, k in ipairs({ "HOME", "USER" }) do
 end
 
 -- human friendly file size
-local _filesize = require "external.filesize"
+local _filesize = require("external.filesize")
 function utils.filesize(size)
     return _filesize(size, { round = 0, spacer = "", base = 2 })
 end
@@ -121,6 +121,17 @@ function utils.interval_call(interv, func, ...)
         cache.last = now
     end
     return cache.result
+end
+
+-- template renderer. usage:
+--   foo_tpl = tpl("this is {%= foo %}")
+--   foo_tpl{foo = "bar"} -> "this is bar"
+local _liluat = require("external.liluat")
+function utils.tpl(t)
+    return function(values)
+        local ct = _liluat.compile(t, { start_tag = "{%", end_tag = "%}" })
+        return _liluat.render(ct, values)
+    end
 end
 
 -- pad string to `max_len`, `align` mode can be 'left', 'right' or 'center'
