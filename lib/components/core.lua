@@ -4,15 +4,14 @@ local core = {}
 
 local tpl_section =
 utils.tpl [[${color1}${voffset $sr{-2}}${lua font icon {{%= icon %} ${voffset $sr{-1}}} {}}#
-${lua font h1 {{%= title %}}} ${hr $sr{1}}${color}${voffset $sr{5}}
-]]
+${lua font h1 {{%= title %}}} ${hr $sr{1}}${color}${voffset $sr{5}}]]
 function core.section(icon, title)
     return tpl_section { icon = icon, title = title }
 end
 
-local tpl_voffset = utils.tpl [[${voffset $sr{{%= dy %}}}]]
-function core.voffset(dy)
-    return tpl_voffset { dy = dy }
+local tpl_vspace = utils.tpl "\n${voffset $sr{{%= dy %}}}"
+function core.vspace(dy)
+    return tpl_vspace { dy = dy }
 end
 
 local tpl_datetime =
@@ -20,7 +19,7 @@ utils.tpl [[${color0}${voffset $sr{2}}${lua font date ${time %b %-d}}${alignr}#
 ${lua font time ${time %H:%M}${voffset $sr{-35}} ${time %H:%M}${voffset $sr{-40}} time_alt}
 ${alignc}${lua font week ${time %^A}}
 ${alignc}${lua font year ${time %Y}}${color}
-${voffset $sr{5}}]]
+${voffset $sr{-8}}]]
 function core.datetime()
     return tpl_datetime()
 end
@@ -29,10 +28,9 @@ local tpl_system =
 utils.tpl [[${font}${sysname} ${kernel} ${alignr}${machine}
 Host:${alignr}${nodename}
 Uptime:${alignr}${uptime}
-Processes:${alignr}${running_processes} / ${processes}
-]]
+Processes:${alignr}${running_processes} / ${processes}]]
 function core.system()
-    return core.section("", "SYSTEM") .. tpl_system()
+    return core.section("", "SYSTEM") .. "\n" .. tpl_system()
 end
 
 local tpl_cpu =
@@ -43,10 +41,9 @@ ${lua top_cpu_line 1}
 ${lua top_cpu_line 2}
 ${lua top_cpu_line 3}
 ${lua top_cpu_line 4}
-${lua top_cpu_line 5}
-]]
+${lua top_cpu_line 5}]]
 function core.cpu()
-    return core.section("", "CPU") .. tpl_cpu()
+    return core.section("", "CPU") .. "\n" .. tpl_cpu()
 end
 
 local tpl_memory =
@@ -59,10 +56,9 @@ ${lua top_mem_line 1}
 ${lua top_mem_line 2}
 ${lua top_mem_line 3}
 ${lua top_mem_line 4}
-${lua top_mem_line 5}
-]]
+${lua top_mem_line 5}]]
 function core.memory()
-    return core.section("", "MEMORY") .. tpl_memory()
+    return core.section("", "MEMORY") .. "\n" .. tpl_memory()
 end
 
 local tpl_storage =
@@ -74,20 +70,18 @@ ${lua top_io_line 1}
 ${lua top_io_line 2}
 ${lua top_io_line 3}
 ${lua top_io_line 4}
-${lua top_io_line 5}
-]]
+${lua top_io_line 5}]]
 function core.storage()
-    return core.section("", "STORAGE") .. tpl_storage()
+    return core.section("", "STORAGE") .. "\n" .. tpl_storage()
 end
 
 local tpl_network =
 utils.tpl [[${color2}${lua font icon_s { } {}}${lua font h2 {Local IPs}}${alignr}${lua font h2 {External IP}}${lua font icon_s { } {}}${font}${color}
 ${execi 60 ip a | grep inet | grep -vw lo | grep -v inet6 | cut -d \/ -f1 | sed 's/[^0-9\.]*//g'}#
 ${alignr}${texeci 3600  wget -q -O- https://ipecho.net/plain; echo}
-${voffset $sr{5}}${lua ifaces 10}
-]]
+${voffset $sr{5}}${lua ifaces 10}]]
 function core.network()
-    return core.section("", "NETWORK") .. tpl_network()
+    return core.section("", "NETWORK") .. "\n" .. tpl_network()
 end
 
 return core
