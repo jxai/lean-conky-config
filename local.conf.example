@@ -1,33 +1,36 @@
 -- vim: ft=lua:ts=4:sw=4:et:ai:cin
 
--- override `lcc.config` here
+-- customize your LCC/Conky here, uncomment lines that interest you to see effects
+
+-- override `lcc.config` (LCC specific settings)
 lcc.config = {
-    scale = 1.5 -- magnify the panel by 1.5x
+    -- scale = 1.5, -- magnify the panel by 1.5x
+    -- spacing = 8, -- more compact layout
 }
 
--- override `lcc.fonts` (named fonts) here
+-- override `lcc.fonts` (LCC named fonts)
 -- !! NOTICE !! `local_fonts` used by older versions will be deprecated in
 -- a future release, please modify your local.conf accordingly
 lcc.fonts = {
-    date = T_ "serif:normal:size=$sc{18}" -- T_ and $sc{} auto-scale font size
+    -- date = T_ "serif:normal:size=$sc{18}" -- T_ and $sc{} auto-scale font size
 }
 
--- override `conky.config` here
+-- override `conky.config` (general Conky settings)
 -- !! NOTICE !! `local_config` used by older versions will be deprecated in
 -- a future release, please modify your local.conf accordingly
 conky.config = {
-    -- LAYOUT --
-    xinerama_head = 1, -- move panel to the second monitor
-    alignment = "top_left", -- dock panel to the left side
-    gap_x = 32, -- horizontal gap from screen edge (default: 0)
-    gap_y = 0, -- vertical gap from screen edge (default: 0)
-    minimum_height = T_.sr(2500), -- in case you want the panel to cover full height of screen
-    -- FONT --
-    font = T_ "serif:bold:size=$sc{8}", -- change default font here
-    -- COLORS --
-    color0 = "turquoise", -- clock color
-    color1 = "orange", -- heading 1 color
-    color2 = "dodgerblue", -- heading 2 color
-    color3 = "limegreen", -- chart color
-    default_color = "white" -- text color
+    -- === LAYOUT ===
+    -- xinerama_head = 1, -- move panel to the second monitor
+    -- alignment = "top_left", -- dock panel to the left side
+    -- gap_x = 32, -- horizontal gap from screen edge (default: 0)
+    -- gap_y = 0, -- vertical gap from screen edge (default: 0)
+    -- minimum_height = T_.sr(2500), -- in case you want the panel to cover full height of screen
+    -- === MAIN FONT ===
+    -- font = T_ "serif:bold:size=$sc{8}", -- change default font here
+    -- === COLORS ===
+    -- default_color = "white" -- text color
+    -- color0 = "turquoise", -- clock color
+    -- color1 = "orange", -- heading 1 color
+    -- color2 = "dodgerblue", -- heading 2 color
+    -- color3 = "limegreen", -- chart color
 }
