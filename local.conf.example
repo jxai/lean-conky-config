@@ -22,8 +22,8 @@ conky.config = {
     -- === LAYOUT ===
     -- xinerama_head = 1, -- move panel to the second monitor
     -- alignment = "top_left", -- dock panel to the left side
-    -- gap_x = 32, -- horizontal gap from screen edge (default: 0)
-    -- gap_y = 0, -- vertical gap from screen edge (default: 0)
+    -- gap_x = T_.sr(10), -- horizontal gap from screen edge (default: 0)
+    -- gap_y = T_.sr(0), -- vertical gap from screen edge (default: 0)
     -- minimum_height = T_.sr(2500), -- in case you want the panel to cover full height of screen
     -- === MAIN FONT ===
     -- font = T_ "serif:bold:size=$sc{8}", -- change default font here
