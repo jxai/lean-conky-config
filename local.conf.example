@@ -15,6 +15,19 @@ lcc.fonts = {
     -- date = T_ "serif:normal:size=$sc{18}" -- T_ and $sc{} auto-scale font size
 }
 
+-- define `lcc.panel` (LCC panel component list)
+-- unlike other settings, the global panel will be *replaced* by the definition here,
+-- pick and order all the components as you want
+lcc.panel = {
+    C_.datetime(),
+    C_.system(),
+    C_.cpu(),
+    C_.memory(),
+    C_.storage(),
+    C_.network(),
+    C_.vspace(-20), -- adjust trailing space at the bottom, use negative value to trim
+}
+
 -- override `conky.config` (general Conky settings)
 -- !! NOTICE !! `local_config` used by older versions will be deprecated in
 -- a future release, please modify your local.conf accordingly
