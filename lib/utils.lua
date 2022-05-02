@@ -134,7 +134,7 @@ function utils.tpl(t)
     end
 end
 
--- pad string to `max_len`, `align` mode can be 'left', 'right' or 'center'
+-- pad string to `max_len`, `align` mode can be 'l/left', 'r/right' or 'c/center'
 function utils.padding(str, max_len, align, char)
     if not max_len then
         return str
@@ -145,7 +145,7 @@ function utils.padding(str, max_len, align, char)
     end
 
     if not align then
-        align = "left"
+        align = "l"
     end
     if not char then
         char = " "
@@ -153,12 +153,12 @@ function utils.padding(str, max_len, align, char)
     assert(utils.utf8_len(char) == 1, "padding `char` must be a single character.")
 
     local srep = string.rep
-    if align == "center" then
+    if align == "c" or align == "center" then
         local m = math.floor(n / 2)
         return srep(char, m) .. str .. srep(char, n - m)
-    elseif align == "left" then
+    elseif align == "l" or align == "left" then
         return str .. srep(char, n)
-    elseif align == "right" then
+    elseif align == "r" or align == "right" then
         return srep(char, n) .. str
     end
 end
@@ -190,8 +190,8 @@ function utils.utf8_len(str)
 end
 
 -- calculate ratio as percentage
-function utils.percent_ratio(x, y)
-    return math.floor(100.0 * tonumber(x) / tonumber(y))
+function utils.ratio_perc(x, y)
+    return math.floor(100.0 * tonumber(x) / tonumber(y) + 0.5)
 end
 
 -- run system command and return stdout as lines or a string
