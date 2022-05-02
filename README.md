@@ -10,7 +10,7 @@ One notable feature is **automatic discovery of devices** such as network interf
 
 ## Installation
 
-If you haven't, install Conky first. On Ubuntu/Debian:
+LCC works with Conky 1.10.0 or above, as it heavily depends on the Lua-based config format. If you haven't, install Conky first. On Ubuntu/Debian:
 
 ```bash
 sudo apt install conky
