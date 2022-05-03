@@ -1,6 +1,9 @@
 -- utility functions and variables
 local utils = {}
 
+-- are we using Lua 5.1 (or below)
+utils.lua_5_1 = (_VERSION <= "Lua 5.1")
+
 -- dump object, see https://stackoverflow.com/a/27028488/707516
 function utils.dump_object(o)
     if type(o) == "table" then
@@ -17,10 +20,13 @@ function utils.dump_object(o)
     end
 end
 
+-- table utilities
+utils.table = {}
+
 -- update `dst` table by merging the other `src` table
 -- `overwrite`: if true (default), overwrite existing `dst` entries with values
 -- from `src`, otherwise only merge those not already existing
-function utils.update_table(dst, src, overwrite)
+function utils.table.update(dst, src, overwrite)
     if overwrite == nil then overwrite = true end
     if src then
         for k, v in pairs(src) do
@@ -32,6 +38,30 @@ function utils.update_table(dst, src, overwrite)
     return dst
 end
 
+-- get value with default
+function utils.table.get(t, k, default)
+    if t == nil then t = {} end
+    local v = t[k]
+    if v == nil then return default end
+    return v
+end
+
+-- pop values from table (as multiple returns)
+-- usage: local a, b = utils.table.pop({ x=1, y=2, z=3 }, 'x', 'z') -> a = 1, b = 3
+function utils.table.pop(t, ...)
+    if t == nil then t = {} end
+    local ret = {}
+    for _, k in ipairs(arg) do
+        table.insert(ret, t[k])
+        t[k] = nil
+    end
+    if utils.lua_5_1 then
+        return unpack(ret)
+    else
+        return table.unpack(ret)
+    end
+end
+
 -- load Lua file in a separate env to prevent polluting global env
 function utils.load_in_env(path, env)
     local _env = env or {}
@@ -39,7 +69,7 @@ function utils.load_in_env(path, env)
         setmetatable(_env, { __index = _G }) -- global fallback
     end
 
-    if _VERSION <= "Lua 5.1" then
+    if utils.lua_5_1 then
         local f = loadfile(path)
         if not f then return {} end
         assert(pcall(setfenv(f, _env)))

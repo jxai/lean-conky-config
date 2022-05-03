@@ -43,8 +43,8 @@ conky_ratio_perc = utils.ratio_perc
 local tpl_section =
 utils.tpl [[${color1}${voffset $sr{-2}}${lua font icon {{%= icon %} ${voffset $sr{-1}}} {}}#
 ${lua font h1 {{%= title %}}} ${hr $sr{1}}${color}${voffset $sr{5}}]]
-function core.section(icon, title)
-    return tpl_section { icon = icon, title = title }
+function core.section(title, icon)
+    return tpl_section { title = title, icon = icon }
 end
 
 local tpl_vspace = utils.tpl "\n${voffset $sr{{%= dy %}}}"
@@ -67,8 +67,8 @@ utils.tpl [[${font}${sysname} ${kernel} ${alignr}${machine}
 Host:${alignr}${nodename}
 Uptime:${alignr}${uptime}
 Processes:${alignr}${running_processes} / ${processes}]]
-function core.system()
-    return core.section("", "SYSTEM") .. "\n" .. tpl_system()
+function core.system(args)
+    return core.section("SYSTEM", "") .. "\n" .. tpl_system()
 end
 
 -- helper to generate conky text for top_x variables, with optional padding
@@ -121,10 +121,10 @@ ${color2}${lua font h2 {PROCESS ${goto $sr{156}}PID ${goto $sr{194}}MEM% ${align
 {% for _, v in ipairs(top_cpu_entries) do +%}
 {%= v.name %} ${goto $sr{156}}{%= v.pid %}${alignr}${offset $sr{-44}}{%= v.mem %}
 ${voffset $sr{-13}}${alignr}{%= v.cpu %}{% end %}{% end %}]]
-function core.cpu(top_max)
-    if top_max == nil then top_max = 5 end
-    return core.section("", "CPU") .. "\n" .. tpl_cpu {
-        top_cpu_entries = get_top_entries(top_max, "cpu", { "name", "pid", "mem", "cpu" })
+function core.cpu(args)
+    local top_n = utils.table.get(args, 'top_n', 5)
+    return core.section("CPU", "") .. "\n" .. tpl_cpu {
+        top_cpu_entries = get_top_entries(top_n, "cpu", { "name", "pid", "mem", "cpu" })
     }
 end
 
@@ -138,10 +138,10 @@ ${color2}${lua font h2 {PROCESS ${goto $sr{156}}PID ${goto $sr{198}}CPU%${alignr
 {% for _, v in ipairs(top_mem_entries) do +%}
 {%= v.name %} ${goto $sr{156}}{%= v.pid %}${alignr}${offset $sr{-44}}{%= v.cpu %}
 ${voffset $sr{-13}}${alignr}{%= v.mem %}{% end %}{% end %}]]
-function core.memory(top_max)
-    if top_max == nil then top_max = 5 end
-    return core.section("", "MEMORY") .. "\n" .. tpl_memory {
-        top_mem_entries = get_top_entries(top_max, "mem", { "name", "pid", "cpu", "mem" })
+function core.memory(args)
+    local top_n = utils.table.get(args, 'top_n', 5)
+    return core.section("MEMORY", "") .. "\n" .. tpl_memory {
+        top_mem_entries = get_top_entries(top_n, "mem", { "name", "pid", "cpu", "mem" })
     }
 end
 
@@ -153,10 +153,10 @@ ${color3}${diskiograph_read $sr{32},$sr{130}} ${alignr}${diskiograph_write $sr{3
 ${color2}${lua font h2 {PROCESS ${goto $sr{156}}PID ${alignr}READ/WRITE}}${font}${color}#
 {% for _, v in ipairs(top_io_entries) do +%}
 {%= v.name %} ${goto $sr{156}}{%= v.pid %} ${alignr}{%= v.io_read %} / {%= v.io_write %}{% end %}{% end %}]]
-function core.storage(top_max)
-    if top_max == nil then top_max = 5 end
-    return core.section("", "STORAGE") .. "\n" .. tpl_storage {
-        top_io_entries = get_top_entries(top_max, "io", { "name", "pid", "io_read", "io_write" })
+function core.storage(args)
+    local top_n = utils.table.get(args, 'top_n', 5)
+    return core.section("STORAGE", "") .. "\n" .. tpl_storage {
+        top_io_entries = get_top_entries(top_n, "io", { "name", "pid", "io_read", "io_write" })
     }
 end
 
@@ -204,7 +204,7 @@ ${execi 60 ip a | grep inet | grep -vw lo | grep -v inet6 | cut -d \/ -f1 | sed 
 ${alignr}${texeci 3600  wget -q -O- https://ipecho.net/plain; echo}
 ${voffset $sr{5}}${lua ifaces 10}]]
 function core.network()
-    return core.section("", "NETWORK") .. "\n" .. tpl_network()
+    return core.section("NETWORK", "") .. "\n" .. tpl_network()
 end
 
 -- dynamically show active ifaces

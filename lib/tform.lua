@@ -1,6 +1,7 @@
 -- defend Lua version incompatibility, just in case
+local utils = require("utils")
 local _load = load
-if _VERSION <= "Lua 5.1" then
+if utils.lua_5_1 then
     _load = loadstring
 end
 
