@@ -19,12 +19,12 @@ lcc.fonts = {
 -- unlike other settings, the global panel will be *replaced* by the definition here,
 -- pick and order all the components as you want
 lcc.panel = {
-    C_.datetime(),
-    C_.system(),
-    C_.cpu(),
-    C_.memory(),
-    C_.storage(),
-    C_.network(),
+    C_.datetime,
+    C_.system,
+    C_.cpu,
+    C_.memory,
+    C_.storage,
+    C_.network,
     C_.vspace(-20), -- adjust trailing space at the bottom, use negative value to trim
 }
 
