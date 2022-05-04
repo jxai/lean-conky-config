@@ -39,6 +39,13 @@ end
 -- ratio as percentage
 conky_ratio_perc = utils.ratio_perc
 
+-- exported utils (name starting with _) --
+
+-- interval call
+function core._interval_call(interv, ...)
+    return conky_parse(utils.interval_call(tonumber(interv or 0), ...))
+end
+
 -- component functions --
 local tpl_section =
 utils.tpl [[${color1}${voffset $sr{-2}}${lua font icon {{%= icon %} ${voffset $sr{-1}}} {}}#
@@ -109,10 +116,6 @@ local function get_top_entries(max, dev, types, padded_len, align)
     return top_entries
 end
 
-local function interval_call(interv, ...)
-    return conky_parse(utils.interval_call(tonumber(interv or 0), ...))
-end
-
 local tpl_cpu =
 utils.tpl [[${font}${execi 3600 grep model /proc/cpuinfo | cut -d : -f2 | tail -1 | sed 's/\s//'} ${alignr} ${cpu cpu0}%
 ${color3}${cpugraph cpu0 $sr{32},$sr{270}}${color}
@@ -171,7 +174,7 @@ ${color3}${lua_bar $sr{4} ratio_perc {%= v.used %} {%= v.size %}}${color}
 ${font}(no mounted disk found)
 {% end %}]]
 function conky_disks(interv)
-    return interval_call(interv, function()
+    return core._interval_call(interv, function()
         local disks = {}
         for _, disk in ipairs(utils.enum_disks()) do
             -- get succinct name for the mount
@@ -221,7 +224,7 @@ ${endif}
 ${font}(no active network interface found)
 {% end %}]]
 function conky_ifaces(interv)
-    return interval_call(interv, function()
+    return core._interval_call(interv, function()
         return T_(utils.trim(tpl_ifaces { ifaces = utils.enum_ifaces() }))
     end)
 end
