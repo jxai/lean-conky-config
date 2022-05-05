@@ -8,8 +8,9 @@ local core = {}
 -- if `alt_font` is unavailable or not specified, render `alt_text` with the
 -- current font.
 -- if no `alt_text` is provided, it is assumed to be the same as `text`.
+-- if no `text` is provided, it becomes a font-changing directive
 function conky_font(font, text, alt_text, alt_font)
-    text = utils.unbrace(text)
+    text = text and utils.unbrace(text) or ""
     if alt_text == nil then
         alt_text = text
     else
@@ -57,6 +58,30 @@ end
 local tpl_vspace = utils.tpl "\n${voffset $sr{{%= dy %}}}"
 function core.vspace(dy)
     return tpl_vspace { dy = dy }
+end
+
+-- print message
+local _message_color = {
+    error = "${color #f33}",
+    warn = "${color #ff3}",
+    info = "${color #3f3}",
+} -- TODO: to be added into named colors
+function core.message(...)
+    local arg = { ... }
+    local level, text
+    if #arg < 1 then return "" end
+    if #arg < 2 then
+        text = ...
+    else
+        level, text = ...
+    end
+    if level and level:sub(-1, -1) == '+' then
+        level = level:sub(1, -2)
+        text = "${lua font h2}[" .. level:upper() .. "]${color}${font} " .. text
+    else
+        text = "${font}" .. text
+    end
+    return (_message_color[level] or "${color}") .. text
 end
 
 local tpl_datetime =
