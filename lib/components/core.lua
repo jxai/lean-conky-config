@@ -1,8 +1,9 @@
 local utils = require("utils")
-
 local core = {}
 
--- basic conky interface functions --
+-------------------------------
+-- conky interface functions --
+-------------------------------
 -- render `text` with the specified `font` if it is available on the system.
 -- if `font ` unavailable, render `alt_text` instead with `alt_font`.
 -- if `alt_font` is unavailable or not specified, render `alt_text` with the
@@ -40,24 +41,19 @@ end
 -- ratio as percentage
 conky_ratio_perc = utils.ratio_perc
 
--- exported utils (name starting with _) --
-
--- interval call
-function core._interval_call(interv, ...)
-    return conky_parse(utils.interval_call(tonumber(interv or 0), ...))
-end
-
--- component functions --
-local tpl_section =
-utils.tpl [[${color1}${voffset $sr{-2}}${lua font icon {{%= icon %} ${voffset $sr{-1}}} {}}#
+----------------
+-- components --
+----------------
+lcc.tpl.section = [[
+${color1}${voffset $sr{-2}}${lua font icon {{%= icon %} ${voffset $sr{-1}}} {}}#
 ${lua font h1 {{%= title %}}} ${hr $sr{1}}${color}${voffset $sr{5}}]]
 function core.section(title, icon)
-    return tpl_section { title = title, icon = icon }
+    return lcc.tpl.section { title = title, icon = icon }
 end
 
-local tpl_vspace = utils.tpl "\n${voffset $sr{{%= dy %}}}"
+lcc.tpl.vspace = "\n${voffset $sr{{%= dy %}}}"
 function core.vspace(dy)
-    return tpl_vspace { dy = dy }
+    return lcc.tpl.vspace { dy = dy }
 end
 
 -- print message
@@ -84,23 +80,23 @@ function core.message(...)
     return (_message_color[level] or "${color}") .. text
 end
 
-local tpl_datetime =
-utils.tpl [[${color0}${voffset $sr{2}}${lua font date ${time %b %-d}}${alignr}#
+lcc.tpl.datetime = [[
+${color0}${voffset $sr{2}}${lua font date ${time %b %-d}}${alignr}#
 ${lua font time ${time %H:%M}${voffset $sr{-35}} ${time %H:%M}${voffset $sr{-40}} time_alt}
 ${alignc}${lua font week ${time %^A}}
 ${alignc}${lua font year ${time %Y}}${color}
 ${voffset $sr{-8}}]]
 function core.datetime()
-    return tpl_datetime()
+    return lcc.tpl.datetime()
 end
 
-local tpl_system =
-utils.tpl [[${font}${sysname} ${kernel} ${alignr}${machine}
+lcc.tpl.system = [[
+${font}${sysname} ${kernel} ${alignr}${machine}
 Host:${alignr}${nodename}
 Uptime:${alignr}${uptime}
 Processes:${alignr}${running_processes} / ${processes}]]
 function core.system(args)
-    return core.section("SYSTEM", "") .. "\n" .. tpl_system()
+    return core.section("SYSTEM", "") .. "\n" .. lcc.tpl.system()
 end
 
 -- helper to generate conky text for top_x variables, with optional padding
@@ -141,8 +137,8 @@ local function get_top_entries(max, dev, types, padded_len, align)
     return top_entries
 end
 
-local tpl_cpu =
-utils.tpl [[${font}${execi 3600 grep model /proc/cpuinfo | cut -d : -f2 | tail -1 | sed 's/\s//'} ${alignr} ${cpu cpu0}%
+lcc.tpl.cpu = [[
+${font}${execi 3600 grep model /proc/cpuinfo | cut -d : -f2 | tail -1 | sed 's/\s//'} ${alignr} ${cpu cpu0}%
 ${color3}${cpugraph cpu0 $sr{32},$sr{270}}${color}
 {% if top_cpu_entries then %}
 ${color2}${lua font h2 {PROCESS ${goto $sr{156}}PID ${goto $sr{194}}MEM% ${alignr}CPU%}}${font}${color}#
@@ -151,13 +147,13 @@ ${color2}${lua font h2 {PROCESS ${goto $sr{156}}PID ${goto $sr{194}}MEM% ${align
 ${voffset $sr{-13}}${alignr}{%= v.cpu %}{% end %}{% end %}]]
 function core.cpu(args)
     local top_n = utils.table.get(args, 'top_n', 5)
-    return core.section("CPU", "") .. "\n" .. tpl_cpu {
+    return core.section("CPU", "") .. "\n" .. lcc.tpl.cpu {
         top_cpu_entries = get_top_entries(top_n, "cpu", { "name", "pid", "mem", "cpu" })
     }
 end
 
-local tpl_memory =
-utils.tpl [[${color2}${lua font h2 RAM}${font}${color} ${alignc $sr{-16}}${mem} / ${memmax} ${alignr}${memperc}%
+lcc.tpl.memory = [[
+${color2}${lua font h2 RAM}${font}${color} ${alignc $sr{-16}}${mem} / ${memmax} ${alignr}${memperc}%
 ${color3}${membar $sr{4}}${color}
 ${color2}${lua font h2 SWAP}${font}${color} ${alignc $sr{-16}}${swap} / ${swapmax} ${alignr}${swapperc}%
 ${color3}${swapbar $sr{4}}${color}
@@ -168,13 +164,13 @@ ${color2}${lua font h2 {PROCESS ${goto $sr{156}}PID ${goto $sr{198}}CPU%${alignr
 ${voffset $sr{-13}}${alignr}{%= v.mem %}{% end %}{% end %}]]
 function core.memory(args)
     local top_n = utils.table.get(args, 'top_n', 5)
-    return core.section("MEMORY", "") .. "\n" .. tpl_memory {
+    return core.section("MEMORY", "") .. "\n" .. lcc.tpl.memory {
         top_mem_entries = get_top_entries(top_n, "mem", { "name", "pid", "cpu", "mem" })
     }
 end
 
-local tpl_storage =
-utils.tpl [[${lua disks 5}
+lcc.tpl.storage = [[
+${lua disks 5}
 ${voffset $sr{4}}${lua font icon_s {} {Read:}} ${font}${diskio_read} ${alignr}${lua font icon_s {} {Write: }}${font}${diskio_write}${lua font icon_s { } {}}
 ${color3}${diskiograph_read $sr{32},$sr{130}} ${alignr}${diskiograph_write $sr{32},$sr{130}}${color}
 {% if top_io_entries then %}
@@ -183,14 +179,14 @@ ${color2}${lua font h2 {PROCESS ${goto $sr{156}}PID ${alignr}READ/WRITE}}${font}
 {%= v.name %} ${goto $sr{156}}{%= v.pid %} ${alignr}{%= v.io_read %} / {%= v.io_write %}{% end %}{% end %}]]
 function core.storage(args)
     local top_n = utils.table.get(args, 'top_n', 5)
-    return core.section("STORAGE", "") .. "\n" .. tpl_storage {
+    return core.section("STORAGE", "") .. "\n" .. lcc.tpl.storage {
         top_io_entries = get_top_entries(top_n, "io", { "name", "pid", "io_read", "io_write" })
     }
 end
 
 -- dynamically show mounted disks
-local tpl_disks =
-utils.tpl [[{% if disks then %}
+lcc.tpl.disks = [[
+{% if disks then %}
 {% for _, v in ipairs(disks) do %}
 ${lua font h2 {{%= v.name %}}}${font} ${alignc $sr{-8}}{%= v.used_h %} / {%= v.size_h %} [{%= v.type %}] ${alignr}{%= v.used_perc %}%
 ${color3}${lua_bar $sr{4} ratio_perc {%= v.used %} {%= v.size %}}${color}
@@ -222,23 +218,23 @@ function conky_disks(interv)
                 size_h = utils.filesize(disk.size),
             })
         end
-        return T_(utils.trim(tpl_disks { disks = disks }))
+        return utils.trim(lcc.tpl.disks { disks = disks })
     end)
 end
 
-local tpl_network =
-utils.tpl [[${color2}${lua font icon_s { } {}}${lua font h2 {Local IPs}}${alignr}${lua font h2 {External IP}}${lua font icon_s { } {}}${font}${color}
+lcc.tpl.network = [[
+${color2}${lua font icon_s { } {}}${lua font h2 {Local IPs}}${alignr}${lua font h2 {External IP}}${lua font icon_s { } {}}${font}${color}
 ${execi 60 ip a | grep inet | grep -vw lo | grep -v inet6 | cut -d \/ -f1 | sed 's/[^0-9\.]*//g'}#
 ${alignr}${texeci 3600  wget -q -O- https://ipecho.net/plain; echo}
 ${voffset $sr{5}}${lua ifaces 10}]]
 function core.network()
-    return core.section("NETWORK", "") .. "\n" .. tpl_network()
+    return core.section("NETWORK", "") .. "\n" .. lcc.tpl.network()
 end
 
 -- dynamically show active ifaces
 -- see https://matthiaslee.com/dynamically-changing-conky-network-interface/
-local tpl_ifaces =
-utils.tpl [[{% if ifaces then %}{% for _, iface in ipairs(ifaces) do %}
+lcc.tpl.ifaces = [[
+{% if ifaces then %}{% for _, iface in ipairs(ifaces) do %}
 ${if_existing /sys/class/net/{%= iface %}/operstate up}#
 ${lua font icon_s  ${voffset $sr{-1}}${font :size=$sc{7}}▼}${font}  ${downspeed {%= iface %}} ${alignc $sr{-22}}${lua font h2 {{%= iface %}}}${font}#
 ${alignr}${upspeed {%= iface %}} ${lua font icon_s  ${voffset $sr{-2}}${font :size=$sc{7}}▲}${font}
@@ -250,8 +246,16 @@ ${font}(no active network interface found)
 {% end %}]]
 function conky_ifaces(interv)
     return core._interval_call(interv, function()
-        return T_(utils.trim(tpl_ifaces { ifaces = utils.enum_ifaces() }))
+        return utils.trim(lcc.tpl.ifaces { ifaces = utils.enum_ifaces() })
     end)
+end
+
+----------------------------
+-- utils for internal use --
+----------------------------
+-- interval call
+function core._interval_call(interv, ...)
+    return conky_parse(utils.interval_call(tonumber(interv or 0), ...))
 end
 
 return core

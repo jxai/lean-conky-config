@@ -62,6 +62,22 @@ function utils.table.pop(t, ...)
     end
 end
 
+-- lazy table: storing values to be evaluated on the first access
+-- usage:
+--   local lz = utils.table.lazy()
+--   local expensive_eval = function(t) return ... end -- argument `t` is optional
+--   lz.foo = expensive_eval
+function utils.table.lazy(vars)
+    local lazy_t = require('external.lazybag').new()
+    getmetatable(lazy_t).__newindex = function(t, k, v)
+        t:lazy(k, v)
+    end
+    for k, v in pairs(vars or {}) do
+        lazy_t[k] = v
+    end
+    return lazy_t
+end
+
 -- load Lua file in a separate env to prevent polluting global env
 function utils.load_in_env(path, env)
     local _env = env or {}
@@ -112,15 +128,12 @@ function utils.enum_disks()
     for i, l in ipairs(mnt_fs) do
         local mnt, type, size, used = l:match(entry_pattern)
         if mnt and utils.is_dir(mnt) and utils.is_readable(mnt) and not mnt:match("^/boot/") then
-            table.insert(
-                mnts,
-                {
-                    mnt = mnt,
-                    type = type,
-                    size = tonumber(size),
-                    used = tonumber(used)
-                }
-            )
+            table.insert(mnts, {
+                mnt = mnt,
+                type = type,
+                size = tonumber(size),
+                used = tonumber(used)
+            })
         end
     end
     return mnts
