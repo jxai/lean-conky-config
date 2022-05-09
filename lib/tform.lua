@@ -28,9 +28,10 @@ end
 -- apply transform functions to rewrite values in a string
 -- e.g. "$sc{42}" would be replaced by the value of T_.sc(42)
 setmetatable(tform, { __call = function(_, s)
-    return s:gsub("$([%w_]+)(%b{})", function(f, args)
+    local ts = s:gsub("$([%w_]+)(%b{})", function(f, args)
         return assert(_load("return T_." .. f .. "(" .. args:sub(2, -2) .. ")"))()
     end)
+    return ts
 end })
 
 return tform
