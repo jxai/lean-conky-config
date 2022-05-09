@@ -51,7 +51,7 @@ function core.section(title, icon)
     return lcc.tpl.section { title = title, icon = icon }
 end
 
-lcc.tpl.vspace = "\n${voffset $sr{{%= dy %}}}"
+lcc.tpl.dynamic_tform('vspace', "\n${voffset $sr{{%= dy %}}}")
 function core.vspace(dy)
     return lcc.tpl.vspace { dy = dy }
 end
