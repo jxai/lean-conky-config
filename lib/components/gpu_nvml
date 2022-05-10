@@ -1,0 +1,135 @@
+#!/usr/bin/env python
+# vim: ft=python:ts=4:sw=4:et:ai:cin
+
+# NVML driver for the gpu.nvidia component
+import pynvml
+from contextlib import contextmanager
+import subprocess
+import os.path as osp
+
+
+@contextmanager
+def nvml(flags=0):
+    pynvml.nvmlInitWithFlags(flags)
+    yield
+    pynvml.nvmlShutdown()
+
+
+def process_name(pid, full=False):
+    try:
+        proc = subprocess.run(
+            ["ps", "-o", "cmd=", str(pid)],
+            capture_output=True,
+            encoding="utf-8",
+            shell=False,
+        )
+        if proc.returncode > 0:
+            raise SystemError()
+        cmdline = proc.stdout
+        return (
+            cmdline if full else osp.basename(cmdline.split(" ", maxsplit=1)[0])
+        ).strip()
+    except:
+        return "[unknown]"
+
+
+with nvml():
+
+    def query(f, *args, **kw):
+        f = getattr(pynvml, f)
+        retval = f(*args, **kw)
+        if isinstance(retval, bytes):
+            retval = retval.decode("utf-8")
+        return retval
+
+    def query_and_print(name, f, *args, **kw):
+        val = query(f, *args, **kw)
+        print_entry(name, val)
+        return val
+
+    def print_entry(k, v):
+        print(f"{v!r}," if k is None else f"{k}={v!r},")
+
+    gpu_count = query("nvmlDeviceGetCount")
+
+    print("{")
+    for gi in range(gpu_count):
+        print("{")
+        handle = query("nvmlDeviceGetHandleByIndex", gi)
+
+        def q(f, *args, **kw):
+            return query(f, handle, *args, **kw)
+
+        def qp(name, f, *args, **kw):
+            return query_and_print(name, f, handle, *args, **kw)
+
+        qp("model_name", "nvmlDeviceGetName")
+
+        memory_info = q("nvmlDeviceGetMemoryInfo")
+        print_entry("mem_used", memory_info.used)
+        print_entry("mem_total", memory_info.total)
+        print_entry("mem_free", memory_info.free)
+
+        util_rates = q("nvmlDeviceGetUtilizationRates")
+        print_entry("gpu_util", util_rates.gpu)
+        print_entry("mem_util", util_rates.memory)
+
+        qp("fan_speed", "nvmlDeviceGetFanSpeed")
+        qp("gpu_temp", "nvmlDeviceGetTemperature", pynvml.NVML_TEMPERATURE_GPU)
+        qp(
+            "gpu_temp_thres",
+            "nvmlDeviceGetTemperatureThreshold",
+            pynvml.NVML_TEMPERATURE_THRESHOLD_GPU_MAX,
+        )
+        print_entry("power_usage", q("nvmlDeviceGetPowerUsage") / 1000.0)
+        print_entry("power_limit", q("nvmlDeviceGetPowerManagementLimit") / 1000.0)
+
+        processes = {}
+        for proc_type, proc_query in (
+            ("c", "nvmlDeviceGetComputeRunningProcesses"),
+            ("g", "nvmlDeviceGetGraphicsRunningProcesses"),
+        ):
+            for proc in q(proc_query):
+                pid = proc.pid
+
+                processes[pid] = dict(
+                    pid=pid,
+                    name=process_name(pid),
+                    type=proc_type,
+                    gpu_util=0,
+                    mem_util=0,
+                    gpu_mem=proc.usedGpuMemory,
+                    gpu_instance=proc.gpuInstanceId,
+                )
+
+        if len(processes) > 0:
+            timestamp = 0  # list all processes
+            samples = q("nvmlDeviceGetProcessUtilization", timestamp)
+            for s in samples:
+                if s.pid in processes:
+                    processes[s.pid].update(
+                        dict(
+                            gpu_util=s.smUtil,
+                            mem_util=s.memUtil,
+                        )
+                    )
+
+        processes = list(processes.values())
+        processes.sort(key=lambda x: x["gpu_util"], reverse=True)
+        print("processes={")
+        for p in processes:
+            print("{")
+            for k in (
+                "pid",
+                "name",
+                "type",
+                "gpu_util",
+                "mem_util",
+                "gpu_mem",
+                "gpu_instance",
+            ):
+                print_entry(k, p[k])
+            print("},")
+        print("}")
+        print("},")
+    print("}")
