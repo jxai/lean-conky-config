@@ -102,7 +102,8 @@ end
 function utils.enum_ifaces()
     local _in_docker = utils.in_docker()
     local ifaces = {}
-    for i, l in ipairs(utils.sys_call("basename -a /sys/class/net/*")) do
+    local iface_names = utils.sys_call("basename -a /sys/class/net/*")
+    for i, l in ipairs(iface_names) do
         local p = utils.sys_call("realpath /sys/class/net/" .. l, true)
         -- for regular host, skip virtual interfaces (including lo)
         -- in container, return all interfaces except lo
@@ -239,16 +240,20 @@ end
 
 -- run system command and return stdout as lines or a string
 function utils.sys_call(cmd, as_string)
-    local pipe = io.popen(cmd)
+    local pipe = io.popen(cmd .. [[;echo "\n$?"]])
+    if not pipe then return nil, 1 end
+
     local lines = {}
     for l in pipe:lines() do
         table.insert(lines, l)
     end
     pipe:close()
+
+    local return_code = tonumber(table.remove(lines))
     if as_string then
-        return table.concat(lines, "\n")
+        return table.concat(lines, "\n"), return_code
     else
-        return lines
+        return lines, return_code
     end
 end
 
