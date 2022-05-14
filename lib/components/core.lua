@@ -265,7 +265,8 @@ end
 ----------------------------
 -- interval call
 function core._interval_call(interv, ...)
-    return conky_parse(utils.interval_call(tonumber(interv or 0), ...))
+    local ret = utils.interval_call(tonumber(interv or 0), ...)
+    return ret and conky_parse(ret) or nil
 end
 
 return core

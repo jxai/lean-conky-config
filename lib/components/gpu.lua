@@ -6,11 +6,11 @@ local gpu = {}
 lcc.tpl.nvidia_conky = [[
 ${font}${nvidia modelname 0} ${alignr} ${nvidia gpuutil 0}%
 ${color3}${nvidiagraph gpuutil $sr{32},$sr{270} 0}${color}
-${color2}${lua font h2 MEM}${font}${color} ${alignc $sr{-16}}${nvidia memused 0} MB / ${nvidia memmax 0} MB ${alignr}${nvidia memutil 0}%
-${color3}${nvidiabar $sr{4} memutil 0}${color}
-${color2}${lua font h2 TEMP}${goto $sr{148}}${lua font h2 FAN}${font}${color}${alignr}${offset $sr{-138}}${nvidia gputemp 0}℃
-${voffset $sr{-13}}${alignr}${nvidia fanlevel 0}%
-${color3}${nvidiabar $sr{4},$sr{130} gputemp 0} ${alignr}${nvidiabar $sr{4},$sr{130} fanlevel 0}${color}]]
+${color2}${lua font h2 FAN}${goto $sr{148}}${lua font h2 TEMP}${font}${color}${alignr}${offset $sr{-138}}${nvidia fanlevel 0}%
+${voffset $sr{-13}}${alignr}${nvidia gputemp 0}℃
+${color3}${nvidiabar $sr{4},$sr{130} fanlevel 0}${color} ${alignr}${nvidiabar $sr{4},$sr{130} gputemp 0}
+${color2}${lua font h2 MEM}${font}${color} ${alignc $sr{-16}}${nvidia memused 0} MB / ${nvidia memmax 0} MB ${alignr}${nvidia membwutil 0}% ${color2}${lua font h2 UT}
+${color3}${nvidiabar $sr{4} memutil 0}${color}]]
 local function _nvidia_conky()
     return lcc.tpl.nvidia_conky()
 end
@@ -32,7 +32,7 @@ ${color2}${lua font h2 {PROCESS ${goto $sr{156}}PID ${goto $sr{194}}MEM%${alignr
 ${voffset $sr{-13}}${alignr}${lua format %.1f {%= p.gpu_util %}}{% end %}{% end %}
 {% end %}]]
 local function _nvidia_nvml(top_n)
-    local out, rc = utils.sys_call(lcc.root_dir .. "/lib/components/gpu_nvml", true)
+    local out, rc = utils.sys_call(lcc.root_dir .. "/lib/components/gpu_nvml 2>/dev/null", true)
     if rc > 0 or not out then return end
     local ok, gpu_info = pcall(utils.loadstring("return " .. out))
     if not ok then return end
@@ -69,7 +69,7 @@ function conky_nvidia(interv, top_n)
     end
 
     return conky_parse(core.message("error+",
-        "Failed to load Nvidia, two options to enable:\n" ..
+        "\nFailed to load Nvidia, two options to enable:\n" ..
         "1. Python + pynvml (recommended)\n" ..
         "2. Conky built with nvidia support"
     ))
