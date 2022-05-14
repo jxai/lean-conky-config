@@ -23,6 +23,7 @@ lcc.panel = {
     C_.system,
     C_.cpu,
     C_.memory,
+    --C_.gpu.nvidia { top_n = 3 }, -- uncomment to monitor Nvidia GPU, `pip install pynvml` first
     C_.storage,
     C_.network,
     C_.vspace(-20), -- adjust trailing space at the bottom, use negative value to trim

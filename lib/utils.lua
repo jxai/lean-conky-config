@@ -4,6 +4,9 @@ local utils = {}
 -- are we using Lua 5.1 (or below)
 utils.lua_5_1 = (_VERSION <= "Lua 5.1")
 
+-- shim functions
+utils.loadstring = utils.lua_5_1 and loadstring or load
+
 -- dump object, see https://stackoverflow.com/a/27028488/707516
 function utils.dump_object(o)
     if type(o) == "table" then
@@ -233,9 +236,17 @@ function utils.utf8_len(str)
     return count
 end
 
+-- round float to integer or specified number of digits
+function utils.round(x, ndigits)
+    ndigits = math.floor(ndigits or 0)
+    if ndigits <= 0 then return math.floor(x + 0.5) end
+    local pow = 10 ^ ndigits
+    return math.floor(x * pow + 0.5) / pow
+end
+
 -- calculate ratio as percentage
-function utils.ratio_perc(x, y)
-    return math.floor(100.0 * tonumber(x) / tonumber(y) + 0.5)
+function utils.ratio_perc(x, y, ndigits)
+    return utils.round(100.0 * tonumber(x) / tonumber(y), ndigits)
 end
 
 -- run system command and return stdout as lines or a string

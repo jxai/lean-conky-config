@@ -41,6 +41,16 @@ end
 -- ratio as percentage
 conky_ratio_perc = utils.ratio_perc
 
+-- echo arguments
+function conky_echo(...)
+    return ...
+end
+
+-- wrapper of string.format
+function conky_format(...)
+    return string.format(...)
+end
+
 ----------------
 -- components --
 ----------------

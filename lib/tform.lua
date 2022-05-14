@@ -1,9 +1,5 @@
 -- defend Lua version incompatibility, just in case
 local utils = require("utils")
-local _load = load
-if utils.lua_5_1 then
-    _load = loadstring
-end
 
 local tform = {}
 T_ = tform -- T_: global alias for `tform`
@@ -29,7 +25,7 @@ end
 -- e.g. "$sc{42}" would be replaced by the value of T_.sc(42)
 setmetatable(tform, { __call = function(_, s)
     local ts = s:gsub("$([%w_]+)(%b{})", function(f, args)
-        return assert(_load("return T_." .. f .. "(" .. args:sub(2, -2) .. ")"))()
+        return assert(utils.loadstring("return T_." .. f .. "(" .. args:sub(2, -2) .. ")"))()
     end)
     return ts
 end })
