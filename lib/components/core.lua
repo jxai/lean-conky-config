@@ -149,7 +149,7 @@ end
 
 lcc.tpl.cpu = [[
 ${font}${execi 3600 grep model /proc/cpuinfo | cut -d : -f2 | tail -1 | sed 's/\s//'} ${alignr} ${cpu cpu0}%
-${color3}${cpugraph cpu0 $sr{32},$sr{270}}${color}
+${color3}${cpugraph cpu0}${color}
 {% if top_cpu_entries then %}
 ${color2}${lua font h2 {PROCESS ${goto $sr{156}}PID ${goto $sr{194}}MEM% ${alignr}CPU%}}${font}${color}#
 {% for _, v in ipairs(top_cpu_entries) do +%}
@@ -164,9 +164,9 @@ end
 
 lcc.tpl.memory = [[
 ${color2}${lua font h2 RAM}${font}${color} ${alignc $sr{-16}}${mem} / ${memmax} ${alignr}${memperc}%
-${color3}${membar $sr{4}}${color}
+${color3}${membar}${color}
 ${color2}${lua font h2 SWAP}${font}${color} ${alignc $sr{-16}}${swap} / ${swapmax} ${alignr}${swapperc}%
-${color3}${swapbar $sr{4}}${color}
+${color3}${swapbar}${color}
 {% if top_mem_entries then %}
 ${color2}${lua font h2 {PROCESS ${goto $sr{156}}PID ${goto $sr{198}}CPU%${alignr}MEM%}}${font}${color}#
 {% for _, v in ipairs(top_mem_entries) do +%}
@@ -179,14 +179,15 @@ function core.memory(args)
     }
 end
 
-lcc.tpl.storage = [[
+lcc.tpl.dynamic_tform('storage', [[
 ${lua disks 5}
 ${voffset $sr{4}}${lua font icon_s {} {Read:}} ${font}${diskio_read} ${alignr}${lua font icon_s {} {Write: }}${font}${diskio_write}${lua font icon_s { } {}}
-${color3}${diskiograph_read $sr{32},$sr{130}} ${alignr}${diskiograph_write $sr{32},$sr{130}}${color}
+${color3}${diskiograph_read {%= conky.config.default_graph_height %},$sr{{%= lcc.config.width_half %}}} ${alignr}${diskiograph_write $sr{32},$sr{130}}${color}
 {% if top_io_entries then %}
 ${color2}${lua font h2 {PROCESS ${goto $sr{156}}PID ${alignr}READ/WRITE}}${font}${color}#
 {% for _, v in ipairs(top_io_entries) do +%}
 {%= v.name %} ${goto $sr{156}}{%= v.pid %} ${alignr}{%= v.io_read %} / {%= v.io_write %}{% end %}{% end %}]]
+)
 function core.storage(args)
     local top_n = utils.table.get(args, 'top_n', 5)
     return core.section("STORAGE", "") .. "\n" .. lcc.tpl.storage {
@@ -199,7 +200,7 @@ lcc.tpl.disks = [[
 {% if disks then %}
 {% for _, v in ipairs(disks) do %}
 ${lua font h2 {{%= v.name %}}}${font} ${alignc $sr{-8}}{%= v.used_h %} / {%= v.size_h %} [{%= v.type %}] ${alignr}{%= v.used_perc %}%
-${color3}${lua_bar $sr{4} ratio_perc {%= v.used %} {%= v.size %}}${color}
+${color3}${lua_bar ratio_perc {%= v.used %} {%= v.size %}}${color}
 {% end %}
 {% else %}
 ${font}(no mounted disk found)

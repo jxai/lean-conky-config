@@ -19,14 +19,14 @@ lcc.fonts = {
 -- unlike other settings, the global panel will be *replaced* by the definition here,
 -- pick and order all the components as you want
 lcc.panel = {
-    C_.datetime,
-    C_.system,
-    C_.cpu,
-    C_.memory,
-    --C_.gpu.nvidia { top_n = 3 }, -- uncomment to monitor Nvidia GPU, `pip install pynvml` first
-    C_.storage,
-    C_.network,
-    C_.vspace(-20), -- adjust trailing space at the bottom, use negative value to trim
+    "datetime",
+    "system",
+    "cpu",
+    "memory",
+    --{"gpu.nvidia", { top_n = 3 }}, -- uncomment to monitor Nvidia GPU, `pip install pynvml` first
+    "storage",
+    "network",
+    { "vspace", -20 }, -- adjust trailing space at the bottom, use negative value to trim
 }
 
 -- override `conky.config` (general Conky settings)
@@ -39,6 +39,8 @@ conky.config = {
     -- gap_x = T_.sr(10), -- horizontal gap from screen edge (default: 0)
     -- gap_y = T_.sr(0), -- vertical gap from screen edge (default: 0)
     -- minimum_height = T_.sr(2500), -- in case you want the panel to cover full height of screen
+    -- default_bar_height = T_.sr(4), -- adjust bar height
+    -- default_graph_height = T_.sr(32), -- adjust graph height
     -- === MAIN FONT ===
     -- font = T_ "serif:bold:size=$sc{8}", -- change default font here
     -- === COLORS ===

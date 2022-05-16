@@ -24,7 +24,9 @@ function utils.dump_object(o)
 end
 
 -- table utilities
-utils.table = {}
+utils.table = {
+    unpack = utils.lua_5_1 and unpack or table.unpack
+}
 
 -- update `dst` table by merging the other `src` table
 -- `overwrite`: if true (default), overwrite existing `dst` entries with values
@@ -58,11 +60,7 @@ function utils.table.pop(t, ...)
         table.insert(ret, t[k])
         t[k] = nil
     end
-    if utils.lua_5_1 then
-        return unpack(ret)
-    else
-        return table.unpack(ret)
-    end
+    return utils.table.unpack(ret)
 end
 
 -- lazy table: storing values to be evaluated on the first access
@@ -175,8 +173,8 @@ end
 --   foo_tpl{foo = "bar"} -> "this is bar"
 local _liluat = require("external.liluat")
 function utils.tpl(t)
+    local ct = _liluat.compile(t, { start_tag = "{%", end_tag = "%}" })
     return function(values)
-        local ct = _liluat.compile(t, { start_tag = "{%", end_tag = "%}" })
         return _liluat.render(ct, values)
     end
 end

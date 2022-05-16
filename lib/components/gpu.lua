@@ -5,12 +5,12 @@ local gpu = {}
 -- conky built-in
 lcc.tpl.nvidia_conky = [[
 ${font}${nvidia modelname 0} ${alignr} ${nvidia gpuutil 0}%
-${color3}${nvidiagraph gpuutil $sr{32},$sr{270} 0}${color}
+${color3}${nvidiagraph gpuutil 0}${color}
 ${color2}${lua font h2 FAN}${goto $sr{148}}${lua font h2 TEMP}${font}${color}${alignr}${offset $sr{-138}}${nvidia fanlevel 0}%
 ${voffset $sr{-13}}${alignr}${nvidia gputemp 0}℃
 ${color3}${nvidiabar $sr{4},$sr{130} fanlevel 0}${color} ${alignr}${nvidiabar $sr{4},$sr{130} gputemp 0}
 ${color2}${lua font h2 MEM}${font}${color} ${alignc $sr{-16}}${nvidia memused 0} MB / ${nvidia memmax 0} MB ${alignr}${nvidia membwutil 0}% ${color2}${lua font h2 UT}
-${color3}${nvidiabar $sr{4} memutil 0}${color}]]
+${color3}${nvidiabar memutil 0}${color}]]
 local function _nvidia_conky()
     return lcc.tpl.nvidia_conky()
 end
@@ -24,7 +24,7 @@ ${color2}${lua font h2 FAN}${goto $sr{148}}${lua font h2 POWER}${font}${color}${
 ${voffset $sr{-13}}${alignr}${lua format %.1f {%= g.power_usage %}}W
 ${color3}${lua_bar $sr{4},$sr{130} echo {%= g.fan_speed %}} ${color}${alignr}${lua_bar $sr{4},$sr{130} ratio_perc {%= g.power_usage %} {%= g.power_limit %}}
 ${color2}${lua font h2 MEM}${font}${color} ${alignc $sr{-16}}{%= g.mem_used_h %} / {%= g.mem_total_h %} ${alignr}{%= g.mem_util %}% ${color2}${lua font h2 UT}
-${color3}${lua_bar $sr{4} ratio_perc {%= g.mem_used %} {%= g.mem_total %}}${color}
+${color3}${lua_bar ratio_perc {%= g.mem_used %} {%= g.mem_total %}}${color}
 {% if g.processes then %}
 ${color2}${lua font h2 {PROCESS ${goto $sr{156}}PID ${goto $sr{194}}MEM%${alignr}GPU%}}${font}${color}#
 {% for _, p in ipairs(g.processes) do +%}
