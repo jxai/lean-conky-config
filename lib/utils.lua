@@ -7,19 +7,28 @@ utils.lua_5_1 = (_VERSION <= "Lua 5.1")
 -- shim functions
 utils.loadstring = utils.lua_5_1 and loadstring or load
 
--- dump object, see https://stackoverflow.com/a/27028488/707516
-function utils.dump_object(o)
+-- dump object
+-- recursively dumps tables, with an optional depth limir (unlimited by default)
+-- cf: https://stackoverflow.com/a/27028488/707516
+function utils.dump_object(o, depth)
+    if depth ~= nil and depth >= 0 then depth = depth - 1 end
     if type(o) == "table" then
-        local s = "{ "
+        if depth < 0 then return "{...}" end
+        local s = "{"
+        local c = 0
         for k, v in pairs(o) do
+            c = c + 1
             if type(k) ~= "number" then
                 k = '"' .. k .. '"'
             end
-            s = s .. "[" .. k .. "] = " .. utils.dump_object(v) .. ","
+            s = s .. " [" .. k .. "] = " .. utils.dump_object(v, depth) .. ","
         end
-        return s .. "} "
+        if c > 0 then s = s:sub(1, -2) .. " " end
+        return s .. "}"
     else
-        return tostring(o)
+        local s = tostring(o)
+        if type(o) == "string" then s = '"' .. s .. '"' end
+        return s
     end
 end
 
