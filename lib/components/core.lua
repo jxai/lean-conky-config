@@ -179,15 +179,14 @@ function core.memory(args)
     }
 end
 
-lcc.tpl.dynamic_tform('storage', [[
+lcc.tpl.storage = [[
 ${lua disks 5}
 ${voffset $sr{4}}${lua font icon_s {} {Read:}} ${font}${diskio_read} ${alignr}${lua font icon_s {} {Write: }}${font}${diskio_write}${lua font icon_s { } {}}
-${color3}${diskiograph_read {%= conky.config.default_graph_height %},$sr{{%= lcc.config.width_half %}}} ${alignr}${diskiograph_write $sr{32},$sr{130}}${color}
+${color3}${diskiograph_read {%= lcc.half_graph_size %}} ${alignr}${diskiograph_write {%= lcc.half_graph_size %}}${color}
 {% if top_io_entries then %}
 ${color2}${lua font h2 {PROCESS ${goto $sr{156}}PID ${alignr}READ/WRITE}}${font}${color}#
 {% for _, v in ipairs(top_io_entries) do +%}
 {%= v.name %} ${goto $sr{156}}{%= v.pid %} ${alignr}{%= v.io_read %} / {%= v.io_write %}{% end %}{% end %}]]
-)
 function core.storage(args)
     local top_n = utils.table.get(args, 'top_n', 5)
     return core.section("STORAGE", "") .. "\n" .. lcc.tpl.storage {
@@ -249,7 +248,7 @@ lcc.tpl.ifaces = [[
 ${if_existing /sys/class/net/{%= iface %}/operstate up}#
 ${lua font icon_s  ${voffset $sr{-1}}${font :size=$sc{7}}▼}${font}  ${downspeed {%= iface %}} ${alignc $sr{-22}}${lua font h2 {{%= iface %}}}${font}#
 ${alignr}${upspeed {%= iface %}} ${lua font icon_s  ${voffset $sr{-2}}${font :size=$sc{7}}▲}${font}
-${color3}${downspeedgraph {%= iface %} $sr{32},$sr{130}} ${alignr}${upspeedgraph {%= iface %} $sr{32},$sr{130} }${color}#
+${color3}${downspeedgraph {%= iface %} {%= lcc.half_graph_size %}} ${alignr}${upspeedgraph {%= iface %} {%= lcc.half_graph_size %} }${color}#
 ${endif}
 {% end %}
 {% else %}

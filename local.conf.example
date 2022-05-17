@@ -40,7 +40,7 @@ conky.config = {
     -- gap_y = T_.sr(0), -- vertical gap from screen edge (default: 0)
     -- minimum_height = T_.sr(2500), -- in case you want the panel to cover full height of screen
     -- default_bar_height = T_.sr(4), -- adjust bar height
-    -- default_graph_height = T_.sr(32), -- adjust graph height
+    -- default_graph_height = T_.sr(24), -- adjust graph height
     -- === MAIN FONT ===
     -- font = T_ "serif:bold:size=$sc{8}", -- change default font here
     -- === COLORS ===
