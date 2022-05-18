@@ -13,12 +13,14 @@ from datetime import date
 import fontforge as ff
 import psMat
 
+tmp_dir = tempfile.gettempdir()
 
-FA_URL = "https://github.com/FortAwesome/Font-Awesome/releases/download/" + \
-         "5.15.3/fontawesome-free-5.15.3-desktop.zip"
-
-FA_DIR = osp.join(tempfile.gettempdir(), "lcc_fontawesome")
-
+# Font Awesome settings
+FA_URL = (
+    "https://github.com/FortAwesome/Font-Awesome/releases/download/"
+    + "5.15.3/fontawesome-free-5.15.3-desktop.zip"
+)
+FA_DIR = osp.join(tmp_dir, "lcc_fontawesome")
 FA_SUBSET = """
 f007    #user
 f013    #cog
@@ -50,21 +52,40 @@ f6ff    #network-wired
 f7c2    #sd-card
 """
 
+# Bootstrap font settings
+FB_URL = "https://github.com/twbs/icons/raw/v1.8.2/font/fonts/bootstrap-icons.woff"
+FB_FILE = osp.join(tmp_dir, "bootstrap-icons.woff")
+FB_SUBSET = """
+f2d5    #cpu-fill
+f6e2    #gpu-card
+"""
+
 # parse command line
-parser = argparse.ArgumentParser(
-    description="Build LeanConkyConfig font file.")
-parser.add_argument('-verbose', help="output debug information",
-                    action='count', default=0)
-parser.add_argument('-lcd-font', help="lcd font file",
-                    default="TRS-Million-mod.otf")
-parser.add_argument('-output', help="output file",
-                    default="lean-conky-config.otf")
+parser = argparse.ArgumentParser(description="Build LeanConkyConfig font file.")
+parser.add_argument(
+    "-verbose", help="output debug information", action="count", default=0
+)
+parser.add_argument("-lcd-font", help="lcd font file", default="TRS-Million-mod.otf")
+parser.add_argument("-output", help="output file", default="lean-conky-config.otf")
 args = parser.parse_args()
 
 # logger
-logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO,
-                    style='{', format="{asctime} {message}", stream=sys.stdout)
+logging.basicConfig(
+    level=logging.DEBUG if args.verbose else logging.INFO,
+    style="{",
+    format="{asctime} {message}",
+    stream=sys.stdout,
+)
 logging.info("Start build custom font")
+
+
+def parse_subset(subset):
+    parsed = []
+    for l in subset.split("\n"):
+        x = l.split("#", maxsplit=1)[0].strip()
+        if x:
+            parsed.append(int(x, base=16))
+    return parsed
 
 
 def copy_attrs(src, dst, attrs):
@@ -86,8 +107,9 @@ def merge_font(dst_font, src_font, selection=None):
 
 
 def copy_glyphnames(dst_font, src_font, unicodes):
-    logging.debug("Copy glyphnames: {} -> {}".format(
-        src_font.fontname, dst_font.fontname))
+    logging.debug(
+        "Copy glyphnames: {} -> {}".format(src_font.fontname, dst_font.fontname)
+    )
     logging.debug("---------------------")
     common_codes = [k for k in unicodes if k in src_font and k in dst_font]
     for k in common_codes:
@@ -97,27 +119,22 @@ def copy_glyphnames(dst_font, src_font, unicodes):
     logging.debug("---------------------")
 
 
-# parse unicodes of FA subset
-fa_subset = []
-for l in FA_SUBSET.split('\n'):
-    x = l.split('#', maxsplit=1)[0].strip()
-    if x:
-        fa_subset.append(int(x, base=16))
-
 # fetch FA if needed
 if osp.isdir(FA_DIR):
-    logging.debug("FA font cache already exists: {}".format(FA_DIR))
+    logging.debug("FA font cache found: {}".format(FA_DIR))
 else:
     fa_download = FA_DIR + ".zip"
     if osp.isfile(fa_download):
         logging.debug("FA font already downloaded: {}".format(fa_download))
     else:
         import urllib.request
+
         urllib.request.urlretrieve(FA_URL, fa_download)
         logging.info("Downloaded FA font: {}".format(fa_download))
 
     import zipfile
-    with zipfile.ZipFile(fa_download, 'r') as z:
+
+    with zipfile.ZipFile(fa_download, "r") as z:
         z.extractall(FA_DIR, [f for f in z.namelist() if f.endswith(".otf")])
         logging.debug("Extracted .otf files from FA")
 
@@ -131,14 +148,15 @@ else:
 
 nf = ff.font()
 nf.fontname = nf.familyname = nf.fullname = "LeanConkyConfig"
-nf.version = date.today().strftime('%Y%m%d')
-with open('./LICENSE', 'r') as f:
+nf.version = date.today().strftime("%Y%m%d")
+with open("./LICENSE", "r") as f:
     nf.copyright = f.read().strip()
 
 logging.info("Copy essential FA font attributes")
-copy_attrs(fa, nf, ['encoding', 'em', 'ascent', 'descent'])
+copy_attrs(fa, nf, ["encoding", "em", "ascent", "descent"])
 
-sel = [('unicode', 'singletons'), ] + fa_subset
+fa_subset = parse_subset(FA_SUBSET)
+sel = [("unicode", "singletons")] + fa_subset
 logging.info("Subset and merge FA-Solid font")
 merge_font(nf, fa, sel)
 copy_glyphnames(nf, fa, fa_subset)
@@ -153,15 +171,33 @@ if fa:
 else:
     raise FileNotFoundError("FA-Brands font not found")
 
+
+# Bootstrap font
+if osp.isfile(FB_FILE):
+    logging.debug("Booststrap font already downloaded: {}".format(FB_FILE))
+else:
+    import urllib.request
+
+    urllib.request.urlretrieve(FB_URL, FB_FILE)
+    logging.info("Downloaded Bootstrap font: {}".format(FB_FILE))
+fb = ff.open(FB_FILE)
+fb.selection.all()
+fb.transform(psMat.compose(psMat.scale(1.15 * nf.em / fb.em), psMat.translate(0, -90)))
+fb_subset = parse_subset(FB_SUBSET)
+sel = [("unicode", "singletons")] + fb_subset
+logging.info("Subset and merge Bootstrap font")
+merge_font(nf, fb, sel)
+copy_glyphnames(nf, fb, fb_subset)
+
 # LCD font (modified TRS Million by default)
 logging.info("Subset and merge LCD font file: {}".format(args.lcd_font))
 cf = ff.open(args.lcd_font)
 cf.selection.all()
 cf.transform(psMat.scale(float(nf.em) / cf.em))
-merge_font(nf, cf, [' '])
-merge_font(nf, cf, [('more', 'ranges',), ".", ":"])  # 0-9 included
-merge_font(nf, cf, [('more', 'ranges'), "A", "Z"])
-merge_font(nf, cf, [('more', 'ranges'), "a", "z"])
+merge_font(nf, cf, [" "])
+merge_font(nf, cf, [("more", "ranges"), ".", ":"])  # 0-9 included
+merge_font(nf, cf, [("more", "ranges"), "A", "Z"])
+merge_font(nf, cf, [("more", "ranges"), "a", "z"])
 
 # save the final work
 nf.generate(args.output)

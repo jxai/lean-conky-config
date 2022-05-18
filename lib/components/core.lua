@@ -157,7 +157,7 @@ ${color2}${lua font h2 {PROCESS ${goto $sr{156}}PID ${goto $sr{194}}MEM% ${align
 ${voffset $sr{-13}}${alignr}{%= v.cpu %}{% end %}{% end %}]]
 function core.cpu(args)
     local top_n = utils.table.get(args, 'top_n', 5)
-    return core.section("CPU", "") .. "\n" .. lcc.tpl.cpu {
+    return core.section("CPU", "") .. "\n" .. lcc.tpl.cpu {
         top_cpu_entries = get_top_entries(top_n, "cpu", { "name", "pid", "mem", "cpu" })
     }
 end

@@ -79,7 +79,7 @@ lcc.tpl.nvidia = [[${lua nvidia {%= interv %} {%= top_n %}}]]
 function gpu.nvidia(args)
     local interv = utils.table.get(args, 'interv', 4)
     local top_n = utils.table.get(args, 'top_n', 5)
-    return core.section("GPU", "") .. "\n" .. lcc.tpl.nvidia {
+    return core.section("GPU", "") .. "\n" .. lcc.tpl.nvidia {
         interv = interv,
         top_n = top_n
     }
