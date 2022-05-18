@@ -18,7 +18,7 @@ tmp_dir = tempfile.gettempdir()
 # Font Awesome settings
 FA_URL = (
     "https://github.com/FortAwesome/Font-Awesome/releases/download/"
-    + "5.15.3/fontawesome-free-5.15.3-desktop.zip"
+    + "6.1.1/fontawesome-free-6.1.1-desktop.zip"
 )
 FA_DIR = osp.join(tmp_dir, "lcc_fontawesome")
 FA_SUBSET = """
@@ -56,7 +56,6 @@ f7c2    #sd-card
 FB_URL = "https://github.com/twbs/icons/raw/v1.8.2/font/fonts/bootstrap-icons.woff"
 FB_FILE = osp.join(tmp_dir, "bootstrap-icons.woff")
 FB_SUBSET = """
-f2d5    #cpu-fill
 f6e2    #gpu-card
 """
 
@@ -182,7 +181,7 @@ else:
     logging.info("Downloaded Bootstrap font: {}".format(FB_FILE))
 fb = ff.open(FB_FILE)
 fb.selection.all()
-fb.transform(psMat.compose(psMat.scale(1.15 * nf.em / fb.em), psMat.translate(0, -90)))
+fb.transform(psMat.compose(psMat.scale(1.18 * nf.em / fb.em), psMat.translate(0, -100)))
 fb_subset = parse_subset(FB_SUBSET)
 sel = [("unicode", "singletons")] + fb_subset
 logging.info("Subset and merge Bootstrap font")
