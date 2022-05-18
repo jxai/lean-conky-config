@@ -198,6 +198,10 @@ merge_font(nf, cf, [("more", "ranges"), ".", ":"])  # 0-9 included
 merge_font(nf, cf, [("more", "ranges"), "A", "Z"])
 merge_font(nf, cf, [("more", "ranges"), "a", "z"])
 
+# adjust specific icon
+nf.selection.select(0xF2DB)  # cpu (microchip)
+nf.transform(psMat.compose(psMat.scale(1.15), psMat.translate(-20, 0)))
+
 # save the final work
 nf.generate(args.output)
 logging.info("Generated font file: {}".format(args.output))
