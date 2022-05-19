@@ -6,7 +6,14 @@ Lean Conky Config (LCC) is, well, a lean [Conky](https://github.com/brndnmtthws/
 
 As shown in the screenshot above, LCC offers an essential collection of system information, cleanly organized into several sections. The layout is fairly self-explanatory.
 
-One notable feature is **automatic discovery of devices** such as network interfaces and mounted disks. Unlike many other Conky configs, LCC works out of the box, saving the trouble of manually configuring those devices. Also it keeps information up-to-date, e.g. when toggling WiFi the NETWORK section is dynamically updated, and when you plug/unplug USB drives DISK USAGE will reflect the change instantly.
+## Features
+
+- Automatic device discovery (storage and network)
+- Simple, intuitive and elegant UI
+- Scalable: fits any screen resolution with a single config variable
+- Customizable: easy to change fonts, colors and more
+- Modular: pick the components you like to build _your_ panel
+- Extensible: template-based component system, easy to develop new components
 
 ## Installation
 
@@ -67,6 +74,10 @@ And to re-enable it:
 /path/to/lean-conky-config/font/install -f
 ```
 
+## Automatic device discovery
+
+Unlike many other Conky configs out there, LCC works out of the box. It automatically discover network interfaces and mounted disks, so you don't have to manually configure them. Moreover, it monitors device changes. When WiFi is toggled, the NETWORK section is dynamically updated; and when you plug/unplug USB drives, DISK USAGE will reflect almost instantly.
+
 ## Customization
 
 While LCC is made to work out of the box, it is also designed to serve your needs for customization. To get started, create your local configuration file `local.conf`:
@@ -102,6 +113,43 @@ Colors can be customized through standard Conky settings.
 To make it easy to customize fonts, LCC implements a **named fonts** mechanism. Fonts for different elements are defined in the `lcc.fonts` table.
 
 Check `local.conf.example` to see how various settings can be customized. For a full reference, dig `conky.conf`.
+
+## Components
+
+LCC is modular. The panel consists of components which you can freely pick and organize. Currently the following core components are available:
+
+- `datetime`
+- `system`
+- `cpu`
+- `memory`
+- `storage`
+- `network`
+
+To include any of them, add an entry in the `lcc.panel` table, e.g.:
+
+```
+{ "<component>", [<arg1>, <arg2>, ...] },
+```
+
+If no arguments are needed, the above can be simplified to a string entry:
+
+```
+"<component>",
+```
+
+Check `local.conf.example` for examples. You might notice a special component `vspace`, which is used to trim the trailing panel space at the bottom. It can also insert a vertical spacing if a positive height is given.
+
+### GPU support
+
+LCC has a GPU component `gpu.nvidia` which is not enabled by default. As the name implies, only Nvidia GPUs are supported. To enable it, add a `gpu.nvidia` entry to `lcc.panel`.
+
+Under the hood, `gpu.nvidia` has two backends. The preferred one depends on Python and `pynvml`, so you need to install that package first, e.g.:
+
+```bash
+pip install pynvml
+```
+
+If the `pynvml` backend doesn't work, `gpu.nvidia` falls back to a backend built in Conky itself, which is less powerful. In case your Conky was not compiled with `nvidia` support, an error would show up in the LCC panel.
 
 ## More Information
 

@@ -54,16 +54,12 @@ end
 ----------------
 -- components --
 ----------------
+-- section title
 lcc.tpl.section = [[
 ${color1}${voffset $sr{-2}}${lua font icon {{%= icon %} ${voffset $sr{-1}}} {}}#
 ${lua font h1 {{%= title %}}} ${hr $sr{1}}${color}${voffset $sr{5}}]]
 function core.section(title, icon)
     return lcc.tpl.section { title = title, icon = icon }
-end
-
-lcc.tpl.dynamic_tform('vspace', "\n${voffset $sr{{%= dy %}}}")
-function core.vspace(dy)
-    return lcc.tpl.vspace { dy = dy }
 end
 
 -- print message
@@ -88,6 +84,12 @@ function core.message(...)
         text = "${font}" .. text
     end
     return (_message_color[level] or "${color}") .. text
+end
+
+-- vertical spacing: `dy` is the height (in pixels) before scaling
+lcc.tpl.dynamic_tform('vspace', "\n${voffset $sr{{%= dy %}}}")
+function core.vspace(dy)
+    return lcc.tpl.vspace { dy = dy }
 end
 
 lcc.tpl.datetime = [[
