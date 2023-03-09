@@ -165,29 +165,34 @@ ${color3}${lua_bar $sr{4} percent_ratio %s %s}${color}]]
 
 local function _conky_disks()
     local rendered = {}
+    local icont = 0
     for i, disk in ipairs(utils.enum_disks()) do
-        -- human friendly size strings
-        local size_h = utils.filesize(disk.size)
-        local used_h = utils.filesize(disk.used)
+        if not disk.mnt:find('^/var/snap') then
+            -- human friendly size strings
+            local size_h = utils.filesize(disk.size)
+            local used_h = utils.filesize(disk.used)
 
-        -- get succinct name for the mount
-        local name = disk.mnt
-        local media = name:match("^/media/" .. utils.env.USER .. "/(.+)$")
-        if media then
-            name = media
-        elseif name == utils.env.HOME then
-            name = T_ "${lua font icon_s  ${voffset $sr{-4}}${font :bold:size=$sc{11}}⌂}"
+            -- get succinct name for the mount
+            local name = disk.mnt
+            local media = name:match("^/media/" .. utils.env.USER .. "/(.+)$")
+            if media then
+                name = media
+            elseif name == utils.env.HOME then
+                name = T_ "${lua font icon_s  ${voffset $sr{-4}}${font :bold:size=$sc{11}}⌂}"
+            end
+            rendered[i - icont] = string.format(
+                TPL_DISK,
+                name,
+                used_h,
+                size_h,
+                disk.type,
+                utils.percent_ratio(disk.used, disk.size),
+                disk.used,
+                disk.size
+            )
+        else
+            icont = icont + 1
         end
-        rendered[i] = string.format(
-            TPL_DISK,
-            name,
-            used_h,
-            size_h,
-            disk.type,
-            utils.percent_ratio(disk.used, disk.size),
-            disk.used,
-            disk.size
-        )
     end
     if #rendered > 0 then
         return table.concat(rendered, "\n")
