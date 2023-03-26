@@ -21,9 +21,9 @@ lcc.fonts = {
 lcc.panel = {
     "datetime",
     "system",
-    { "cpu", { top_n = 3 } }, -- change number of top entries, up to 10
-    { "memory", { top_n = 3 } },
-    --{"gpu.nvidia", { top_n = 3 }}, -- uncomment to monitor Nvidia GPU, `pip install pynvml` first
+    { "cpu",     { top_n = 3 } }, -- change number of top entries, up to 10
+    { "memory",  { top_n = 3 } },
+    -- { "gpu.nvidia", { top_n = 3 } }, -- uncomment to monitor Nvidia GPU, `pip install pynvml` first
     { "storage", { top_n = 3 } },
     "network",
     { "vspace", -20 }, -- adjust trailing space at the bottom, use negative value to trim
