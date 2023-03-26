@@ -8,12 +8,12 @@ As shown in the screenshot above, LCC offers an essential collection of system i
 
 ## Features
 
-- Automatic device discovery (storage and network)
-- Simple, intuitive and elegant UI
-- Scalable: fits any screen resolution with a single config variable
-- Customizable: easy to change fonts, colors and more
-- Modular: pick the components you like to build _your_ panel
-- Extensible: template-based component system, easy to develop new components
+- **Easy**: works out of the box, discovering devices (e.g. storage and network) automatically
+- **Elegant**: simple and intuitive layout
+- **Scalable**: fits any screen resolution with a single config variable
+- **Customizable**: easy to change fonts, colors etc.
+- **Modular**: pick components and build the panel the way you like
+- **Extensible**: template-based component system, easy to extend
 
 ## Installation
 
@@ -25,7 +25,7 @@ sudo apt install conky
 
 For other operating systems, refer to [Conky documentation](https://github.com/brndnmtthws/conky/wiki/Installation).
 
-To install LCC, just download the [ZIP](https://github.com/jxai/lean-conky-config/archive/master.zip) and decompress it into any directory you like. Alternatively, clone the repository:
+To install LCC of the current version, download the [ZIP](https://github.com/jxai/lean-conky-config/archive/refs/tags/v0.7.1.zip) and decompress it into any directory you like. Alternatively, clone the repository to get the latest dev version:
 
 ```bash
 git clone https://github.com/jxai/lean-conky-config [/path/to/lean-conky-config]
@@ -131,7 +131,7 @@ To include any of them, add an entry in the `lcc.panel` table, e.g.:
 { "<component>", [<arg1>, <arg2>, ...] },
 ```
 
-If no arguments are needed, the above can be simplified to a string entry:
+If no arguments are required, the entry can just be a string:
 
 ```
 "<component>",
@@ -141,15 +141,15 @@ Check `local.conf.example` for examples. You might notice a special component `v
 
 ### GPU support
 
-LCC has a GPU component `gpu.nvidia` which is not enabled by default. As the name implies, only Nvidia GPUs are supported. To enable it, add a `gpu.nvidia` entry to `lcc.panel`.
+LCC comes with a component supporting Nvidia GPUs, `gpu.nvidia`, which is not enabled by default (because not every system is equipped with an Nvidia GPU). To enable it, add a `gpu.nvidia` entry to `lcc.panel`.
 
-Under the hood, `gpu.nvidia` has two backends. The preferred one depends on Python and `pynvml`, so you need to install that package first, e.g.:
+Under the hood, `gpu.nvidia` has two backends. The preferred one depends on Python and `pynvml`, and you need to install that package first, e.g.:
 
 ```bash
 pip install pynvml
 ```
 
-If the `pynvml` backend doesn't work, `gpu.nvidia` falls back to a backend built in Conky itself, which is less powerful. In case your Conky was not compiled with `nvidia` support, an error would show up in the LCC panel.
+If the `pynvml` backend doesn't work, `gpu.nvidia` falls back to a backend offered by Conky itself, which is less powerful. In case your Conky was not compiled with `nvidia` support, an error would show up in the LCC panel.
 
 ## More Information
 
