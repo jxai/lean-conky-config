@@ -1,23 +1,19 @@
 # Lean Conky Config (v0.7.1)
 
+<img align="right" height="800" src="./screenshot.jpg?raw=true">
+
 Lean Conky Config (LCC) is, well, a lean [Conky](https://github.com/brndnmtthws/conky/wiki) config that just works.
-
-![Screenshot](./screenshot.jpg?raw=true 'Screenshot')
-
-As shown in the screenshot above, LCC offers an essential collection of system information, cleanly organized into several sections. The layout is fairly self-explanatory.
 
 ## Features
 
-- **Easy**: works out of the box, discovering devices (e.g. storage and network) automatically
-- **Elegant**: simple and intuitive layout
-- **Scalable**: fits any screen resolution with a single config variable
-- **Customizable**: easy to change fonts, colors etc.
-- **Modular**: pick components and build the panel the way you like
-- **Extensible**: template-based component system, easy to extend
+- **Simple**: works out of the box, automatically discovers devices (storage, network etc.), resizable to fit any screen resolution with a single config
+- **Elegant**: clean, sleek and functional layout
+- **Customizable**: pick the components you need to build the panel, change colors and fonts the way you like
+- **Extensible**: modular component system, template-based, easy to extend
 
 ## Installation
 
-LCC works with Conky 1.10.0 or above, as it heavily depends on the Lua-based config format. If you haven't, install Conky first. On Ubuntu/Debian:
+LCC works with Conky 1.10.0 or above. If you haven't, install Conky first. On Ubuntu/Debian:
 
 ```bash
 sudo apt install conky
@@ -25,15 +21,15 @@ sudo apt install conky
 
 For other operating systems, refer to [Conky documentation](https://github.com/brndnmtthws/conky/wiki/Installation).
 
-To install LCC of the current version, download the [ZIP](https://github.com/jxai/lean-conky-config/archive/refs/tags/v0.7.1.zip) and decompress it into any directory you like. Alternatively, clone the repository to get the latest dev version:
+To install LCC of the current release, download the [ZIP](https://github.com/jxai/lean-conky-config/archive/refs/tags/v0.7.1.zip) and decompress it into any directory you like. Alternatively, clone the repository to get the latest dev version:
 
 ```bash
 git clone https://github.com/jxai/lean-conky-config [/path/to/lean-conky-config]
 ```
 
-If `~/.config/conky` doesn't exist yet, you may simply use that path which is for the default Conky config.
+If `~/.config/conky` doesn't exist yet, you may simply use that path which is the default for Conky config.
 
-## Usage
+## How to Run
 
 Start Conky/LCC by:
 
@@ -74,7 +70,7 @@ And to re-enable it:
 /path/to/lean-conky-config/font/install -f
 ```
 
-## Automatic device discovery
+### Automatic device discovery
 
 Unlike many other Conky configs out there, LCC works out of the box. It automatically discover network interfaces and mounted disks, so you don't have to manually configure them. Moreover, it monitors device changes. When WiFi is toggled, the NETWORK section is dynamically updated; and when you plug/unplug USB drives, DISK USAGE will reflect almost instantly.
 
@@ -114,7 +110,7 @@ To make it easy to customize fonts, LCC implements a **named fonts** mechanism. 
 
 Check `local.conf.example` to see how various settings can be customized. For a full reference, dig `conky.conf`.
 
-## Components
+### Components
 
 LCC is modular. The panel consists of components which you can freely pick and organize. Currently the following core components are available:
 
@@ -149,7 +145,7 @@ Under the hood, `gpu.nvidia` has two backends. The preferred one depends on Pyth
 pip install pynvml
 ```
 
-If the `pynvml` backend doesn't work, `gpu.nvidia` falls back to a backend offered by Conky itself, which is less powerful. In case your Conky was not compiled with `nvidia` support, an error would show up in the LCC panel.
+If the `pynvml` backend doesn't work, `gpu.nvidia` falls back to a backend offered by Conky itself, which is less powerful. In case your Conky was not compiled with `nvidia` support, an error message would show up in the LCC panel.
 
 ## More Information
 
