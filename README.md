@@ -1,4 +1,4 @@
-# Lean Conky Config (v0.7.1)
+# Lean Conky Config (v0.8.0)
 
 <img align="right" height="800" src="./screenshot.jpg?raw=true">
 
@@ -21,7 +21,7 @@ sudo apt install conky
 
 For other operating systems, refer to [Conky documentation](https://github.com/brndnmtthws/conky/wiki/Installation).
 
-To install LCC of the current release, download the [ZIP](https://github.com/jxai/lean-conky-config/archive/refs/tags/v0.7.1.zip) and decompress it into any directory you like. Alternatively, clone the repository to get the latest dev version:
+To install LCC of the current release, download the [ZIP](https://github.com/jxai/lean-conky-config/archive/refs/tags/v0.8.0.zip) and decompress it into any directory you like. Alternatively, clone the repository to get the latest dev version:
 
 ```bash
 git clone https://github.com/jxai/lean-conky-config [/path/to/lean-conky-config]
