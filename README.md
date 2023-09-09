@@ -53,6 +53,8 @@ You might have installed Conky [as an AppImage](https://github.com/brndnmtthws/c
 
 In order to auto-start Conky on Ubuntu, follow [this tutorial](https://linuxconfig.org/ubuntu-20-04-system-monitoring-with-conky-widgets#h2-enable-conky-to-start-at-boot), replacing Command with the `start-lcc.sh` command line you have run successfully. For other desktop environments, check the information [here](https://wiki.archlinux.org/index.php/Autostarting#On_desktop_environment_startup).
 
+Note: Ubuntu Startup Application requres that the command path be full specified. For example if your path is `~/git/lean-conky-config/start-lcc.sh` then run `realpath ~/git/lean-conky-config/start-lcc.sh` to get the full path which may look like `/home/exampleuser/git/lean-conky-config/start-lcc.sh`.
+
 ### Enable/disable LCC font
 
 You might have noticed the icons and LCD-style time in the screenshot above. LCC renders them with a custom font named `LeanConkyConfig`, which is automatically installed in your local font directory (`~/.local/share/fonts`) when LCC starts. If you don't see the font in effect, likely your desktop environment doesn't load it properly. In this case you can manually install the font, located at `font/lean-conky-config.otf`. This is optional though. LCC is designed to just work, it would fall back gracefully instead of breaking the layout, even if the font is not loaded by the system.
