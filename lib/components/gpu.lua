@@ -29,8 +29,9 @@ ${color3}${lua_bar ratio_perc {%= g.mem_used %} {%= g.mem_total %}}${color}
 ${color2}${lua font h2 {PROCESS ${goto $sr{156}}PID ${goto $sr{194}}MEM%${alignr}GPU%}}${font}${color}#
 {% for _, p in ipairs(g.processes) do +%}
 {%= p.name %} ${goto $sr{156}}{%= p.pid %}${alignr}${offset $sr{-44}}${lua ratio_perc {%= p.gpu_mem %} {%= g.mem_total %} 2}
-${voffset $sr{-13}}${alignr}${lua format %.1f {%= p.gpu_util %}}{% end %}{% end %}
-{% end %}]]
+${voffset $sr{-13}}${alignr}${lua format %.1f {%= p.gpu_util %}}{% end %}${voffset $sr{13}}
+{% end %}
+{% end %}${voffset $sr{-26}}]]
 local function _nvidia_nvml(top_n)
     local out, rc = utils.sys_call(lcc.root_dir .. "/lib/components/gpu_nvml 2>/dev/null", true)
     if rc > 0 or not out then return end
