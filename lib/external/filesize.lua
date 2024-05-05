@@ -77,9 +77,9 @@ local function filesize(size, options)
 
         local val
         if o.base == 2 then
-            val = size / math.pow(2, o.exponent * 10)
+            val = size / math.pow(2^o.exponent * 10)
         else
-            val = size / math.pow(1000, o.exponent)
+            val = size / math.pow(1000^o.exponent)
         end
 
         if o.bits then
