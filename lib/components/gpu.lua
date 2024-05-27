@@ -89,7 +89,6 @@ local function parse_amdgpu_top_output(output, top)
   local processes = {}
 
   local lines = {}
-  -- Split the output into lines and discard the first three lines
   for line in output:gmatch("[^\r\n]+") do
       table.insert(lines, line)
   end
@@ -97,7 +96,8 @@ local function parse_amdgpu_top_output(output, top)
 
   for i = 3, top_n, 3 do
       local line = lines[i]
-      local process_name, pid, vram = line:match("(%S+)%s+%(%s+(%d+)%)%s*,.-%bVRAM%s+(%d+)%s+MiB")
+      local process_name, pid, vram = line:match("([^%s]+)%s+%(%s*(%d+)%s*%).*VRAM%s+(%d+)%s+MiB")
+
       if process_name and pid and vram then
           -- Store the extracted information in a table
           table.insert(processes, {
@@ -119,7 +119,7 @@ ${font}${color}{%= g.gpu_util %}%${alignc $sr{-16}}{%= g.model_name %}${alignr}{
 ${color3}${lua_graph "echo {%= g.gpu_util %}" {%= lcc.half_graph_size %}} ${alignr}${lua_graph "echo {%= g.gpu_temp %}" {%= lcc.half_graph_size %} {%= g.gpu_temp_thres %}}${color}
 ${color2}${lua font h2 FAN}${goto $sr{148}}${lua font h2 POWER}${font}${color}${alignr}${offset $sr{-138}}{%= g.fan_util %}%
 ${voffset $sr{-13}}${alignr}${lua format %.1f {%= g.power_usage %}}W
-${color3}${lua_bar {%= lcc.half_bar_size %} echo {%= g.fan_util %}} ${color}${alignr}${lua_bar {%= lcc.half_bar_size %} ratio_perc {%= g.power_usage %} {%= g.power_limit %}}
+${color3}${lua_bar {%= lcc.half_bar_size %} echo {%= g.fan_util %}} ${color3}${alignr}${lua_bar {%= lcc.half_bar_size %} ratio_perc {%= g.power_usage %} {%= g.power_limit %}}
 ${color2}${lua font h2 MEM}${font}${color} ${alignc $sr{-16}}{%= g.mem_used_h %} / {%= g.mem_total_h %} ${alignr}{%= g.mem_util %} ${color2}${lua font h2 UT}
 ${color3}${lua_bar ratio_perc {%= g.mem_used %} {%= g.mem_total %}}${color}
 {% if g.processes then %}
