@@ -93,9 +93,9 @@ local function parse_amdgpu_top_output(output, top)
   for line in output:gmatch("[^\r\n]+") do
       table.insert(lines, line)
   end
-  local top_n = top or #lines
+  local top_n = top * 3 or #lines
 
-  for i = 3, top_n * 3, 3 do
+  for i = 3, top_n, 3 do
       local line = lines[i]
       local process_name, pid, vram = line:match("(%S+)%s+%(%s+(%d+)%)%s*,.-%bVRAM%s+(%d+)%s+MiB")
       if process_name and pid and vram then
