@@ -29,7 +29,7 @@ git clone https://github.com/jxai/lean-conky-config [/path/to/lean-conky-config]
 
 If `~/.config/conky` doesn't exist yet, you may simply use that path which is the default for Conky config.
 
-It is recommended to install the [LCC font](#Enable/disable-LCC-font), but that is optional.
+It is recommended to install the [LCC font](#Enabledisable-LCC-font), but that is optional.
 
 ## How to Run
 
