@@ -29,6 +29,8 @@ git clone https://github.com/jxai/lean-conky-config [/path/to/lean-conky-config]
 
 If `~/.config/conky` doesn't exist yet, you may simply use that path which is the default for Conky config.
 
+It is recommended to install the [LCC font](#Enable/disable-LCC-font), but that is optional.
+
 ## How to Run
 
 Start Conky/LCC by:
@@ -49,7 +51,7 @@ You might have installed Conky [as an AppImage](https://github.com/brndnmtthws/c
 /path/to/lean-conky-config/start-lcc.sh -p /path/to/your/conky
 ```
 
-Conky [releases](https://github.com/brndnmtthws/conky/releases) AppImage packages officially, give it a try if a more recent version is preferred. For instance, if the network meters [show nothing](https://github.com/brndnmtthws/conky/issues/1307), you might need v1.17 or above.
+Conky [releases](https://github.com/brndnmtthws/conky/releases) AppImage packages officially, give it a try if a more recent version is preferred. For instance, if the network meters [show nothing](brndnmtthws/conky#1307), you might need v1.17 or above.
 
 ### Auto-start
 
