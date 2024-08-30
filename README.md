@@ -43,11 +43,13 @@ If there are Conky instances running already, the LCC script will terminate them
 
 ### Use AppImage or a custom Conky binary
 
-You might have installed Conky [as an AppImage](https://github.com/brndnmtthws/conky#quickstart) or built it from source, and the binary is not in the standard location. No worries, start LCC this way to use your specific Conky:
+You might have installed Conky [as an AppImage](https://github.com/brndnmtthws/conky#quickstart) or built it from source, and the binary is not at a standard location. If it is the only Conky installation, you might simply symlink to it from system paths (e.g. `~/.local/bin` or `/usr/local/bin`). In case you have multiple Conky executables and want a specific one for LCC to use, start it this way:
 
 ```bash
 /path/to/lean-conky-config/start-lcc.sh -p /path/to/your/conky
 ```
+
+Conky [releases](https://github.com/brndnmtthws/conky/releases) AppImage packages officially, give it a try if a more recent version is preferred. For instance, if the network meters [show nothing](https://github.com/brndnmtthws/conky/issues/1307), you might need v1.17 or above.
 
 ### Auto-start
 
