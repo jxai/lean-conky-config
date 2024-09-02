@@ -127,7 +127,7 @@ end
 -- enumerate mounted disks
 -- by default only show essential filesystems, but customizable
 function utils.enum_disks(include_types, exclude_types, exclude_targets)
-    local fs_types_default = "fuseblk,ext2,ext3,ext4,ecryptfs,vfat,btrfs"
+    local fs_types_default = "ext4,ext3,ext2,xfs,btrfs,zfs,ecryptfs,fuseblk,ntfs3,ntfs,vfat,exfat,fat"
     if utils.in_docker() then
         fs_types_default = fs_types_default .. ",overlay"
     end

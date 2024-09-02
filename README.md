@@ -151,6 +151,14 @@ pip install pynvml
 
 If the `pynvml` backend doesn't work, `gpu.nvidia` falls back to a backend offered by Conky itself, which is less powerful. In case your Conky was not compiled with `nvidia` support, an error message would show up in the LCC panel.
 
+### Customize storage mountpoints
+
+In the STORAGE section, LCC by default shows mountpoints from local filesystems most commonly found on major Linux distros. In case you don't see some of your drives, or on the other hand would rather hide certain mountpoints, LCC offers several configurable options in `lcc.config` to help you:
+
+- `storage_include_fs`: Extra filesystem types to show, specified as a comma-separated string e.g. `"cifs,nfs"`. To find the supported types, you may check `/proc/filesystems` or `/lib/modules/$(uname -r)/kernel/fs`.
+- `storage_exclude_fs`: Filesystems you want to hide, a comma-separated string e.g. `"fat,ntfs"`.
+- `storage_exclude_paths`: An array of [Lua patterns](https://www.lua.org/pil/20.2.html) matching specific mountpoints you want to hide. If a mountpoint matches any of the patterns it won't show up. Check `local.conf.example`.
+
 ## More Information
 
 Check official Conky documentation:
