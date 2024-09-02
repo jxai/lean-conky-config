@@ -17,8 +17,9 @@ end
 
 -- more powerful, requires pynvml
 lcc.tpl.nvidia_nvml = [[
-{% for i, g in ipairs(gpu_info) do %}
-${font}${color}{%= g.gpu_util %}%${alignc $sr{-16}}{%= g.model_name %}${alignr}{%= g.gpu_temp %}℃
+{% for i, g in ipairs(gpu_info) do %}{% if i>1 then %}${voffset $sr{8}}
+{% end %}
+${font}${color}{%= g.gpu_util %}%${alignc $sr{-16}}{% if #gpu_info>1 then %}{%= i %}: {% end %}{%= g.model_name %}${alignr}{%= g.gpu_temp %}℃
 ${color3}${lua_graph "echo {%= g.gpu_util %}" {%= lcc.half_graph_size %}} ${alignr}${lua_graph "echo {%= g.gpu_temp %}" {%= lcc.half_graph_size %} {%= g.gpu_temp_thres %}}${color}
 ${color2}${lua font h2 FAN}${goto $sr{148}}${lua font h2 POWER}${font}${color}${alignr}${offset $sr{-138}}{%= g.fan_speed %}%
 ${voffset $sr{-13}}${alignr}${lua format %.1f {%= g.power_usage %}}W
