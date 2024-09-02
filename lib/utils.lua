@@ -125,20 +125,33 @@ function utils.enum_ifaces()
 end
 
 -- enumerate mounted disks
--- NOTE: only list most relevant mounts, e.g. boot partitions are ignored
-function utils.enum_disks()
-    local fs_types = "fuseblk,ext2,ext3,ext4,ecryptfs,vfat,btrfs"
+-- by default only show essential filesystems, but customizable
+function utils.enum_disks(include_types, exclude_types, exclude_targets)
+    local fs_types_default = "fuseblk,ext2,ext3,ext4,ecryptfs,vfat,btrfs"
     if utils.in_docker() then
-        fs_types = fs_types .. ",overlay"
+        fs_types_default = fs_types_default .. ",overlay"
     end
-    local cmd = "findmnt -bPUno TARGET,FSTYPE,SIZE,USED -t " .. fs_types
+
+    local fs_types = utils.clean_array(
+        utils.str_to_array(fs_types_default .. "," .. include_types, ",", true, true),
+        utils.str_to_array(exclude_types), true
+    )
+
+    local cmd = "findmnt -bPUno TARGET,FSTYPE,SIZE,USED -t " .. utils.join_strs(fs_types, ",")
     local entry_pattern = '^TARGET="(.+)"%s+FSTYPE="(.+)"%s+SIZE="(.+)"%s+USED="(.+)"$'
     local mnt_fs = utils.sys_call(cmd)
     local mnts = {}
 
-    for i, l in ipairs(mnt_fs) do
+    for _, l in ipairs(mnt_fs) do
         local mnt, type, size, used = l:match(entry_pattern)
-        if mnt and utils.is_dir(mnt) and utils.is_readable(mnt) and not mnt:match("^/boot/") then
+
+        for _, p in ipairs(utils.str_to_array(exclude_targets) or {}) do
+            if mnt == nil or mnt:match(p) then
+                mnt = nil
+                break
+            end
+        end
+        if mnt and utils.is_dir(mnt) and utils.is_readable(mnt) then
             table.insert(mnts, {
                 mnt = mnt,
                 type = type,
@@ -241,6 +254,66 @@ end
 function utils.utf8_len(str)
     local _, count = string.gsub(str, "[^\128-\193]", "")
     return count
+end
+
+-- split comma-separated string to array, supported separators are: ,(default) ; : - _ +
+-- if str is already an array (table), it is returned without processing
+-- if trim is true, surrounding spaces around each item are trimmed
+-- if ignore_empty is true, only non-empty items (after optional trimming) are added
+function utils.str_to_array(str, sep, trim, ignore_empty)
+    if type(str) == "table" then return str end
+    if type(str) ~= "string" then return nil end
+    if sep == nil then sep = "," end
+    if trim == nil then trim = false end
+    if ignore_empty == nil then ignore_empty = false end
+
+    if type(sep) ~= "string" or #sep ~= 1
+        or not sep:match("[%,%;%:%-%_%+]") then
+        return nil
+    end
+    local arr = {}
+    local p = 1
+    local function _append(s)
+        if trim then s = utils.trim(s) end
+        if #s > 0 or not ignore_empty then
+            table.insert(arr, s)
+        end
+    end
+    while true do
+        local q = str:find(sep, p, true)
+        if q then
+            _append(string.sub(str, p, q - 1))
+            p = q + 1
+        else
+            _append(string.sub(str, p))
+            break
+        end
+    end
+    return arr
+end
+
+-- clean array: exclude certain items and/or remove duplicate items
+function utils.clean_array(arr, exclude, dedup)
+    local exclude_hash = {}
+    local dedup_hash = {}
+    local cleaned = {}
+
+    for _, k in ipairs(exclude) do
+        exclude_hash[k] = true
+    end
+
+    for _, k in ipairs(arr) do
+        if dedup and dedup_hash[k] or exclude_hash[k] then else
+            table.insert(cleaned, k)
+            if dedup then dedup_hash[k] = true end
+        end
+    end
+    return cleaned
+end
+
+-- join strings stored in an array
+function utils.join_strs(strs, sep)
+    return table.concat(strs, sep)
 end
 
 -- round float to integer or specified number of digits

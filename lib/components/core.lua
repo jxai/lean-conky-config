@@ -209,7 +209,10 @@ ${font}(no mounted disk found)
 function conky_disks(interv)
     return core._interval_call(interv, function()
         local disks = {}
-        for _, disk in ipairs(utils.enum_disks()) do
+        for _, disk in ipairs(utils.enum_disks(
+            lcc.config.storage_include_fs,
+            lcc.config.storage_exclude_fs,
+            lcc.config.storage_exclude_paths)) do
             -- get succinct name for the mount
             local name = disk.mnt
             local media = name:match("^/media/" .. utils.env.USER .. "/(.+)$")

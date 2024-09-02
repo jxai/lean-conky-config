@@ -4,8 +4,17 @@
 
 -- override `lcc.config` (LCC specific settings)
 lcc.config = {
+    -- === LAYOUT ===
     -- scale = 1.5, -- magnify the panel by 1.5x
     -- spacing = 8, -- more compact layout
+    -- === STORAGE ===
+    -- storage_include_fs = "nfs,cifs", -- show more filesystem types
+    -- storage_exclude_fs = "vfat",     -- hide unwanted filesystem types
+    -- storage_exclude_paths = {        -- hide unwanted paths (specified as Lua patterns)
+    --     "^/$",
+    --     "^/boot/",
+    --     "^/var/snap/",
+    -- },
 }
 
 -- override `lcc.fonts` (LCC named fonts)
