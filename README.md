@@ -55,7 +55,7 @@ Conky [releases](https://github.com/brndnmtthws/conky/releases) AppImage package
 
 ### Auto-start
 
-In order to auto-start Conky on Ubuntu, follow [this tutorial](https://linuxconfig.org/ubuntu-20-04-system-monitoring-with-conky-widgets#h2-enable-conky-to-start-at-boot), replacing Command with the `start-lcc.sh` command line you have run successfully. For other desktop environments, check the information [here](https://wiki.archlinux.org/index.php/Autostarting#On_desktop_environment_startup).
+In order to auto-start Conky on Ubuntu, follow [this tutorial](https://linuxconfig.org/ubuntu-20-04-system-monitoring-with-conky-widgets#h2-enable-conky-to-start-at-boot), replacing Command with the `start-lcc.sh` command line you have run successfully (note that you need to specify the full path to the script). For other desktop environments, check the information [here](https://wiki.archlinux.org/index.php/Autostarting#On_desktop_environment_startup).
 
 ### Enable/disable LCC font
 
