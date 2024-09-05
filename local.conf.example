@@ -36,6 +36,7 @@ lcc.panel = {
     { "storage", { top_n = 3 } },
     "network",
     { "vspace", -20 }, -- adjust trailing space at the bottom, use negative value to trim
+    -- { "vspace", 1000 }, -- vertically fill screen space to mimic the look of a side panel
 }
 
 -- override `conky.config` (general Conky settings)
