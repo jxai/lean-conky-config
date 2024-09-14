@@ -35,15 +35,18 @@ def process_name(pid, full=False):
 
 with nvml():
 
-    def query(f, *args, **kw):
-        f = getattr(pynvml, f)
-        retval = f(*args, **kw)
-        if isinstance(retval, bytes):
-            retval = retval.decode("utf-8")
-        return retval
+    def query(f, *args, default=None, **kw):
+        try:
+            f = getattr(pynvml, f)
+            val = f(*args, **kw)
+        except:
+            val = default
+        if isinstance(val, bytes):
+            val = val.decode("utf-8")
+        return val
 
-    def query_and_print(name, f, *args, **kw):
-        val = query(f, *args, **kw)
+    def query_and_print(name, f, *args, default=None, **kw):
+        val = query(f, *args, default=default, **kw)
         print_entry(name, val)
         return val
 
@@ -80,6 +83,7 @@ with nvml():
             "gpu_temp_thres",
             "nvmlDeviceGetTemperatureThreshold",
             pynvml.NVML_TEMPERATURE_THRESHOLD_GPU_MAX,
+            default=100,
         )
         print_entry("power_usage", q("nvmlDeviceGetPowerUsage") / 1000.0)
         print_entry("power_limit", q("nvmlDeviceGetPowerManagementLimit") / 1000.0)
