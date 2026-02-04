@@ -3,6 +3,8 @@
 -- https://github.com/starius/lua-filesize/blob/master/LICENSE
 -- AUTHORS: Boris Nagaev, Jason Xu
 
+local _pow = math.pow or (function (a,b) return (a)^(b) end)  -- see https://www.lua.org/manual/5.3/manual.html#8.2
+
 local si = {
     base10 = {
         bits = { "b", "Kb", "Mb", "Gb", "Tb", "Pb", "Eb", "Zb", "Yb" },
@@ -77,9 +79,9 @@ local function filesize(size, options)
 
         local val
         if o.base == 2 then
-            val = size / math.pow(2, o.exponent * 10)
+            val = size / _pow(2, o.exponent * 10)
         else
-            val = size / math.pow(1000, o.exponent)
+            val = size / _pow(1000, o.exponent)
         end
 
         if o.bits then
