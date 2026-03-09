@@ -348,6 +348,23 @@ function utils.sys_call(cmd, as_string)
     end
 end
 
+-- JSON utilities
+local _json = require("external.json")
+utils.json = {
+    loads = _json.decode,
+    dumps = _json.encode,
+}
+
+-- fetch and parse JSON data with CURL
+-- 5 seconds timeout by default, to override supply a custom `curl_cmd`
+function utils.json.curl(url, curl_cmd)
+    curl_cmd = curl_cmd or "curl --connect-timeout 5 -s"
+    local out, rc = utils.sys_call(curl_cmd .. " " .. url, true)
+    if rc > 0 or not out then return end
+    local data = utils.json.loads(out)
+    return data
+end
+
 -- eval string as system call and check if result is true
 function utils.is_true(expr)
     local s = utils.sys_call(expr .. ' && echo "true"', true)
