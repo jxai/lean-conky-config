@@ -386,4 +386,12 @@ function utils.in_docker()
     return utils.is_true('[ -f /.dockerenv ] || grep -Eq "(lxc|docker)" /proc/1/cgroup')
 end
 
+-- date/time utils
+local _date = require("external.date")
+-- returns seconds since the epoch at the datetime specified as a string
+function utils.time_from_str(datetime)
+    local d = _date(datetime):toutc() - _date.epoch()
+    if d then return d:spanseconds() else return nil end
+end
+
 return utils

@@ -102,6 +102,89 @@ function core.datetime()
     return lcc.tpl.datetime()
 end
 
+lcc.tpl.weather = [[
+${lua weather {%= interv %} {{%= location %}}}]]
+function core.weather(args)
+    return lcc.tpl.weather {
+        interv = utils.table.get(args, 'interv', 900),
+        location = utils.table.get(args, 'location', "auto"),
+    }
+end
+
+function conky_weather(interv, location)
+    -- location might has spaces, has to be wrapped and then unbraced here
+    location = location and utils.unbrace(location) or "auto"
+    return core._interval_call(interv, _weather_wttrin, location)
+end
+
+lcc.tpl.weather_wttrin = [[${color}${lua font icon_s { } {}}${font}{%= wd.location %}${alignr}{%= wd.desc %}
+{%= wd.tempC %}℃${alignr}${lua font icon {{%= wd.icon %}} {[{%= wd.code %}]}}
+${font}{%= wd.fc[1].day %} ${lua font icon {{%= wd.fc[1].icon %}} {}}${font} {%= wd.fc[1].desc %} {%= wd.fc[1].maxtempC %} / {%= wd.fc[1].mintempC %} ℃
+${font}{%= wd.fc[2].day %} ${lua font icon {{%= wd.fc[2].icon %}} {}}${font} {%= wd.fc[2].desc %} {%= wd.fc[2].maxtempC %} / {%= wd.fc[2].mintempC %} ℃
+${font}{%= wd.fc[3].day %} ${lua font icon {{%= wd.fc[3].icon %}} {}}${font} {%= wd.fc[3].desc %} {%= wd.fc[3].maxtempC %} / {%= wd.fc[3].mintempC %} ℃
+]]
+function _weather_wttrin(location)
+    -- Code definitions: https://www.worldweatheronline.com/weather-api/api/docs/weather-icons.aspx
+    function _weather_icon(code)
+        local icons = {
+            ['113'] = "",
+            ['116'] = "",
+            ['122'] = "",
+            ['296'] = "",
+        }
+        return utils.table.get(icons, code, "[" .. code .. "]")
+    end
+
+    function _day_of_week(date)
+        local t = utils.time_from_str(date)
+        if t == nil then return "???" else return os.date("%a", t) end
+    end
+
+    if location:lower() == "auto" then
+        local d = utils.json.curl("ip-api.com/json") -- more accuate auto location
+        if d then
+            location = utils.join_strs({ d.city, d.region, d.countryCode }, " ")
+            -- location = string.format("%f,%f", tonumber(d.lat), tonumber(d.lon)) -- not working if latlon not precise
+        else
+            location = ""
+        end
+    end
+    location = location:gsub("%s+", "+")
+
+    local w = utils.json.curl("wttr.in/" .. location .. "?format=j1")
+    if w then
+        local forecast = {}
+        for i = 1, 3 do
+            local fw = w.weather[i]
+            local fc = fw.hourly[5] -- condition forecast at noon
+            forecast[i] = {
+                day = _day_of_week(fw.date),
+                desc = fc.weatherDesc[1].value,
+                code = fc.weatherCode,
+                icon = _weather_icon(fc.weatherCode),
+                maxtempC = fw.maxtempC,
+                mintempC = fw.mintempC,
+                maxtempF = fw.maxtempF,
+                mintempF = fw.mintempF,
+            }
+        end
+        local c = w.current_condition[1]
+        local weather_data = {
+            location = w.nearest_area[1].areaName[1].value .. ", " .. w.nearest_area[1].region[1].value,
+            desc = c.weatherDesc[1].value,
+            code = c.weatherCode,
+            icon = _weather_icon(c.weatherCode),
+            tempC = c.temp_C,
+            tempF = c.temp_F,
+            hum = c.humidity,
+            fc = forecast,
+        }
+        return lcc.tpl.weather_wttrin { wd = weather_data }
+    else
+        return "ERROR: Failed to fetch weather data"
+    end
+end
+
 lcc.tpl.system = [[
 ${font}${sysname} ${kernel} ${alignr}${machine}
 Host:${alignr}${nodename}
