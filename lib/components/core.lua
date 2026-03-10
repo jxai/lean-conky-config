@@ -103,36 +103,80 @@ function core.datetime()
 end
 
 lcc.tpl.weather = [[
-${lua weather {%= interv %} {{%= location %}}}]]
+${lua weather {%= interv %} {{%= loc %}}}]]
 function core.weather(args)
     return lcc.tpl.weather {
-        interv = utils.table.get(args, 'interv', 900),
-        location = utils.table.get(args, 'location', "auto"),
+        interv = utils.table.get(args, 'interval', 900),
+        loc = utils.table.get(args, 'location', "auto"),
     }
 end
 
-function conky_weather(interv, location)
-    -- location might has spaces, has to be wrapped and then unbraced here
-    location = location and utils.unbrace(location) or "auto"
-    return core._interval_call(interv, _weather_wttrin, location)
+function conky_weather(interv, loc)
+    -- `loc` might has spaces, has to be wrapped and then unbraced here
+    loc = loc and utils.unbrace(loc) or "auto"
+    return core._interval_call(interv, _weather_wttrin, loc)
 end
 
-lcc.tpl.weather_wttrin = [[${color}${lua font icon_s { } {}}${font}{%= wd.location %}${alignr}{%= wd.desc %}
-{%= wd.tempC %}℃${alignr}${lua font icon {{%= wd.icon %}} {[{%= wd.code %}]}}
-${font}{%= wd.fc[1].day %} ${lua font icon {{%= wd.fc[1].icon %}} {}}${font} {%= wd.fc[1].desc %} {%= wd.fc[1].maxtempC %} / {%= wd.fc[1].mintempC %} ℃
-${font}{%= wd.fc[2].day %} ${lua font icon {{%= wd.fc[2].icon %}} {}}${font} {%= wd.fc[2].desc %} {%= wd.fc[2].maxtempC %} / {%= wd.fc[2].mintempC %} ℃
-${font}{%= wd.fc[3].day %} ${lua font icon {{%= wd.fc[3].icon %}} {}}${font} {%= wd.fc[3].desc %} {%= wd.fc[3].maxtempC %} / {%= wd.fc[3].mintempC %} ℃
+lcc.tpl.weather_wttrin = [[${color}${lua font icon_s { } {}}${font}{%= wd.loc %}${alignr}{%= wd.desc %}
+{%= wd.tempC %}℃${alignr}${lua font icon {%= wd.icon[1] %} {%= wd.icon[2] %} icon_alt}
+${font}{%= wd.fc[1].day %} ${lua font icon {%= wd.fc[1].icon[1] %} {%= wd.fc[1].icon[2] %} icon_alt}${font} {%= wd.fc[1].desc %} {%= wd.fc[1].maxtempC %} / {%= wd.fc[1].mintempC %} ℃
+${font}{%= wd.fc[2].day %} ${lua font icon {%= wd.fc[2].icon[1] %} {%= wd.fc[2].icon[2] %} icon_alt}${font} {%= wd.fc[2].desc %} {%= wd.fc[2].maxtempC %} / {%= wd.fc[2].mintempC %} ℃
+${font}{%= wd.fc[3].day %} ${lua font icon {%= wd.fc[3].icon[1] %} {%= wd.fc[3].icon[2] %} icon_alt}${font} {%= wd.fc[3].desc %} {%= wd.fc[3].maxtempC %} / {%= wd.fc[3].mintempC %} ℃
 ]]
-function _weather_wttrin(location)
+function _weather_wttrin(loc)
     -- Code definitions: https://www.worldweatheronline.com/weather-api/api/docs/weather-icons.aspx
     function _weather_icon(code)
         local icons = {
-            ['113'] = "",
-            ['116'] = "",
-            ['122'] = "",
-            ['296'] = "",
+            ['113'] = { "", "☀" }, -- Clear/Sunny
+            ['116'] = { "", "☁" }, -- Partly Cloudy
+            ['119'] = { "", "☁" }, -- Cloudy
+            ['122'] = { "", "☁" }, -- Overcast
+            ['143'] = { "", "≡" }, -- Mist
+            ['176'] = { "", "☔" }, -- Patchy rain nearby
+            ['179'] = { "", "❄" }, -- Patchy snow nearby
+            ['182'] = { "", "☔" }, -- Patchy sleet nearby
+            ['185'] = { "", "☔" }, -- Patchy freezing drizzle nearby
+            ['200'] = { "", "⚡" }, -- Thundery outbreaks in nearby
+            ['227'] = { "", "❄" }, -- Blowing snow
+            ['230'] = { "", "❄" }, -- Blizzard
+            ['248'] = { "", "≡" }, -- Fog
+            ['260'] = { "", "≡" }, -- Freezing fog
+            ['263'] = { "", "☔" }, -- Patchy light drizzle
+            ['266'] = { "", "☔" }, -- Light drizzle
+            ['281'] = { "", "☔" }, -- Freezing drizzle
+            ['284'] = { "", "☔" }, -- Heavy freezing drizzle
+            ['293'] = { "", "☔" }, -- Patchy light rain
+            ['296'] = { "", "☔" }, -- Light rain
+            ['299'] = { "", "☔" }, -- Moderate rain at times
+            ['302'] = { "", "☔" }, -- Moderate rain
+            ['305'] = { "", "☔" }, -- Heavy rain at times
+            ['308'] = { "", "☔" }, -- Heavy rain
+            ['311'] = { "", "☔" }, -- Light freezing rain
+            ['314'] = { "", "☔" }, -- Moderate or heavy freezing rain
+            ['317'] = { "", "☔" }, -- Light sleet
+            ['320'] = { "", "☔" }, -- Moderate or heavy sleet
+            ['323'] = { "", "❄" }, -- Patchy light snow
+            ['326'] = { "", "❄" }, -- Light snow
+            ['329'] = { "", "❄" }, -- Patchy moderate snow
+            ['332'] = { "", "❄" }, -- Moderate snow
+            ['335'] = { "", "❄" }, -- Patchy heavy snow
+            ['338'] = { "", "❄" }, -- Heavy snow
+            ['350'] = { "", "❄" }, -- Ice pellets
+            ['353'] = { "", "☔" }, -- Light rain shower
+            ['356'] = { "", "☔" }, -- Moderate or heavy rain shower
+            ['359'] = { "", "☔" }, -- Torrential rain shower
+            ['362'] = { "", "☔" }, -- Light sleet showers
+            ['365'] = { "", "☔" }, -- Moderate or heavy sleet showers
+            ['368'] = { "", "❄" }, -- Light snow showers
+            ['371'] = { "", "❄" }, -- Moderate or heavy snow showers
+            ['374'] = { "", "☔" }, -- Light showers of ice pellets
+            ['377'] = { "", "☔" }, -- Moderate or heavy showers of ice pellets
+            ['386'] = { "", "⚡" }, -- Patchy light rain in area with thunder
+            ['389'] = { "", "⚡" }, -- Moderate or heavy rain in area with thunder
+            ['392'] = { "", "⚡" }, -- Patchy light snow in area with thunder
+            ['395'] = { "", "⚡" }, -- Moderate or heavy snow in area with thunder
         }
-        return utils.table.get(icons, code, "[" .. code .. "]")
+        return utils.table.get(icons, code)
     end
 
     function _day_of_week(date)
@@ -140,18 +184,18 @@ function _weather_wttrin(location)
         if t == nil then return "???" else return os.date("%a", t) end
     end
 
-    if location:lower() == "auto" then
-        local d = utils.json.curl("ip-api.com/json") -- more accuate auto location
+    if loc:lower() == "auto" then
+        local d = utils.json.curl("ip-api.com/json") -- more accurate auto location
         if d then
-            location = utils.join_strs({ d.city, d.region, d.countryCode }, " ")
-            -- location = string.format("%f,%f", tonumber(d.lat), tonumber(d.lon)) -- not working if latlon not precise
+            loc = utils.join_strs({ d.city, d.region, d.countryCode }, " ")
+            -- loc = string.format("%f,%f", tonumber(d.lat), tonumber(d.lon)) -- not working if latlon not precise
         else
-            location = ""
+            loc = ""
         end
     end
-    location = location:gsub("%s+", "+")
+    loc = loc:gsub("%s+", "+")
 
-    local w = utils.json.curl("wttr.in/" .. location .. "?format=j1")
+    local w = utils.json.curl("wttr.in/" .. loc .. "?format=j1")
     if w then
         local forecast = {}
         for i = 1, 3 do
@@ -170,7 +214,7 @@ function _weather_wttrin(location)
         end
         local c = w.current_condition[1]
         local weather_data = {
-            location = w.nearest_area[1].areaName[1].value .. ", " .. w.nearest_area[1].region[1].value,
+            loc = w.nearest_area[1].areaName[1].value .. ", " .. w.nearest_area[1].region[1].value,
             desc = c.weatherDesc[1].value,
             code = c.weatherCode,
             icon = _weather_icon(c.weatherCode),

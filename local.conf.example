@@ -29,7 +29,7 @@ lcc.fonts = {
 -- pick and order all the components as you want
 lcc.panel = {
     "datetime",
-    -- { "weather", { location = "auto", interv = 3600 } }, -- if "auto" doesn't work, specify e.g. "London" or "London, UK"
+    -- { "weather", { location = "auto", interval = 3600 } }, -- if "auto" doesn't work, specify e.g. "London" or "London, UK"
     "system",
     { "cpu",     { top_n = 3 } }, -- change number of top entries, up to 10
     { "memory",  { top_n = 3 } },
