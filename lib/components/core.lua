@@ -378,8 +378,8 @@ end
 lcc.tpl.ifaces = [[
 {% if ifaces then %}{% for _, iface in ipairs(ifaces) do %}
 ${if_existing /sys/class/net/{%= iface %}/operstate up}#
-${lua font icon_s  ${voffset $sr{-1}}${font :size=$sc{7}}▼}${font}  ${downspeed {%= iface %}} ${alignc $sr{-22}}${lua font h2 {{%= iface %}}}${font}#
-${alignr}${upspeed {%= iface %}} ${lua font icon_s  ${voffset $sr{-2}}${font :size=$sc{7}}▲}${font}
+${lua font icon_s  ${voffset $sr{-1}}▼ icon_s_alt}${font}  ${downspeed {%= iface %}} ${alignc $sr{-22}}${lua font h2 {{%= iface %}}}${font}#
+${alignr}${upspeed {%= iface %}}  ${lua font icon_s  ${voffset $sr{-2}}▲ icon_s_alt}${font}
 ${color3}${downspeedgraph {%= iface %} {%= lcc.half_graph_size %}} ${alignr}${upspeedgraph {%= iface %} {%= lcc.half_graph_size %} }${color}#
 ${endif}
 {% end %}
