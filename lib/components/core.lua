@@ -346,7 +346,7 @@ function conky_disks(interv)
             if media then
                 name = media
             elseif name == utils.env.HOME then
-                name = "${lua font icon_s  ${voffset $sr{-4}}${font :bold:size=$sc{11}}⌂}"
+                name = T_ "${lua font icon_s  ${voffset $sr{-4}}⌂ icon_alt}"
             end
 
             table.insert(disks, {
