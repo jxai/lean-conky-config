@@ -151,6 +151,8 @@ parser.add_argument(
 )
 parser.add_argument("-lcd-font", help="lcd font file", default="TRS-Million-mod.otf")
 parser.add_argument("-output", help="output file", default="lean-conky-config.otf")
+parser.add_argument("-view", "-v", help="open built font in FontForge", action="store_true")
+parser.add_argument("-dry-run", "-n", help="skip generation, log what would be done", action="store_true")
 args = parser.parse_args()
 
 # logger
@@ -160,7 +162,7 @@ logging.basicConfig(
     format="{asctime} {message}",
     stream=sys.stdout,
 )
-logging.info("Start build custom font")
+logging.info("Building custom font")
 
 
 def parse_subset(subset):
@@ -258,7 +260,7 @@ else:
 
 # Bootstrap font
 if osp.isfile(FB_FILE):
-    logging.debug("Booststrap font already downloaded: {}".format(FB_FILE))
+    logging.debug("Bootstrap font already downloaded: {}".format(FB_FILE))
 else:
     import urllib.request
 
@@ -288,5 +290,22 @@ nf.selection.select(0xF2DB)  # cpu (microchip)
 nf.transform(psMat.compose(psMat.scale(1.15), psMat.translate(-20, 0)))
 
 # save the final work
-nf.generate(args.output)
-logging.info("Generated font file: {}".format(args.output))
+if args.dry_run:
+    logging.info("Dry run: skipping generation of {}".format(args.output))
+else:
+    nf.generate(args.output)
+    if osp.isfile(args.output) and osp.getsize(args.output):
+        logging.info("Generated font file: {}".format(args.output))
+    else:
+        raise RuntimeError("Font generation failed: {} missing or empty".format(args.output))
+
+if args.view:
+    if osp.isfile(args.output) and osp.getsize(args.output):
+        # compact view by default, easier to check all glyphs
+        ff.setPrefs("CompactOnOpen", 1)
+        ff.savePrefs()
+
+        import subprocess
+        subprocess.Popen(["fontforge", args.output])
+    else:
+        raise RuntimeError("Cannot open font: {} missing or empty".format(args.output))
