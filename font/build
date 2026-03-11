@@ -291,7 +291,7 @@ nf.transform(psMat.compose(psMat.scale(1.15), psMat.translate(-20, 0)))
 
 # save the final work
 if args.dry_run:
-    logging.info("Dry run: skipping generation of {}".format(args.output))
+    logging.warning("\033[33m[DRY RUN] skipping generation of {}".format(args.output))
 else:
     nf.generate(args.output)
     if osp.isfile(args.output) and osp.getsize(args.output):
@@ -306,6 +306,6 @@ if args.view:
         ff.savePrefs()
 
         import subprocess
-        subprocess.Popen(["fontforge", args.output])
+        subprocess.Popen(["fontforge", "-nosplash", args.output])
     else:
         raise RuntimeError("Cannot open font: {} missing or empty".format(args.output))
