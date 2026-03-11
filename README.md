@@ -119,6 +119,7 @@ Check `local.conf.example` to see how various settings can be customized. For a 
 LCC is modular. The panel consists of components which you can freely pick and organize. Currently the following core components are available:
 
 - `datetime`
+- `weather`
 - `system`
 - `cpu`
 - `memory`
@@ -138,6 +139,13 @@ If no arguments are required, the entry can just be a string:
 ```
 
 Check `local.conf.example` for examples. You might notice a special component `vspace`, which is used to trim the trailing panel space at the bottom. It can also insert a vertical spacing if a positive height is given.
+
+### Weather
+
+The `weather` component is based on [wttr.in](https://wttr.in/), supporting following options:
+
+- `location` (default: `"auto"`): Location to query the weather information for, if "auto" it will be guessed from your IP. If the auto location is not accurate, specify one. There are many ways to specify your location, check [wttr.in's doc](https://github.com/chubin/wttr.in) for details. Under the hood, wttr.in actually calls [OSM Nominatim](https://nominatim.openstreetmap.org/ui/search.html) for geolocation reverse lookup, it might be helpful to test your choice there.
+- `interv` (default: `900`): Interval in seconds to refresh the weather information.
 
 ### GPU support
 
