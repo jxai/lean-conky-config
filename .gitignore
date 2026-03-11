@@ -1,3 +1,7 @@
 local.conf
-.vscode
 *.code-workspace
+.vscode/
+.cursor/
+.claude/
+.codex/
+.gemini/

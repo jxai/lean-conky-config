@@ -118,63 +118,63 @@ function conky_weather(interv, loc)
 end
 
 lcc.tpl.weather_wttrin = [[${color}${lua font icon_s { } {}}${font}{%= wd.loc %}${alignr}{%= wd.desc %}
-{%= wd.tempC %}℃${alignr}${lua font icon {%= wd.icon[1] %} {%= wd.icon[2] %} icon_alt}
-${font}{%= wd.fc[1].day %} ${lua font icon {%= wd.fc[1].icon[1] %} {%= wd.fc[1].icon[2] %} icon_alt}${font} {%= wd.fc[1].desc %} {%= wd.fc[1].maxtempC %} / {%= wd.fc[1].mintempC %} ℃
-${font}{%= wd.fc[2].day %} ${lua font icon {%= wd.fc[2].icon[1] %} {%= wd.fc[2].icon[2] %} icon_alt}${font} {%= wd.fc[2].desc %} {%= wd.fc[2].maxtempC %} / {%= wd.fc[2].mintempC %} ℃
-${font}{%= wd.fc[3].day %} ${lua font icon {%= wd.fc[3].icon[1] %} {%= wd.fc[3].icon[2] %} icon_alt}${font} {%= wd.fc[3].desc %} {%= wd.fc[3].maxtempC %} / {%= wd.fc[3].mintempC %} ℃
+{%= wd.tempC %}℃${alignr}${lua font icon {%= wd.icon[2] %} {%= wd.icon[1] %} icon_alt}
+${font}{%= wd.fc[1].day %} ${lua font icon {%= wd.fc[1].icon[2] %} {%= wd.fc[1].icon[1] %} icon_alt}${font} {%= wd.fc[1].desc %} {%= wd.fc[1].maxtempC %} / {%= wd.fc[1].mintempC %} ℃
+${font}{%= wd.fc[2].day %} ${lua font icon {%= wd.fc[2].icon[2] %} {%= wd.fc[2].icon[1] %} icon_alt}${font} {%= wd.fc[2].desc %} {%= wd.fc[2].maxtempC %} / {%= wd.fc[2].mintempC %} ℃
+${font}{%= wd.fc[3].day %} ${lua font icon {%= wd.fc[3].icon[2] %} {%= wd.fc[3].icon[1] %} icon_alt}${font} {%= wd.fc[3].desc %} {%= wd.fc[3].maxtempC %} / {%= wd.fc[3].mintempC %} ℃
 ]]
 function _weather_wttrin(loc)
     -- Code definitions: https://www.worldweatheronline.com/weather-api/api/docs/weather-icons.aspx
     function _weather_icon(code)
         local icons = {
-            ['113'] = { "", "☀" }, -- Clear/Sunny
-            ['116'] = { "", "☁" }, -- Partly Cloudy
-            ['119'] = { "", "☁" }, -- Cloudy
-            ['122'] = { "", "☁" }, -- Overcast
-            ['143'] = { "", "≡" }, -- Mist
-            ['176'] = { "", "☔" }, -- Patchy rain nearby
-            ['179'] = { "", "❄" }, -- Patchy snow nearby
-            ['182'] = { "", "☔" }, -- Patchy sleet nearby
-            ['185'] = { "", "☔" }, -- Patchy freezing drizzle nearby
-            ['200'] = { "", "⚡" }, -- Thundery outbreaks in nearby
-            ['227'] = { "", "❄" }, -- Blowing snow
-            ['230'] = { "", "❄" }, -- Blizzard
-            ['248'] = { "", "≡" }, -- Fog
-            ['260'] = { "", "≡" }, -- Freezing fog
-            ['263'] = { "", "☔" }, -- Patchy light drizzle
-            ['266'] = { "", "☔" }, -- Light drizzle
-            ['281'] = { "", "☔" }, -- Freezing drizzle
-            ['284'] = { "", "☔" }, -- Heavy freezing drizzle
-            ['293'] = { "", "☔" }, -- Patchy light rain
-            ['296'] = { "", "☔" }, -- Light rain
-            ['299'] = { "", "☔" }, -- Moderate rain at times
-            ['302'] = { "", "☔" }, -- Moderate rain
-            ['305'] = { "", "☔" }, -- Heavy rain at times
-            ['308'] = { "", "☔" }, -- Heavy rain
-            ['311'] = { "", "☔" }, -- Light freezing rain
-            ['314'] = { "", "☔" }, -- Moderate or heavy freezing rain
-            ['317'] = { "", "☔" }, -- Light sleet
-            ['320'] = { "", "☔" }, -- Moderate or heavy sleet
-            ['323'] = { "", "❄" }, -- Patchy light snow
-            ['326'] = { "", "❄" }, -- Light snow
-            ['329'] = { "", "❄" }, -- Patchy moderate snow
-            ['332'] = { "", "❄" }, -- Moderate snow
-            ['335'] = { "", "❄" }, -- Patchy heavy snow
-            ['338'] = { "", "❄" }, -- Heavy snow
-            ['350'] = { "", "❄" }, -- Ice pellets
-            ['353'] = { "", "☔" }, -- Light rain shower
-            ['356'] = { "", "☔" }, -- Moderate or heavy rain shower
-            ['359'] = { "", "☔" }, -- Torrential rain shower
-            ['362'] = { "", "☔" }, -- Light sleet showers
-            ['365'] = { "", "☔" }, -- Moderate or heavy sleet showers
-            ['368'] = { "", "❄" }, -- Light snow showers
-            ['371'] = { "", "❄" }, -- Moderate or heavy snow showers
-            ['374'] = { "", "☔" }, -- Light showers of ice pellets
-            ['377'] = { "", "☔" }, -- Moderate or heavy showers of ice pellets
-            ['386'] = { "", "⚡" }, -- Patchy light rain in area with thunder
-            ['389'] = { "", "⚡" }, -- Moderate or heavy rain in area with thunder
-            ['392'] = { "", "⚡" }, -- Patchy light snow in area with thunder
-            ['395'] = { "", "⚡" }, -- Moderate or heavy snow in area with thunder
+            ['113'] = { "☀", "", "" }, -- Clear/Sunny
+            ['116'] = { "☁", "", "" }, -- Partly Cloudy
+            ['119'] = { "☁", "", "" }, -- Cloudy
+            ['122'] = { "☁", "", "" }, -- Overcast
+            ['143'] = { "≡", "", "" }, -- Mist
+            ['176'] = { "☔", "", "" }, -- Patchy rain nearby
+            ['179'] = { "❄", "", "" }, -- Patchy snow nearby
+            ['182'] = { "☔", "", "" }, -- Patchy sleet nearby
+            ['185'] = { "☔", "", "" }, -- Patchy freezing drizzle nearby
+            ['200'] = { "⚡", "", "" }, -- Thundery outbreaks in nearby
+            ['227'] = { "❄", "", "" }, -- Blowing snow
+            ['230'] = { "❄", "", "" }, -- Blizzard
+            ['248'] = { "≡", "", "" }, -- Fog
+            ['260'] = { "≡", "", "" }, -- Freezing fog
+            ['263'] = { "☔", "", "" }, -- Patchy light drizzle
+            ['266'] = { "☔", "", "" }, -- Light drizzle
+            ['281'] = { "☔", "", "" }, -- Freezing drizzle
+            ['284'] = { "☔", "", "" }, -- Heavy freezing drizzle
+            ['293'] = { "☔", "", "" }, -- Patchy light rain
+            ['296'] = { "☔", "", "" }, -- Light rain
+            ['299'] = { "☔", "", "" }, -- Moderate rain at times
+            ['302'] = { "☔", "", "" }, -- Moderate rain
+            ['305'] = { "☔", "", "" }, -- Heavy rain at times
+            ['308'] = { "☔", "", "" }, -- Heavy rain
+            ['311'] = { "☔", "", "" }, -- Light freezing rain
+            ['314'] = { "☔", "", "" }, -- Moderate or heavy freezing rain
+            ['317'] = { "☔", "", "" }, -- Light sleet
+            ['320'] = { "☔", "", "" }, -- Moderate or heavy sleet
+            ['323'] = { "❄", "", "" }, -- Patchy light snow
+            ['326'] = { "❄", "", "" }, -- Light snow
+            ['329'] = { "❄", "", "" }, -- Patchy moderate snow
+            ['332'] = { "❄", "", "" }, -- Moderate snow
+            ['335'] = { "❄", "", "" }, -- Patchy heavy snow
+            ['338'] = { "❄", "", "" }, -- Heavy snow
+            ['350'] = { "❄", "", "" }, -- Ice pellets
+            ['353'] = { "☔", "", "" }, -- Light rain shower
+            ['356'] = { "☔", "", "" }, -- Moderate or heavy rain shower
+            ['359'] = { "☔", "", "" }, -- Torrential rain shower
+            ['362'] = { "☔", "", "" }, -- Light sleet showers
+            ['365'] = { "☔", "", "" }, -- Moderate or heavy sleet showers
+            ['368'] = { "❄", "", "" }, -- Light snow showers
+            ['371'] = { "❄", "", "" }, -- Moderate or heavy snow showers
+            ['374'] = { "☔", "", "" }, -- Light showers of ice pellets
+            ['377'] = { "☔", "", "" }, -- Moderate or heavy showers of ice pellets
+            ['386'] = { "⚡", "", "" }, -- Patchy light rain in area with thunder
+            ['389'] = { "⚡", "", "" }, -- Moderate or heavy rain in area with thunder
+            ['392'] = { "⚡", "", "" }, -- Patchy light snow in area with thunder
+            ['395'] = { "⚡", "", "" }, -- Moderate or heavy snow in area with thunder
         }
         return utils.table.get(icons, code)
     end
