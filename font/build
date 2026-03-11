@@ -18,7 +18,7 @@ tmp_dir = tempfile.gettempdir()
 # Font Awesome settings
 FA_URL = (
     "https://github.com/FortAwesome/Font-Awesome/releases/download/"
-    + "6.1.1/fontawesome-free-6.1.1-desktop.zip"
+    + "7.2.0/fontawesome-free-7.2.0-desktop.zip"
 )
 FA_DIR = osp.join(tmp_dir, "lcc_fontawesome")
 FA_SUBSET = """
@@ -40,6 +40,7 @@ f1eb    #wifi
 f233    #server
 f293    #bluetooth
 f2db    #microchip
+f2dc    #snowflake
 f2f5    #sign-out-alt
 f2f6    #sign-in-alt
 f381    #cloud-download-alt
@@ -53,10 +54,94 @@ f7c2    #sd-card
 """
 
 # Bootstrap font settings
-FB_URL = "https://github.com/twbs/icons/raw/v1.8.2/font/fonts/bootstrap-icons.woff"
+FB_URL = "https://github.com/twbs/icons/raw/v1.13.1/font/fonts/bootstrap-icons.woff"
 FB_FILE = osp.join(tmp_dir, "bootstrap-icons.woff")
 FB_SUBSET = """
 f6e2    #gpu-card
+# weather: clouds
+f29c    #cloud-drizzle-fill
+f29d    #cloud-drizzle
+f29e    #cloud-fill
+f29f    #cloud-fog-fill
+f2a0    #cloud-fog
+f2a1    #cloud-fog2-fill
+f2a2    #cloud-fog2
+f2a3    #cloud-hail-fill
+f2a4    #cloud-hail
+f2a6    #cloud-haze-fill
+f2a7    #cloud-haze
+f2a8    #cloud-haze2-fill
+f2a9    #cloud-lightning-fill
+f2aa    #cloud-lightning-rain-fill
+f2ab    #cloud-lightning-rain
+f2ac    #cloud-lightning
+f2af    #cloud-moon-fill
+f2b0    #cloud-moon
+f2b3    #cloud-rain-fill
+f2b4    #cloud-rain-heavy-fill
+f2b5    #cloud-rain-heavy
+f2b6    #cloud-rain
+f2b9    #cloud-sleet-fill
+f2ba    #cloud-sleet
+f2bb    #cloud-snow-fill
+f2bc    #cloud-snow
+f2bd    #cloud-sun-fill
+f2be    #cloud-sun
+f2c1    #cloud
+f2c2    #clouds-fill
+f2c3    #clouds
+f2c4    #cloudy-fill
+f2c5    #cloudy
+# weather: droplets
+f30b    #droplet-fill
+f30c    #droplet-half
+f30d    #droplet
+# weather: storms
+f427    #hurricane
+# weather: lightning
+f46c    #lightning-charge-fill
+f46d    #lightning-charge
+f46e    #lightning-fill
+f46f    #lightning
+# weather: moon/night
+f494    #moon-fill
+f495    #moon-stars-fill
+f496    #moon-stars
+f497    #moon
+# weather: phenomena
+f50d    #rainbow
+# weather: snow
+f56d    #snow
+#f56e    #snow2 - collide with FA file-export
+#f56f    #snow3 - collide with FA file-import
+# weather: sun
+f5a1    #sun-fill
+f5a2    #sun
+f5a4    #sunrise-fill
+f5a5    #sunrise
+f5a6    #sunset-fill
+f5a7    #sunset
+# weather: temperature
+f5cd    #thermometer-half
+f5ce    #thermometer-high
+f5cf    #thermometer-low
+f5d0    #thermometer-snow
+f5d1    #thermometer-sun
+f5d2    #thermometer
+# weather: extreme
+f5dc    #tornado
+f5e8    #tropical-storm
+f5eb    #tsunami
+# weather: rain accessories
+f5fc    #umbrella-fill
+f5fd    #umbrella
+f617    #water
+# weather: wind
+f61d    #wind
+# weather: thunder
+f6ef    #thunderbolt-fill
+f6f0    #thunderbolt
+f6f7    #cloud-haze2
 """
 
 # parse command line
