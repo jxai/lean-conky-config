@@ -10,6 +10,9 @@ local core = {}
 -- current font.
 -- if no `alt_text` is provided, it is assumed to be the same as `text`.
 -- if no `text` is provided, it becomes a font-changing directive
+-- `font` and `alt_font` may include property overrides after the font key,
+-- e.g. "icon:size=24" or "icon:bold:size=24", which replace all original
+-- font properties
 function conky_font(font, text, alt_text, alt_font)
     text = text and utils.unbrace(text) or ""
     if alt_text == nil then
@@ -17,16 +20,29 @@ function conky_font(font, text, alt_text, alt_font)
     else
         alt_text = utils.unbrace(alt_text)
     end
-    if font then
-        font = lcc.fonts[font]
+
+    local function _resolve_font(font_arg)
+        if not font_arg then return nil end
+
+        local p = font_arg:find(":", 1, true)
+        local prop = nil
+        if p then
+            prop = font_arg:sub(p)
+            font_arg = font_arg:sub(1, p - 1)
+        end
+        local res = lcc.fonts[font_arg]
+        if res and prop then
+            res = res:match("^([^:]+)") .. prop
+        end
+        return res
     end
-    if alt_font then
-        alt_font = lcc.fonts[alt_font]
-    end
-    if font then
-        return conky_parse(string.format("${font %s}%s", font, text))
-    elseif alt_font then
-        return conky_parse(string.format("${font %s}%s", alt_font, alt_text))
+
+    local font_res     = _resolve_font(font)
+    local alt_font_res = _resolve_font(alt_font)
+    if font_res then
+        return conky_parse(string.format("${font %s}%s", font_res, text))
+    elseif alt_font_res then
+        return conky_parse(string.format("${font %s}%s", alt_font_res, alt_text))
     else
         return conky_parse(alt_text)
     end
@@ -117,12 +133,14 @@ function conky_weather(interv, loc)
     return core._interval_call(interv, _weather_wttrin, loc)
 end
 
-lcc.tpl.weather_wttrin = [[${color}${lua font icon_s { } {}}${font}{%= wd.loc %}${alignr}{%= wd.desc %}
-{%= wd.tempC %}℃${alignr}${lua font icon {%= wd.icon[2] %} {%= wd.icon[1] %} icon_alt}
-${font}{%= wd.fc[1].day %} ${lua font icon {%= wd.fc[1].icon[2] %} {%= wd.fc[1].icon[1] %} icon_alt}${font} {%= wd.fc[1].desc %} {%= wd.fc[1].maxtempC %} / {%= wd.fc[1].mintempC %} ℃
-${font}{%= wd.fc[2].day %} ${lua font icon {%= wd.fc[2].icon[2] %} {%= wd.fc[2].icon[1] %} icon_alt}${font} {%= wd.fc[2].desc %} {%= wd.fc[2].maxtempC %} / {%= wd.fc[2].mintempC %} ℃
-${font}{%= wd.fc[3].day %} ${lua font icon {%= wd.fc[3].icon[2] %} {%= wd.fc[3].icon[1] %} icon_alt}${font} {%= wd.fc[3].desc %} {%= wd.fc[3].maxtempC %} / {%= wd.fc[3].mintempC %} ℃
-]]
+lcc.tpl.weather_wttrin = [[${voffset $sr{-5}}${color}${lua font icon_s { } {}}${font}{%= wd.loc %}
+${voffset $sr{10}}${lua font icon:size=$sr{30} {%= wd.icon[2] %} {%= wd.icon[1] %} icon_alt:size=$sr{30}}${voffset $sr{-3}}${offset $sr{3}}${lua font h1:size=$sr{20} {{%= wd.tempC %}℃}}${font}
+${voffset $sr{10}}{%= wd.desc %}${voffset $sr{-87}}
+{% for i, fc in ipairs(wd.fc) do +%}
+${alignc {%= (3-i)*$sr{50} %}}${offset $sr{120}}${font}{%= fc.day %}
+${voffset $sr{5}}${alignc {%= (3-i)*$sr{50} %}}${offset $sr{120}}${lua font icon_l  {%= fc.icon[2] %} {%= fc.icon[1] %} icon_l_alt}
+${voffset $sr{-5}}${alignc {%= (3-i)*$sr{50} %}}${offset $sr{120}}${font}{%= fc.maxtempC %} / {%= fc.mintempC %}℃${voffset $sr{-71}}{% end %}
+${voffset $sr{80}}]]
 function _weather_wttrin(loc)
     -- Code definitions: https://www.worldweatheronline.com/weather-api/api/docs/weather-icons.aspx
     function _weather_icon(code)
