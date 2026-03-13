@@ -1,0 +1,150 @@
+#!/usr/bin/env python3
+# vim: ft=python:ts=4:sw=4:et:ai:cin
+
+# Usage: textwidth [-h] [-b/--backend {auto,debug,freetype,cairo,pil}] [-v/--verbose] spec text
+#
+# Backends (auto mode tries in this order - freetype/pil match XFT/FreeType rendering):
+#   freetype  ctypes + libfreetype.so.6  (stdlib + always-present system lib)
+#   pil       Pillow                     (python3-pil, needs explicit install)
+#   cairo     pycairo                    (python3-cairo, uses different hinting path)
+import sys, subprocess, math, argparse
+
+AUTO_ORDER = ["freetype", "pil", "cairo"]
+
+
+def display_dpi():
+    try:
+        out = subprocess.check_output(["xdpyinfo"], stderr=subprocess.DEVNULL).decode()
+        for line in out.splitlines():
+            if "resolution:" in line:  # e.g. "  resolution:  96x96 dots per inch"
+                return int(line.split()[1].split("x")[0])
+    except Exception:
+        pass
+    return 96  # safe fallback
+
+
+def resolve_font(spec):
+    """Ask fontconfig for the matched font file, pixelsize, and family name.
+    DPI is injected so size= (points) converts to the same pixelsize XFT would use."""
+    dpi_spec = spec + ":dpi=" + str(display_dpi())
+    raw = subprocess.check_output(
+        ["fc-match", "--format=%{file}|%{pixelsize}|%{family}", dpi_spec]
+    ).decode()
+    path, px_str, family = raw.split("|", 2)
+    return path.strip(), math.ceil(float(px_str)), family.strip()
+
+
+def measure_freetype(path, px, text):
+    import ctypes
+
+    FT = ctypes.CDLL("libfreetype.so.6")
+    lib, face, adv = ctypes.c_void_p(), ctypes.c_void_p(), ctypes.c_long()
+    FT.FT_Init_FreeType(ctypes.byref(lib))
+    FT.FT_New_Face(lib, path.encode(), 0, ctypes.byref(face))
+    FT.FT_Set_Pixel_Sizes(face, 0, px)
+    total = 0
+    for ch in text:
+        FT.FT_Get_Advance(
+            face, FT.FT_Get_Char_Index(face, ord(ch)), 0, ctypes.byref(adv)
+        )
+        total += (adv.value + 0x8000) >> 16  # round 16.16 fixed-point to integer
+    FT.FT_Done_Face(face)
+    FT.FT_Done_FreeType(lib)
+    return total
+
+
+def measure_cairo(family, px, text):
+    import cairo
+
+    ctx = cairo.Context(cairo.ImageSurface(cairo.FORMAT_ARGB32, 1, 1))
+    ctx.select_font_face(family)  # fontconfig resolves to same file as fc-match
+    ctx.set_font_size(px)
+    return int(ctx.text_extents(text).x_advance)
+
+
+def measure_pil(path, px, text):
+    from PIL import ImageFont
+
+    return int(ImageFont.truetype(path, size=px).getlength(text))
+
+
+def _error(s):
+    return f"\033[91m{s}\033[0m" if sys.stderr.isatty() else s
+
+
+def _dispatch(backend, path, px, family, text, verbose=0):
+    # Single entry point for all backends: runs the backend, reports verbose info on
+    # success, and absorbs exceptions so callers need no try/except. Returns the pixel
+    # width on success, or None on failure.
+    try:
+        if backend == "freetype":
+            result = measure_freetype(path, px, text)
+        elif backend == "cairo":
+            result = measure_cairo(family, px, text)
+        else:
+            result = measure_pil(path, px, text)
+        if verbose >= 1:
+            print(f"backend: {backend}", file=sys.stderr)
+        return result
+    except Exception as e:
+        print(_error(f"textwidth: backend '{backend}' failed: {e}"), file=sys.stderr)
+        return None
+
+
+def main():
+    ap = argparse.ArgumentParser(
+        description="Measure rendered pixel width of a string."
+    )
+    ap.add_argument(
+        "-b", "--backend", default="auto", choices=["auto", "debug"] + AUTO_ORDER
+    )
+    ap.add_argument(
+        "-v",
+        "--verbose",
+        action="count",
+        default=0,
+        help="show resolved font and backend on stderr (repeat for more detail)",
+    )
+    ap.add_argument("spec", help="fontconfig pattern, e.g. 'DejaVuSans:normal:size=16'")
+    ap.add_argument("text", help="string to measure")
+    args = ap.parse_args()
+
+    path, px, family = resolve_font(args.spec)
+    if args.verbose >= 1:
+        print(f"font: {family!r}  file: {path}  px: {px}", file=sys.stderr)
+
+    if args.backend == "auto":
+        for name in AUTO_ORDER:
+            result = _dispatch(name, path, px, family, args.text, args.verbose)
+            if result is not None:
+                print(result)
+                return
+        sys.exit(
+            _error(
+                "textwidth: no usable backend found (install python3-cairo or python3-pil)"
+            )
+        )
+    elif args.backend == "debug":
+        # Run all backends and print each result; flag any disagreement.
+        results = {}
+        for name in AUTO_ORDER:
+            r = _dispatch(name, path, px, family, args.text, verbose=0)
+            results[name] = r
+            print(f"{name}: {r}", file=sys.stderr)
+        values = [r for r in results.values() if r is not None]
+        n = len(set(values))
+        if n == 1:
+            print(values[0])
+        elif n > 1:
+            sys.exit(_error(f"textwidth: backends disagree: {results}"))
+        else:
+            sys.exit(_error("textwidth: all backends failed"))
+    else:
+        result = _dispatch(args.backend, path, px, family, args.text, args.verbose)
+        if result is None:
+            sys.exit(1)  # error already printed by _dispatch
+        print(result)
+
+
+if __name__ == "__main__":
+    main()
