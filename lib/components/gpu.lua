@@ -20,7 +20,7 @@ lcc.tpl.nvidia_nvml = [[
 {% for i, g in ipairs(gpu_info) do %}{% if i>1 then %}${voffset $sr{8}}
 {% end %}
 ${font}${color}{%= g.gpu_util %}%${alignc $sr{-16}}{% if #gpu_info>1 then %}{%= i %}: {% end %}{%= g.model_name %}${alignr}{%= g.gpu_temp %}℃
-${color3}${lua_graph "echo {%= g.gpu_util %}" {%= lcc.half_graph_size %}} ${alignr}${lua_graph "echo {%= g.gpu_temp %}" {%= lcc.half_graph_size %} {%= g.gpu_temp_thres %}}${color}
+${color3}${lua_graph "echo {%= g.gpu_util %}" {%= lcc.half_graph_size %}} ${alignr}${lua_graph "echo {%= g.gpu_temp %}" {%= lcc.half_graph_size %}{% if g.gpu_temp>=(0.8*g.gpu_temp_thres) then %} #fb3 #f33 -t{% end %}}${color}
 ${color2}${lua font h2 FAN}${goto $sr{148}}${lua font h2 POWER}${font}${color}${alignr}${offset $sr{-138}}{%= g.fan_speed %}%
 ${voffset $sr{-13}}${alignr}${lua format %.1f {%= g.power_usage %}}W
 ${color3}${lua_bar {%= lcc.half_bar_size %} echo {%= g.fan_speed %}} ${color}${alignr}${lua_bar {%= lcc.half_bar_size %} ratio_perc {%= g.power_usage %} {%= g.power_limit %}}
