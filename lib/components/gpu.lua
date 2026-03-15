@@ -34,7 +34,8 @@ ${voffset $sr{-13}}${alignr}${lua format %.1f {%= p.gpu_util %}}{% end %}{% end 
 {% end %}]]
 local function _nvidia_nvml(top_n)
     local out, rc = utils.sys_call(lcc.root_dir .. "/lib/components/gpu_nvml 2>/dev/null", true)
-    if rc > 0 or not out then return end
+    -- TODO: rc == nil is unexpected, suppressed for now, might need a look
+    if rc == nil or rc > 0 or not out then return end
     local ok, gpu_info = pcall(utils.loadstring("return " .. out))
     if not ok then return end
 
