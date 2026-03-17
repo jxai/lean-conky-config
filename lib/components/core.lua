@@ -6,17 +6,18 @@ local core = {}
 -------------------------------
 -- renders text with specified font and placement
 -- `pla`: placement (position and alignment) formatted as '[l|c|r][<pos>]'
---        l/c/r indicates left/center/right alignment respectively
+--        l/c/r indicates left/center/right alignment respectively, if not specified left is assumed
 --        <pos> can be in pixel (scaled) from the left boundary of the rendering area or percentage
 --        e,g, `33.3%`
+--        if neither is provided, string is rendered inline with no specific placement
 -- `text`: string to render
 -- `font`: key of the desired font, e.g. "h1"
 -- `alt_font`: alternative font if `font `is not found on the system, if neither found or both empty
 --             the default font will be used
 -- `alt_text`: alternative text to be rendered when `font` is unavailable - this offers flexibility
 --             while handling a missing `font`. if `nil`, it is assumed to be the same as `text`
--- NOTE: `font` and `alt_font` may include property overrides following the font key, separated by ':'
--- e.g. "icon:size=24" or "icon:bold:size=24", which replace all original font properties
+-- NOTE: `font` and `alt_font` may include property overrides following the font key, e.g.
+--       "icon:size=24" or "icon:bold:size=24", which replace all original font properties
 function conky_text(pla, text, font, alt_text, alt_font)
     -- `align`: 'l' - left, 'c' = center, 'r' - right, nil - inline
     -- `pos`: absolute postion of the text in physical (scaled) pixels
@@ -37,6 +38,8 @@ function conky_text(pla, text, font, alt_text, alt_font)
             else
                 return
             end
+        elseif align == "" then
+            align = 'l'
         end
         local perc = tonumber(pos_str:match("^([%d%.]+)%%$"))
         if perc then return align, utils.round(perc / 100 * conky_window.text_width) end
@@ -72,8 +75,8 @@ function conky_text(pla, text, font, alt_text, alt_font)
     local function _render(_text, _font)
         if not _font then _font = lcc.fonts.default end
         local s = string.format("${font %s}%s", _font, _text)
-        local p = conky_window.text_start_x + pos
-        if pos then
+        if align then
+            local p = conky_window.text_start_x + pos
             local w = utils.text_width(_text, _font)
             if align == 'c' then
                 p = p - utils.round(w / 2)
@@ -93,48 +96,13 @@ function conky_text(pla, text, font, alt_text, alt_font)
     end
 end
 
--- render `text` with the specified `font` if it is available on the system.
--- if `font ` unavailable, render `alt_text` instead with `alt_font`.
--- if `alt_font` is unavailable or not specified, render `alt_text` with the
--- current font.
--- if no `alt_text` is provided, it is assumed to be the same as `text`.
--- if no `text` is provided, it becomes a font-changing directive
--- `font` and `alt_font` may include property overrides after the font key,
--- e.g. "icon:size=24" or "icon:bold:size=24", which replace all original
--- font properties
+-------------------------------------------------------------------------------
+-- ! WARNING ! `conky_font`:
+-- 1. it is now a thin wrapper of `conky_text`, which is preferred for text rendering
+-- 2. the API will likely undergo an incompatible change with a future release
+-------------------------------------------------------------------------------
 function conky_font(font, text, alt_text, alt_font)
-    text = text and utils.unbrace(text) or ""
-    if alt_text == nil then
-        alt_text = text
-    else
-        alt_text = utils.unbrace(alt_text)
-    end
-
-    local function _resolve_font(font_arg)
-        if not font_arg then return nil end
-
-        local p = font_arg:find(":", 1, true)
-        local prop = nil
-        if p then
-            prop = font_arg:sub(p)
-            font_arg = font_arg:sub(1, p - 1)
-        end
-        local res = lcc.fonts[font_arg]
-        if res and prop then
-            res = res:match("^([^:]+)") .. prop
-        end
-        return res
-    end
-
-    local font_res     = _resolve_font(font)
-    local alt_font_res = _resolve_font(alt_font)
-    if font_res then
-        return conky_parse(string.format("${font %s}%s", font_res, text))
-    elseif alt_font_res then
-        return conky_parse(string.format("${font %s}%s", alt_font_res, alt_text))
-    else
-        return conky_parse(alt_text)
-    end
+    return conky_text(nil, text, font, alt_text, alt_font)
 end
 
 -- padding
