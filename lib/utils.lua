@@ -394,4 +394,26 @@ function utils.time_from_str(datetime)
     if d then return d:spanseconds() else return nil end
 end
 
+-- calculates rendered text width given a fontconfig pattern (with `size`/`pixelsize` specified)
+-- pass `cache=true` to speed up repeated calls on a *constant* string
+local _text_width_cache = {}
+function utils.text_width(text, font_spec, cache)
+    local cache_key
+    if cache then
+        cache_key = font_spec .. "\0" .. text
+        if _text_width_cache[cache_key] then return _text_width_cache[cache_key] end
+    end
+
+    ---@diagnostic disable-next-line: undefined-field
+    local script = _G.lcc.root_dir .. "lib/textwidth"
+    local esc = text:gsub("'", "'\\''")
+    local out, _ = utils.sys_call("'" .. script .. "' '" .. font_spec .. "' '" .. esc .. "'", true)
+    local w = tonumber(out)
+
+    if cache then
+        _text_width_cache[cache_key] = w
+    end
+    return w
+end
+
 return utils
