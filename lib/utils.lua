@@ -419,4 +419,11 @@ function utils.text_width(text, font_spec, cache)
     return w
 end
 
+-- get detailed geocode info from lat and lon
+function utils.reverse_geocode(lat, lon)
+    local url = "api-bdc.io/data/reverse-geocode-client?latitude=" ..
+        lat .. "&longitude=" .. lon .. "&localityLanguage=en"
+    return utils.json.curl(url)
+end
+
 return utils

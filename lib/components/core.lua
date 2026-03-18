@@ -268,10 +268,10 @@ function _weather_wttrin(loc)
             loc = ""
         end
     end
-    loc = loc:gsub("%s+", "+")
 
-    local w = utils.json.curl("wttr.in/" .. loc .. "?format=j1")
+    local w = utils.json.curl("wttr.in/" .. loc:gsub("%s+", "+") .. "?format=j1")
     if w then
+        if w.data then w = w.data end -- workaround for unexpected wttr.in response format change
         local forecast = {}
         for i = 1, 3 do
             local fw = w.weather[i]
@@ -287,9 +287,24 @@ function _weather_wttrin(loc)
                 mintempF = fw.mintempF,
             }
         end
+
+        local actual_loc, geo
+        if w.nearest_area then
+            geo = w.nearest_area[1]
+            actual_loc = geo and utils.join_strs({ geo.areaName[1].value, geo.region[1].value }, ", ")
+        elseif w.request and w.request[1] and w.request[1].type == "LatLon" and w.request[1].query then
+            local lat, lon = w.request[1].query:lower():match("lat (%d*%.?%d*).+ lon ([+-]?%d*%.?%d*)")
+            lat, lon = tonumber(lat), tonumber(lon)
+            if lat and lon then
+                geo = utils.reverse_geocode(lat, lon)
+                actual_loc = geo and utils.join_strs({ geo.city, geo.principalSubdivision }, ", ")
+            end
+        end
+        if not actual_loc then actual_loc = loc end -- last resort
+
         local c = w.current_condition[1]
         local weather_data = {
-            loc = w.nearest_area[1].areaName[1].value .. ", " .. w.nearest_area[1].region[1].value,
+            loc = actual_loc,
             desc = c.weatherDesc[1].value,
             code = c.weatherCode,
             icon = _weather_icon(c.weatherCode),
