@@ -333,7 +333,8 @@ end
 -- also returns the exit code - or nil if execution fails or is interrupted (e.g. process killed)
 function utils.sys_call(cmd, as_string)
     local marker = "__EXIT_2cc9171556dd44b1aba0e283eca6a8ba="
-    local pipe = io.popen([[_OUTPUT=$(]] .. cmd .. [[);echo "${_OUTPUT}]] .. marker .. [[$?"]])
+    local pipe = io.popen([[_OUTPUT=$(]] .. cmd ..
+        [[); _RC=$?; printf '%s' "$_OUTPUT"; printf ']] .. marker .. [[%d' "$_RC"]])
     if not pipe then return end
 
     local lines = {}
