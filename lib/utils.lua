@@ -362,7 +362,7 @@ utils.json = {
 -- 5 seconds timeout by default, to override supply a custom `curl_cmd`
 function utils.json.curl(url, curl_cmd)
     curl_cmd = curl_cmd or "curl --connect-timeout 5 -s"
-    local out, rc = utils.sys_call(curl_cmd .. " " .. url, true)
+    local out, rc = utils.sys_call(curl_cmd .. ' "' .. url .. '"', true)
     if rc > 0 or not out then return end
     local data = utils.json.loads(out)
     return data
