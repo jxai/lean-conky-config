@@ -329,10 +329,12 @@ function utils.ratio_perc(x, y, ndigits)
     return utils.round(100.0 * tonumber(x) / tonumber(y), ndigits)
 end
 
--- run system command and return stdout as lines or a string
+-- runs system command and returns stdout as lines or a string
+-- also returns the exit code - or nil if execution fails or is interrupted (e.g. process killed)
 function utils.sys_call(cmd, as_string)
-    local pipe = io.popen([[_OUTPUT=$(]] .. cmd .. [[);echo "$_OUTPUT\n$?"]])
-    if not pipe then return nil, 1 end
+    local marker = "__EXIT_2cc9171556dd44b1aba0e283eca6a8ba="
+    local pipe = io.popen([[_OUTPUT=$(]] .. cmd .. [[);echo "${_OUTPUT}]] .. marker .. [[$?"]])
+    if not pipe then return end
 
     local lines = {}
     for l in pipe:lines() do
@@ -340,9 +342,12 @@ function utils.sys_call(cmd, as_string)
     end
     pipe:close()
 
-    -- TODO: might need to handle unexpected exits, e.g. process killed
-    local return_code = tonumber(table.remove(lines))
-    assert(return_code) -- make sure the exit code is correctly fetched
+    if #lines == 0 then return end
+    local last_line, return_code = lines[#lines]:match("^(.*)" .. marker .. "(.*)$")
+    if not last_line then return end -- execution interrupted
+
+    lines[#lines] = last_line
+    return_code = tonumber(return_code)
 
     if as_string then
         return table.concat(lines, "\n"), return_code
@@ -363,7 +368,7 @@ utils.json = {
 function utils.json.curl(url, curl_cmd)
     curl_cmd = curl_cmd or "curl --connect-timeout 5 -s"
     local out, rc = utils.sys_call(curl_cmd .. ' "' .. url .. '"', true)
-    if rc > 0 or not out then return end
+    if not rc or rc > 0 or not out then return end
     local data = utils.json.loads(out)
     return data
 end
@@ -410,12 +415,10 @@ function utils.text_width(text, font_spec, cache)
     ---@diagnostic disable-next-line: undefined-field
     local script = _G.lcc.root_dir .. "lib/textwidth"
     local esc = text:gsub("'", "'\\''")
-    local out, _ = utils.sys_call("'" .. script .. "' '" .. font_spec .. "' '" .. esc .. "'", true)
+    local out = utils.sys_call("'" .. script .. "' '" .. font_spec .. "' '" .. esc .. "'", true)
     local w = tonumber(out)
 
-    if cache then
-        _text_width_cache[cache_key] = w
-    end
+    if cache then _text_width_cache[cache_key] = w end
     return w
 end
 
