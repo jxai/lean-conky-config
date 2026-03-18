@@ -329,10 +329,13 @@ function utils.ratio_perc(x, y, ndigits)
     return utils.round(100.0 * tonumber(x) / tonumber(y), ndigits)
 end
 
--- runs system command and returns stdout as lines or a string
--- also returns the exit code - or nil if execution fails or is interrupted (e.g. process killed)
-function utils.sys_call(cmd, as_string)
+-- run system command and return stdout as lines or a string
+-- also return the exit code - or nil if execution fails or is interrupted (e.g. process killed)
+-- if timeout (seconds) is given, kill cmd after that duration and return exit code 124
+-- NOTE: timeout applies to the first token of cmd only; wrap complex commands in sh -c '...'
+function utils.sys_call(cmd, as_string, timeout)
     local marker = "__EXIT_2cc9171556dd44b1aba0e283eca6a8ba="
+    if timeout then cmd = "timeout " .. timeout .. " " .. cmd end
     local pipe = io.popen([[_OUTPUT=$(]] .. cmd ..
         [[); _RC=$?; printf '%s' "$_OUTPUT"; printf ']] .. marker .. [[%d' "$_RC"]])
     if not pipe then return end
@@ -364,11 +367,11 @@ utils.json = {
     dumps = _json.encode,
 }
 
--- fetch and parse JSON data with CURL
--- 5 seconds timeout by default, to override supply a custom `curl_cmd`
-function utils.json.curl(url, curl_cmd)
-    curl_cmd = curl_cmd or "curl --connect-timeout 5 -s"
-    local out, rc = utils.sys_call(curl_cmd .. ' "' .. url .. '"', true)
+-- fetch JSON data with curl and decode
+-- NOTE: 10 seconds timeout by default
+function utils.json.curl(url, timeout)
+    timeout = timeout or 10
+    local out, rc = utils.sys_call('curl --silent "' .. url .. '"', true, timeout)
     if not rc or rc > 0 or not out then return end
     local data = utils.json.loads(out)
     return data
