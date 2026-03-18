@@ -331,7 +331,7 @@ end
 
 -- run system command and return stdout as lines or a string
 function utils.sys_call(cmd, as_string)
-    local pipe = io.popen(cmd .. [[;echo "\n$?"]])
+    local pipe = io.popen([[_OUTPUT=$(]] .. cmd .. [[);echo "$_OUTPUT\n$?"]])
     if not pipe then return nil, 1 end
 
     local lines = {}
@@ -340,7 +340,10 @@ function utils.sys_call(cmd, as_string)
     end
     pipe:close()
 
+    -- TODO: might need to handle unexpected exits, e.g. process killed
     local return_code = tonumber(table.remove(lines))
+    assert(return_code) -- make sure the exit code is correctly fetched
+
     if as_string then
         return table.concat(lines, "\n"), return_code
     else
