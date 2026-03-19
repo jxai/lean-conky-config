@@ -2,7 +2,7 @@ local utils = require("utils")
 local core = require("components.core")
 local gpu = {}
 
--- conky built-in
+-- conky built-in NVIDIA backend
 lcc.tpl.nvidia_conky = [[
 ${font}${nvidia modelname 0} ${alignr} ${nvidia gpuutil 0}%
 ${color3}${nvidiagraph gpuutil 0}${color}
@@ -15,7 +15,7 @@ local function _nvidia_conky()
     return lcc.tpl.nvidia_conky()
 end
 
--- more powerful, requires pynvml
+-- pynvml NVIDIA backend - much more powerful, Python or system pynvml package required
 lcc.tpl.nvidia_nvml = [[
 {% for i, g in ipairs(gpu_info) do %}{% if i>1 then %}${voffset $sr{8}}
 {% end %}
@@ -59,6 +59,7 @@ local _lz = utils.table.lazy {
     end
 }
 
+-- NVIDIA GPU component implementation
 function conky_nvidia(interv, top_n)
     local rendered = core._interval_call(
         interv, _nvidia_nvml, tonumber(top_n or 0)
@@ -76,6 +77,7 @@ function conky_nvidia(interv, top_n)
     ))
 end
 
+-- NVIDIA GPU component
 lcc.tpl.nvidia = [[${lua nvidia {%= interv %} {%= top_n %}}]]
 function gpu.nvidia(args)
     local interv = utils.table.get(args, 'interv', 4)
