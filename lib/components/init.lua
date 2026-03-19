@@ -46,15 +46,16 @@ end
 local components = {}
 C_ = components -- C_: global alias for `components`
 
-------------------------
--- collect components --
-------------------------
+-------------------------
+-- register components --
+-------------------------
+-- core components, directly mounted for easy access
 local core = require("components.core")
 utils.table.update(components, core)
-
--- GPU support for different vendors, as of now only Nvidia's is supported
+-- GPU: only NVIDIA is supported now
 components.gpu = require("components.gpu")
-
+-- weather: wttr.in backend
+components.weather = require("components.weather")
 
 ------------------------
 -- external interface --
