@@ -9,7 +9,7 @@ conky_bin="conky"
 pause_flag="--pause=3"
 magic_id="0ce31833f8f0bae3" # truncated md5sum of 'lean-conky-config'
 
-while getopts "np:h" opt; do
+while getopts "np:rh" opt; do
     case $opt in
     n) # no-waiting
         pause_flag=""
@@ -23,6 +23,10 @@ while getopts "np:h" opt; do
             usage
             exit 1
         fi
+        ;;
+    r) # reload
+        pkill -SIGUSR1 -f $magic_id && echo "Reloading Conky/LCC..."
+        exit
         ;;
     h) # help
         usage
