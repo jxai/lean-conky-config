@@ -10,9 +10,11 @@
 
 local log = { _version = "0.2.0" }
 
+log.level = "trace"
 log.usecolor = true
 log.outfile = nil
-log.level = "trace"
+log.stderr = false
+log.tostr = nil
 
 
 local modes = {
@@ -65,19 +67,21 @@ local noop = function() end
 --   on the singleton) into the same metatable.
 local function attach_log_methods(instance, extra_mt)
   local current_level = instance.level
+  local current_name  = instance.name
+  local impls         = {}
 
   -- Build real implementations upfront, closed over `instance`.
-  local impls = {}
   for i, x in ipairs(modes) do
     local nameupper = x.name:upper()
     impls[i] = function(...)
       local msg = make_msg(instance.tostr, ...)
       local info = debug.getinfo(2, "Sl")
       local lineinfo = info.short_src .. ":" .. info.currentline
-      local prefix = instance.name and instance.name .. ":" or ""
+      local prefix = current_name and current_name .. ":" or ""
 
       -- Output to console
-      print(string.format("%s[%-6s%s]%s %s%s: %s",
+      local out = instance.stderr and io.stderr or io.stdout
+      out:write(string.format("%s[%-6s%s]%s %s%s: %s\n",
         instance.usecolor and x.color or "",
         nameupper,
         os.date("%H:%M:%S"),
@@ -108,17 +112,21 @@ local function attach_log_methods(instance, extra_mt)
     end
   end
 
-  -- Remove `level` from the raw table so __newindex always fires for it.
+  -- Remove level and name from the raw table so __newindex always fires for them.
   rawset(instance, "level", nil)
+  rawset(instance, "name", nil)
 
   local mt = extra_mt or {}
   mt.__index = function(_, k)
     if k == "level" then return current_level end
+    if k == "name" then return current_name end
   end
   mt.__newindex = function(t, k, v)
     if k == "level" then
       current_level = v
       apply_level(v)
+    elseif k == "name" then
+      error("name is read-only after creation", 2)
     else
       rawset(t, k, v)
     end
@@ -137,10 +145,11 @@ attach_log_methods(log, {
     local usecolor = config.usecolor
     if usecolor == nil then usecolor = log.usecolor end
     local instance = {
+      name     = config.name,
+      level    = config.level or log.level,
       usecolor = usecolor,
       outfile  = config.outfile or log.outfile,
-      level    = config.level or log.level,
-      name     = config.name,
+      stderr   = config.stderr ~= nil and config.stderr or log.stderr,
       tostr    = config.tostr or log.tostr,
     }
     attach_log_methods(instance)
