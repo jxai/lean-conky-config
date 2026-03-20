@@ -15,10 +15,11 @@ local core = {}
 -- `alt_font`: alternative font if `font `is not found on the system, if neither found or both empty
 --             the default font will be used
 -- `alt_text`: alternative text to be rendered when `font` is unavailable - this offers flexibility
---             while handling a missing `font`. if `nil`, it is assumed to be the same as `text`
+--             of displaying something different while handling a missing `font`. If `nil`, it is
+--             assumed to be the same as `text`
 -- NOTE: `font` and `alt_font` may include property overrides following the font key, e.g.
 --       "icon:size=24" or "icon:bold:size=24", which replace all original font properties
-function conky_text(pla, text, font, alt_text, alt_font)
+function conky_text(pla, text, font, alt_font, alt_text)
     -- `align`: 'l' - left, 'c' = center, 'r' - right, nil - inline
     -- `pos`: absolute postion of the text in physical (scaled) pixels
     local function _parse_placement(pla)
@@ -102,7 +103,7 @@ end
 -- 2. the API will likely undergo an incompatible change with a future release
 -------------------------------------------------------------------------------
 function conky_font(font, text, alt_text, alt_font)
-    return conky_text(nil, text, font, alt_text, alt_font)
+    return conky_text(nil, text, font, alt_font, alt_text)
 end
 
 -- padding
