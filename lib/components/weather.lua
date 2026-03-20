@@ -20,8 +20,9 @@ function conky_weather(interv, loc)
 end
 
 -- wttr.in backend implementation
-lcc.tpl.weather_wttrin = [[${voffset $sr{-6}}${color}${lua text l { } icon_s icon_s_alt {⊙ }}${font}{%= wd.loc %}
-${voffset $sr{10}}${lua text l {%= wd.icon[2] %} icon:size=$sr{30} icon_alt:size=$sr{30} {%= wd.icon[1] %}}${voffset $sr{-3}}${offset $sr{3}}${lua text {} {{%= wd.tempC %}℃} h1:size=$sr{20}}${font}
+lcc.tpl.weather_wttrin =
+[[${voffset $sr{-6}}${color}${lua text l { } icon_s icon_s_alt {⊙ }}${font}${voffset $sr{-1}}{%= wd.loc %}
+${voffset $sr{10}}${lua text l {%= wd.icon[2] %} icon_l:size=$sr{30} icon_l_alt:size=$sr{27} {%= wd.icon[1] %}}${voffset $sr{-3}}${offset $sr{3}}${lua text {} {{%= wd.tempC %}℃} h1:size=$sr{20}}${font}
 ${voffset $sr{10}}{%= wd.desc %}{% local b,s=49,17 %}${voffset $sr{-86}}
 {% for i, fc in ipairs(wd.fc) do +%}${lua text r{%= b+i*s %}% {%= fc.day %}}{% end %}${voffset $sr{5}}
 {% for i, fc in ipairs(wd.fc) do +%}${lua text r{%= b+i*s %}% {%= fc.icon[2] %} icon_l icon_l_alt {%= fc.icon[1] %}}{% end %}${voffset $sr{-5}}
