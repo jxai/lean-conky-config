@@ -15,6 +15,7 @@ lcc.config = {
     --     "^/boot/",
     --     "^/var/snap/",
     -- },
+    -- debug = true, --  show log at all levels, ONLY for development or diagnosis
 }
 
 -- override `lcc.fonts` (LCC named fonts)
