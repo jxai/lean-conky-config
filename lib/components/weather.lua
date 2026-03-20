@@ -151,7 +151,7 @@ end
 
 -- shortcut: weather -> weather.wttrin
 setmetatable(weather, {
-    __call = function(...)
+    __call = function(_, ...)
         return weather.wttrin(...)
     end
 })
