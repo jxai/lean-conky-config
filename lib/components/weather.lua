@@ -20,14 +20,13 @@ function conky_weather(interv, loc)
 end
 
 -- wttr.in backend implementation
-lcc.tpl.weather_wttrin = [[${voffset $sr{-5}}${color}${lua font icon_s { } {}}${font}{%= wd.loc %}
-${voffset $sr{10}}${lua font icon:size=$sr{30} {%= wd.icon[2] %} {%= wd.icon[1] %} icon_alt:size=$sr{30}}${voffset $sr{-3}}${offset $sr{3}}${lua font h1:size=$sr{20} {{%= wd.tempC %}℃}}${font}
-${voffset $sr{10}}{%= wd.desc %}${voffset $sr{-87}}
-{% for i, fc in ipairs(wd.fc) do +%}
-${alignc {%= (3-i)*$sr{50} %}}${offset $sr{120}}${font}{%= fc.day %}
-${voffset $sr{5}}${alignc {%= (3-i)*$sr{50} %}}${offset $sr{120}}${lua font icon_l  {%= fc.icon[2] %} {%= fc.icon[1] %} icon_l_alt}
-${voffset $sr{-5}}${alignc {%= (3-i)*$sr{50} %}}${offset $sr{120}}${font}{%= fc.maxtempC %} / {%= fc.mintempC %}℃${voffset $sr{-71}}{% end %}
-${voffset $sr{80}}]]
+lcc.tpl.weather_wttrin = [[${voffset $sr{-6}}${color}${lua text l { } icon_s icon_s_alt {⊙ }}${font}{%= wd.loc %}
+${voffset $sr{10}}${lua text l {%= wd.icon[2] %} icon:size=$sr{30} icon_alt:size=$sr{30} {%= wd.icon[1] %}}${voffset $sr{-3}}${offset $sr{3}}${lua text {} {{%= wd.tempC %}℃} h1:size=$sr{20}}${font}
+${voffset $sr{10}}{%= wd.desc %}{% local b,s=49,17 %}${voffset $sr{-86}}
+{% for i, fc in ipairs(wd.fc) do +%}${lua text r{%= b+i*s %}% {%= fc.day %}}{% end %}${voffset $sr{5}}
+{% for i, fc in ipairs(wd.fc) do +%}${lua text r{%= b+i*s %}% {%= fc.icon[2] %} icon_l icon_l_alt {%= fc.icon[1] %}}{% end %}${voffset $sr{-5}}
+{% for i, fc in ipairs(wd.fc) do +%}${lua text r{%= b+i*s %}% {{%= fc.maxtempC %}℃} default:size=$sc{7}}{% end %}${voffset}
+{% for i, fc in ipairs(wd.fc) do +%}${lua text r{%= b+i*s %}% {{%= fc.mintempC %}℃} default:size=$sc{7}}{% end %}${voffset $sr{7}}]]
 function _weather_wttrin(loc)
     -- Code definitions: https://www.worldweatheronline.com/weather-api/api/docs/weather-icons.aspx
     function _weather_icon(code)
@@ -107,7 +106,7 @@ function _weather_wttrin(loc)
             local fw = w.weather[i]
             local fc = fw.hourly[5] -- condition forecast at noon
             forecast[i] = {
-                day = _day_of_week(fw.date),
+                day = _day_of_week(fw.date):upper(),
                 desc = fc.weatherDesc[1].value,
                 code = fc.weatherCode,
                 icon = _weather_icon(fc.weatherCode),
