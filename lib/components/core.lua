@@ -240,7 +240,7 @@ end
 lcc.tpl.network = [[
 ${color2}${lua font icon_s { } {}}${lua font h2 {Local IPs}}${alignr}${lua font h2 {External IP}}${lua font icon_s { } {}}${font}${color}
 ${execi 60 ip a | grep inet | grep -vw lo | grep -v inet6 | cut -d \/ -f1 | sed 's/[^0-9\.]*//g'}#
-${alignr}${texeci 3600  wget -q -O- https://ipecho.net/plain; echo}
+${alignr}${texeci 3600  wget -qO- https://checkip.amazonaws.com; echo}
 ${voffset $sr{5}}${lua ifaces 10}]]
 function core.network()
     return core.section("NETWORK", "") .. "\n" .. lcc.tpl.network()
