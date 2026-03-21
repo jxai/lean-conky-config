@@ -9,6 +9,11 @@ conky_bin="conky"
 pause_flag="--pause=3"
 magic_id="0ce31833f8f0bae3" # truncated md5sum of 'lean-conky-config'
 
+# get directories
+current_dir=$(pwd)
+script_path=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+config_path="$script_path"/conky.conf
+
 while getopts "np:h" opt; do
     case $opt in
     n) # no-waiting
@@ -37,13 +42,15 @@ while getopts "np:h" opt; do
 done
 shift "$((OPTIND - 1))"
 
+font/install
 cd $(dirname $0)
 pkill -f "conky.*\s-- $magic_id"
-font/install
 
 [ -z "$pause_flag" ] && echo "Starting Conky..." || echo "Conky waiting 3 seconds to start..."
-if "$conky_bin" --daemonize --quiet "$pause_flag" --config=./conky.conf -- $magic_id; then
+if "$conky_bin" --daemonize --quiet "$pause_flag" --config="$config_path" -- $magic_id; then
     echo "Started"
 else
     echo "Failed"
 fi
+
+cd $current_dir
