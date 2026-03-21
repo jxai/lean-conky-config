@@ -177,11 +177,17 @@ end
 
 -- call at interval, similar to Conky's `execi` but for functions
 local _interval_call_cache = {}
+local function _cache_key(func, ...)
+    local key = tostring(func)
+    for i = 1, select('#', ...) do key = key .. "\0" .. tostring(select(i, ...)) end
+    return key
+end
 function utils.interval_call(interv, func, ...)
-    if _interval_call_cache[func] == nil then
-        _interval_call_cache[func] = {}
+    local key = _cache_key(func, ...)
+    if _interval_call_cache[key] == nil then
+        _interval_call_cache[key] = {}
     end
-    local cache = _interval_call_cache[func]
+    local cache = _interval_call_cache[key]
     local now = os.time()
     if cache.last == nil or (now - cache.last) >= interv then
         cache.result = func(...)
