@@ -81,14 +81,17 @@ function components.build_panel()
             else
                 error("invalid type: " .. tc)
             end
+            local name = type(func) == "string" and func or tostring(func)
             if type(func) == "string" then
                 if string.sub(func, 1, 3) ~= "C_." then func = "C_." .. func end
                 func = utils.loadstring("return " .. func)()
             end
             if not func then error("component function not found") end
+            lcc.log.debug("building component [" .. i .. "]: ", name, args)
             return func(utils.table.unpack(args))
         end)
         if not ok then
+            lcc.log.error("component [" .. i .. "] failed", s)
             s = core.message(
                 "error+", "invalid component [" .. i .. "]:\n" .. string.gsub(s, ": ", ":\n")
             )

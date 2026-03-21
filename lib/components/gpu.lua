@@ -36,7 +36,10 @@ local function _nvidia_nvml(top_n)
     local out, rc = utils.sys_call(lcc.root_dir .. "/lib/components/gpu_nvml 2>/dev/null", true)
     if not rc or rc > 0 or not out then return end
     local ok, gpu_info = pcall(utils.loadstring("return " .. out))
-    if not ok then return end
+    if not ok then
+        lcc.log.warn("gpu_nvml output parse failed")
+        return
+    end
 
     for _, g in ipairs(gpu_info) do
         g.mem_used_h = utils.filesize(g.mem_used)

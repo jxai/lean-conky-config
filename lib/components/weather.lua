@@ -89,12 +89,14 @@ function _weather_wttrin(loc)
         if t == nil then return "???" else return os.date("%a", t) end
     end
 
+    lcc.log.debug("fetching weather for: " .. loc)
     if loc:lower() == "auto" then
         local d = utils.json.curl("ip-api.com/json") -- more accurate auto location
         if d then
             loc = utils.join_strs({ d.city, d.region, d.countryCode }, " ")
             -- loc = string.format("%f,%f", tonumber(d.lat), tonumber(d.lon)) -- not working if latlon not precise
         else
+            lcc.log.warn("ip-api geolocation failed, deferring to wttr.in")
             loc = ""
         end
     end
@@ -143,8 +145,10 @@ function _weather_wttrin(loc)
             hum = c.humidity,
             fc = forecast,
         }
+        lcc.log.debug("weather fetched for location: " .. actual_loc)
         return lcc.tpl.weather_wttrin { wd = weather_data }
     else
+        lcc.log.warn("wttr.in fetch failed for location: " .. loc)
         return "ERROR: Failed to fetch weather data"
     end
 end
