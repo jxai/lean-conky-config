@@ -1,72 +1,6 @@
 local utils = require("utils")
 local core = require("components.core")
 
--- weather: interface
-lcc.tpl.weather_wrapper = [[
-${lua weather {%= interv %} {%= backend %} {{%= loc %}} {%= metric %}}]]
-function weather(args)
-    return lcc.tpl.weather_wrapper {
-        interv = utils.table.get(args, 'interval', 900),
-        backend = utils.table.get(args, 'backend', 'wttrin'),
-        loc = utils.table.get(args, 'location', "auto"),
-        metric = utils.table.get(args, 'metric', 1),
-    }
-end
-
--- weather: dispatcher
-function conky_weather(interv, backend, loc, metric)
-    loc = loc and utils.unbrace(loc) or "auto" -- loc is {} wrapped, has to be unbraced here
-    metric = (tonumber(metric) == 1)
-
-    local rendered = core._interval_call(interv, _weather, backend, loc, metric)
-    if rendered then return rendered end
-
-    return conky_parse(core.message("error+",
-        "\nWeather failed to load" ..
-        "\nData service (" .. backend .. ") might be invalid or broken"
-    ))
-end
-
--- weather: implementation
-lcc.tpl.weather = -- p:info offset b:forecast offset s:forecast spacing
-[[{% local p,b,s=$sr{58},49,17 %}${voffset $sr{-6}}${color}${lua text l { } icon_s icon_s_alt {⊙ }}${font}${voffset $sr{-1}}{%= wd.loc %}
-${lua text l {{%= wd.desc %}} default:size=$sc{7}}
-${voffset $sr{5}}${lua text l {%= wd.icon[2] %} icon_l:size=$sr{32} icon_l_alt:size=$sr{30} {%= wd.icon[1] %}}
-${voffset $sr{-64}}${lua text l{%= p %} {{%= wd.temp %}} h1:size=$sr{20}}
-${voffset $sr{-21}}{% if wd.has_precip then +%}${lua text l{%= p %} {${voffset $sr{-1}}} icon_s icon_s_alt {☔${voffset $sr{1}}}}${font} {%= wd.precip %}{% else +%}${lua text l{%= p %} {${voffset $sr{-1}}} icon_s icon_s_alt {◑${voffset $sr{1}}}}${font} {%= wd.hum %}%{% end %}
-${voffset $sr{16}}${lua text l{%= p %} {${voffset $sr{-1}}} icon_s icon_s_alt {≈${voffset $sr{1}}}}${font}${voffset $sr{-1}} {%= wd.wind %} {%= wd.winddir %}${voffset $sr{-84}}
-{% for i, fc in ipairs(wd.fc) do +%}${lua text r{%= b+i*s %}% {%= fc.day %}}{% end %}${voffset $sr{5}}
-{% for i, fc in ipairs(wd.fc) do +%}${lua text r{%= b+i*s %}% {%= fc.icon[2] %} icon_l icon_l_alt {%= fc.icon[1] %}}{% end %}${voffset $sr{-5}}
-{% for i, fc in ipairs(wd.fc) do +%}${lua text r{%= b+i*s %}% {{%= fc.maxtemp %}} default:size=$sc{7}}{% end %}${voffset}
-{% for i, fc in ipairs(wd.fc) do +%}${lua text r{%= b+i*s %}% {{%= fc.mintemp %}} default:size=$sc{7}}{% end %}${voffset $sr{7}}]]
-function _weather(backend, loc, metric)
-    if loc:lower() == "auto" then
-        lcc.log.debug("auto detecting geolocation")
-        local d = utils.json.curl("ip-api.com/json") -- more accurate auto location
-        if d then
-            loc = utils.join_strs({ d.city, d.region, d.countryCode }, " ")
-            -- loc = string.format("%f,%f", tonumber(d.lat), tonumber(d.lon)) -- not working if latlon not precise
-        else
-            lcc.log.warn("ip-api geolocation failed, deferring to weather backend")
-        end
-    end
-    lcc.log.debug("fetching weather data from", backend, "backend for location:", loc)
-    if backend == 'wttrin' then
-        backend = fetch_weather_wttrin
-    else
-        lcc.log.error("invalid weather backend: ", backend)
-        return
-    end
-
-    local weather_data, actual_loc = backend(loc, metric)
-    if weather_data then
-        lcc.log.debug("weather fetched for actual location:", actual_loc)
-        return lcc.tpl.weather { wd = weather_data }
-    else
-        lcc.log.warn("failed to fetch weather for location: " .. loc)
-    end
-end
-
 -- helper functions --
 local function _weather_icon(code)
     -- code definitions: https://www.worldweatheronline.com/weather-api/api/docs/weather-icons.aspx
@@ -133,7 +67,7 @@ local function _format_temp(metric, tempC, tempF)
 end
 
 -- weather backend - wttr.in
-function fetch_weather_wttrin(loc, metric)
+local function fetch_weather_wttrin(loc, metric)
     loc = loc:lower() == "auto" and "" or loc:gsub("%s+", "+") -- normalize loc for wttr.in
     local w = utils.json.curl("wttr.in/" .. loc .. "?format=j1")
     if w then
@@ -182,6 +116,73 @@ function fetch_weather_wttrin(loc, metric)
         }
         return weather_data, actual_loc
     end
+end
+
+
+-- weather: implementation
+lcc.tpl.weather = -- p:info offset b:forecast offset s:forecast spacing
+[[{% local p,b,s=$sr{58},49,17 %}${voffset $sr{-6}}${color}${lua text l { } icon_s icon_s_alt {⊙ }}${font}${voffset $sr{-1}}{%= wd.loc %}
+${lua text l {{%= wd.desc %}} default:size=$sc{7}}
+${voffset $sr{5}}${lua text l {%= wd.icon[2] %} icon_l:size=$sr{32} icon_l_alt:size=$sr{30} {%= wd.icon[1] %}}
+${voffset $sr{-64}}${lua text l{%= p %} {{%= wd.temp %}} h1:size=$sr{20}}
+${voffset $sr{-21}}{% if wd.has_precip then +%}${lua text l{%= p %} {${voffset $sr{-1}}} icon_s icon_s_alt {☔${voffset $sr{1}}}}${font} {%= wd.precip %}{% else +%}${lua text l{%= p %} {${voffset $sr{-1}}} icon_s icon_s_alt {◑${voffset $sr{1}}}}${font} {%= wd.hum %}%{% end %}
+${voffset $sr{16}}${lua text l{%= p %} {${voffset $sr{-1}}} icon_s icon_s_alt {≈${voffset $sr{1}}}}${font}${voffset $sr{-1}} {%= wd.wind %} {%= wd.winddir %}${voffset $sr{-84}}
+{% for i, fc in ipairs(wd.fc) do +%}${lua text r{%= b+i*s %}% {%= fc.day %}}{% end %}${voffset $sr{5}}
+{% for i, fc in ipairs(wd.fc) do +%}${lua text r{%= b+i*s %}% {%= fc.icon[2] %} icon_l icon_l_alt {%= fc.icon[1] %}}{% end %}${voffset $sr{-5}}
+{% for i, fc in ipairs(wd.fc) do +%}${lua text r{%= b+i*s %}% {{%= fc.maxtemp %}} default:size=$sc{7}}{% end %}${voffset}
+{% for i, fc in ipairs(wd.fc) do +%}${lua text r{%= b+i*s %}% {{%= fc.mintemp %}} default:size=$sc{7}}{% end %}${voffset $sr{7}}]]
+local function _weather(backend, loc, metric)
+    if loc:lower() == "auto" then
+        lcc.log.debug("auto detecting geolocation")
+        local d = utils.json.curl("ip-api.com/json") -- more accurate auto location
+        if d then
+            loc = utils.join_strs({ d.city, d.region, d.countryCode }, " ")
+            -- loc = string.format("%f,%f", tonumber(d.lat), tonumber(d.lon)) -- not working if latlon not precise
+        else
+            lcc.log.warn("ip-api geolocation failed, deferring to weather backend")
+        end
+    end
+    lcc.log.debug("fetching weather data from", backend, "backend for location:", loc)
+    if backend == 'wttrin' then
+        backend = fetch_weather_wttrin
+    else
+        lcc.log.error("invalid weather backend: ", backend)
+        return
+    end
+
+    local weather_data, actual_loc = backend(loc, metric)
+    if weather_data then
+        lcc.log.debug("weather fetched for actual location:", actual_loc)
+        return lcc.tpl.weather { wd = weather_data }
+    else
+        lcc.log.warn("failed to fetch weather for location: " .. loc)
+    end
+end
+
+-- weather: dispatcher
+function conky_weather(interv, backend, loc, metric)
+    loc = loc and utils.unbrace(loc) or "auto" -- loc is {} wrapped, has to be unbraced here
+    metric = (tonumber(metric) == 1)
+
+    local rendered = core._interval_call(interv, _weather, backend, loc, metric)
+    if rendered then return rendered end
+
+    return conky_parse(core.message("error+",
+        "\nWeather failed to load" ..
+        "\nData service (" .. backend .. ") might be invalid or broken"
+    ))
+end
+
+-- weather: interface
+lcc.tpl.weather_wrapper = [[
+${lua weather {%= interv %} {%= backend %} {{%= loc %}} {%= metric %}}]]
+local function weather(args)
+    return lcc.tpl.weather_wrapper {
+        interv = utils.table.get(args, 'interval', 900),
+        backend = utils.table.get(args, 'backend', 'wttrin'),
+        loc = utils.table.get(args, 'location', "auto"),
+        metric = utils.table.get(args, 'metric', 1),
+    }
 end
 
 return weather
