@@ -20,10 +20,13 @@ function conky_weather(interv, loc)
 end
 
 -- wttr.in backend implementation
-lcc.tpl.weather_wttrin =
-[[${voffset $sr{-6}}${color}${lua text l { } icon_s icon_s_alt {⊙ }}${font}${voffset $sr{-1}}{%= wd.loc %}
-${voffset $sr{10}}${lua text l {%= wd.icon[2] %} icon_l:size=$sr{30} icon_l_alt:size=$sr{27} {%= wd.icon[1] %}}${voffset $sr{-3}}${offset $sr{3}}${lua text {} {{%= wd.tempC %}℃} h1:size=$sr{20}}${font}
-${voffset $sr{10}}{%= wd.desc %}{% local b,s=49,17 %}${voffset $sr{-86}}
+lcc.tpl.weather_wttrin = -- p:info offset b:forecast offset s:forecast spacing
+[[{% local p,b,s=$sr{58},49,17 %}${voffset $sr{-6}}${color}${lua text l { } icon_s icon_s_alt {⊙ }}${font}${voffset $sr{-1}}{%= wd.loc %}
+${lua text l {{%= wd.desc %}} default:size=$sc{7}}
+${voffset $sr{5}}${lua text l {%= wd.icon[2] %} icon_l:size=$sr{32} icon_l_alt:size=$sr{30} {%= wd.icon[1] %}}
+${voffset $sr{-64}}${lua text l{%= p %} {{%= wd.tempC %}℃} h1:size=$sr{20}}
+${voffset $sr{-21}}{% if tonumber(wd.precip) > 0 then +%}${lua text l{%= p %} {${voffset $sr{-1}}} icon_s icon_s_alt {☔${voffset $sr{1}}}}${font} {%= wd.precip %} mm{% else +%}${lua text l{%= p %} {${voffset $sr{-1}}} icon_s icon_s_alt {◑${voffset $sr{1}}}}${font} {%= wd.hum %}%{% end %}
+${voffset $sr{16}}${lua text l{%= p %} {${voffset $sr{-1}}} icon_s icon_s_alt {≈${voffset $sr{1}}}}${font}${voffset $sr{-1}} {%= wd.wind %} km/h {%= wd.winddir %}${voffset $sr{-84}}
 {% for i, fc in ipairs(wd.fc) do +%}${lua text r{%= b+i*s %}% {%= fc.day %}}{% end %}${voffset $sr{5}}
 {% for i, fc in ipairs(wd.fc) do +%}${lua text r{%= b+i*s %}% {%= fc.icon[2] %} icon_l icon_l_alt {%= fc.icon[1] %}}{% end %}${voffset $sr{-5}}
 {% for i, fc in ipairs(wd.fc) do +%}${lua text r{%= b+i*s %}% {{%= fc.maxtempC %}℃} default:size=$sc{7}}{% end %}${voffset}
@@ -106,8 +109,8 @@ function _weather_wttrin(loc)
         if w.data then w = w.data end -- workaround for unexpected wttr.in response format change
         local forecast = {}
         for i = 1, 3 do
-            local fw = w.weather[i]
-            local fc = fw.hourly[5] -- condition forecast at noon
+            local fw = w.weather[i] -- forecast weather of day i
+            local fc = fw.hourly[5] -- forecast condition at noon
             forecast[i] = {
                 day = _day_of_week(fw.date):upper(),
                 desc = fc.weatherDesc[1].value,
@@ -143,6 +146,9 @@ function _weather_wttrin(loc)
             tempC = c.temp_C,
             tempF = c.temp_F,
             hum = c.humidity,
+            wind = c.windspeedKmph,
+            winddir = c.winddir16Point,
+            precip = c.precipMM,
             fc = forecast,
         }
         lcc.log.debug("weather fetched for location: " .. actual_loc)
