@@ -4,19 +4,20 @@ local weather = {}
 
 -- weather component (wttr.in backend)
 lcc.tpl.weather = [[
-${lua weather {%= interv %} {{%= loc %}}}]]
+${lua weather {%= interv %} {{%= loc %}} {%= metric %}} ]]
 function weather.wttrin(args)
     return lcc.tpl.weather {
         interv = utils.table.get(args, 'interval', 900),
         loc = utils.table.get(args, 'location', "auto"),
+        metric = utils.table.get(args, 'metric', 1),
     }
 end
 
 -- weather component implementation
-function conky_weather(interv, loc)
+function conky_weather(interv, loc, metric)
     -- `loc` might has spaces, has to be wrapped and then unbraced here
     loc = loc and utils.unbrace(loc) or "auto"
-    return core._interval_call(interv, _weather_wttrin, loc)
+    return core._interval_call(interv, _weather_wttrin, loc, metric)
 end
 
 -- wttr.in backend implementation
@@ -24,14 +25,16 @@ lcc.tpl.weather_wttrin = -- p:info offset b:forecast offset s:forecast spacing
 [[{% local p,b,s=$sr{58},49,17 %}${voffset $sr{-6}}${color}${lua text l { } icon_s icon_s_alt {⊙ }}${font}${voffset $sr{-1}}{%= wd.loc %}
 ${lua text l {{%= wd.desc %}} default:size=$sc{7}}
 ${voffset $sr{5}}${lua text l {%= wd.icon[2] %} icon_l:size=$sr{32} icon_l_alt:size=$sr{30} {%= wd.icon[1] %}}
-${voffset $sr{-64}}${lua text l{%= p %} {{%= wd.tempC %}℃} h1:size=$sr{20}}
-${voffset $sr{-21}}{% if tonumber(wd.precip) > 0 then +%}${lua text l{%= p %} {${voffset $sr{-1}}} icon_s icon_s_alt {☔${voffset $sr{1}}}}${font} {%= wd.precip %} mm{% else +%}${lua text l{%= p %} {${voffset $sr{-1}}} icon_s icon_s_alt {◑${voffset $sr{1}}}}${font} {%= wd.hum %}%{% end %}
-${voffset $sr{16}}${lua text l{%= p %} {${voffset $sr{-1}}} icon_s icon_s_alt {≈${voffset $sr{1}}}}${font}${voffset $sr{-1}} {%= wd.wind %} km/h {%= wd.winddir %}${voffset $sr{-84}}
+${voffset $sr{-64}}${lua text l{%= p %} {{%= wd.temp %}} h1:size=$sr{20}}
+${voffset $sr{-21}}{% if wd.has_precip then +%}${lua text l{%= p %} {${voffset $sr{-1}}} icon_s icon_s_alt {☔${voffset $sr{1}}}}${font} {%= wd.precip %}{% else +%}${lua text l{%= p %} {${voffset $sr{-1}}} icon_s icon_s_alt {◑${voffset $sr{1}}}}${font} {%= wd.hum %}%{% end %}
+${voffset $sr{16}}${lua text l{%= p %} {${voffset $sr{-1}}} icon_s icon_s_alt {≈${voffset $sr{1}}}}${font}${voffset $sr{-1}} {%= wd.wind %} {%= wd.winddir %}${voffset $sr{-84}}
 {% for i, fc in ipairs(wd.fc) do +%}${lua text r{%= b+i*s %}% {%= fc.day %}}{% end %}${voffset $sr{5}}
 {% for i, fc in ipairs(wd.fc) do +%}${lua text r{%= b+i*s %}% {%= fc.icon[2] %} icon_l icon_l_alt {%= fc.icon[1] %}}{% end %}${voffset $sr{-5}}
-{% for i, fc in ipairs(wd.fc) do +%}${lua text r{%= b+i*s %}% {{%= fc.maxtempC %}℃} default:size=$sc{7}}{% end %}${voffset}
-{% for i, fc in ipairs(wd.fc) do +%}${lua text r{%= b+i*s %}% {{%= fc.mintempC %}℃} default:size=$sc{7}}{% end %}${voffset $sr{7}}]]
-function _weather_wttrin(loc)
+{% for i, fc in ipairs(wd.fc) do +%}${lua text r{%= b+i*s %}% {{%= fc.maxtemp %}} default:size=$sc{7}}{% end %}${voffset}
+{% for i, fc in ipairs(wd.fc) do +%}${lua text r{%= b+i*s %}% {{%= fc.mintemp %}} default:size=$sc{7}}{% end %}${voffset $sr{7}}]]
+function _weather_wttrin(loc, metric)
+    metric = (tonumber(metric) == 1)
+
     -- Code definitions: https://www.worldweatheronline.com/weather-api/api/docs/weather-icons.aspx
     function _weather_icon(code)
         local icons = {
@@ -92,6 +95,10 @@ function _weather_wttrin(loc)
         if t == nil then return "???" else return os.date("%a", t) end
     end
 
+    function _format_temp(tempC, tempF)
+        return metric and tostring(tempC) .. "℃" or tostring(tempF) .. "℉"
+    end
+
     lcc.log.debug("fetching weather for: " .. loc)
     if loc:lower() == "auto" then
         local d = utils.json.curl("ip-api.com/json") -- more accurate auto location
@@ -116,10 +123,8 @@ function _weather_wttrin(loc)
                 desc = fc.weatherDesc[1].value,
                 code = fc.weatherCode,
                 icon = _weather_icon(fc.weatherCode),
-                maxtempC = fw.maxtempC,
-                mintempC = fw.mintempC,
-                maxtempF = fw.maxtempF,
-                mintempF = fw.mintempF,
+                maxtemp = _format_temp(fw.maxtempC, fw.maxtempF),
+                mintemp = _format_temp(fw.mintempC, fw.mintempF),
             }
         end
 
@@ -143,12 +148,12 @@ function _weather_wttrin(loc)
             desc = c.weatherDesc[1].value,
             code = c.weatherCode,
             icon = _weather_icon(c.weatherCode),
-            tempC = c.temp_C,
-            tempF = c.temp_F,
+            temp = _format_temp(c.temp_C, c.temp_F),
             hum = c.humidity,
-            wind = c.windspeedKmph,
+            wind = metric and c.windspeedKmph .. " km/h" or c.windspeedMiles .. " mph",
             winddir = c.winddir16Point,
-            precip = c.precipMM,
+            has_precip = (tonumber(c.precipMM) or 0) > 0,
+            precip = metric and c.precipMM .. " mm" or c.precipInches .. " in",
             fc = forecast,
         }
         lcc.log.debug("weather fetched for location: " .. actual_loc)
