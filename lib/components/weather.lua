@@ -1,73 +1,61 @@
 local utils = require("utils")
 local core = require("components.core")
 
--- helper functions --
-local function _weather_icon(code)
-    -- code definitions: https://www.worldweatheronline.com/weather-api/api/docs/weather-icons.aspx
-    local icons = {
-        ['113'] = { "☀", "", "" }, -- Clear/Sunny
-        ['116'] = { "☁", "", "" }, -- Partly Cloudy
-        ['119'] = { "☁", "", "" }, -- Cloudy
-        ['122'] = { "☁", "", "" }, -- Overcast
-        ['143'] = { "≡", "", "" }, -- Mist
-        ['176'] = { "☔", "", "" }, -- Patchy rain nearby
-        ['179'] = { "❄", "", "" }, -- Patchy snow nearby
-        ['182'] = { "☔", "", "" }, -- Patchy sleet nearby
-        ['185'] = { "☔", "", "" }, -- Patchy freezing drizzle nearby
-        ['200'] = { "⚡", "", "" }, -- Thundery outbreaks in nearby
-        ['227'] = { "❄", "", "" }, -- Blowing snow
-        ['230'] = { "❄", "", "" }, -- Blizzard
-        ['248'] = { "≡", "", "" }, -- Fog
-        ['260'] = { "≡", "", "" }, -- Freezing fog
-        ['263'] = { "☔", "", "" }, -- Patchy light drizzle
-        ['266'] = { "☔", "", "" }, -- Light drizzle
-        ['281'] = { "☔", "", "" }, -- Freezing drizzle
-        ['284'] = { "☔", "", "" }, -- Heavy freezing drizzle
-        ['293'] = { "☔", "", "" }, -- Patchy light rain
-        ['296'] = { "☔", "", "" }, -- Light rain
-        ['299'] = { "☔", "", "" }, -- Moderate rain at times
-        ['302'] = { "☔", "", "" }, -- Moderate rain
-        ['305'] = { "☔", "", "" }, -- Heavy rain at times
-        ['308'] = { "☔", "", "" }, -- Heavy rain
-        ['311'] = { "☔", "", "" }, -- Light freezing rain
-        ['314'] = { "☔", "", "" }, -- Moderate or heavy freezing rain
-        ['317'] = { "☔", "", "" }, -- Light sleet
-        ['320'] = { "☔", "", "" }, -- Moderate or heavy sleet
-        ['323'] = { "❄", "", "" }, -- Patchy light snow
-        ['326'] = { "❄", "", "" }, -- Light snow
-        ['329'] = { "❄", "", "" }, -- Patchy moderate snow
-        ['332'] = { "❄", "", "" }, -- Moderate snow
-        ['335'] = { "❄", "", "" }, -- Patchy heavy snow
-        ['338'] = { "❄", "", "" }, -- Heavy snow
-        ['350'] = { "❄", "", "" }, -- Ice pellets
-        ['353'] = { "☔", "", "" }, -- Light rain shower
-        ['356'] = { "☔", "", "" }, -- Moderate or heavy rain shower
-        ['359'] = { "☔", "", "" }, -- Torrential rain shower
-        ['362'] = { "☔", "", "" }, -- Light sleet showers
-        ['365'] = { "☔", "", "" }, -- Moderate or heavy sleet showers
-        ['368'] = { "❄", "", "" }, -- Light snow showers
-        ['371'] = { "❄", "", "" }, -- Moderate or heavy snow showers
-        ['374'] = { "☔", "", "" }, -- Light showers of ice pellets
-        ['377'] = { "☔", "", "" }, -- Moderate or heavy showers of ice pellets
-        ['386'] = { "⚡", "", "" }, -- Patchy light rain in area with thunder
-        ['389'] = { "⚡", "", "" }, -- Moderate or heavy rain in area with thunder
-        ['392'] = { "⚡", "", "" }, -- Patchy light snow in area with thunder
-        ['395'] = { "⚡", "", "" }, -- Moderate or heavy snow in area with thunder
-    }
-    return utils.table.get(icons, code)
-end
+-- WWO weather code -> { fallback_icon, icon_font_primary, icon_font_solid }
+-- code definitions: https://www.worldweatheronline.com/weather-api/api/docs/weather-icons.aspx
+local WWO_ICONS = {
+    ['113'] = { "☀", "", "" }, -- Clear/Sunny
+    ['116'] = { "☁", "", "" }, -- Partly Cloudy
+    ['119'] = { "☁", "", "" }, -- Cloudy
+    ['122'] = { "☁", "", "" }, -- Overcast
+    ['143'] = { "≡", "", "" }, -- Mist
+    ['176'] = { "☔", "", "" }, -- Patchy rain nearby
+    ['179'] = { "❄", "", "" }, -- Patchy snow nearby
+    ['182'] = { "☔", "", "" }, -- Patchy sleet nearby
+    ['185'] = { "☔", "", "" }, -- Patchy freezing drizzle nearby
+    ['200'] = { "⚡", "", "" }, -- Thundery outbreaks in nearby
+    ['227'] = { "❄", "", "" }, -- Blowing snow
+    ['230'] = { "❄", "", "" }, -- Blizzard
+    ['248'] = { "≡", "", "" }, -- Fog
+    ['260'] = { "≡", "", "" }, -- Freezing fog
+    ['263'] = { "☔", "", "" }, -- Patchy light drizzle
+    ['266'] = { "☔", "", "" }, -- Light drizzle
+    ['281'] = { "☔", "", "" }, -- Freezing drizzle
+    ['284'] = { "☔", "", "" }, -- Heavy freezing drizzle
+    ['293'] = { "☔", "", "" }, -- Patchy light rain
+    ['296'] = { "☔", "", "" }, -- Light rain
+    ['299'] = { "☔", "", "" }, -- Moderate rain at times
+    ['302'] = { "☔", "", "" }, -- Moderate rain
+    ['305'] = { "☔", "", "" }, -- Heavy rain at times
+    ['308'] = { "☔", "", "" }, -- Heavy rain
+    ['311'] = { "☔", "", "" }, -- Light freezing rain
+    ['314'] = { "☔", "", "" }, -- Moderate or heavy freezing rain
+    ['317'] = { "☔", "", "" }, -- Light sleet
+    ['320'] = { "☔", "", "" }, -- Moderate or heavy sleet
+    ['323'] = { "❄", "", "" }, -- Patchy light snow
+    ['326'] = { "❄", "", "" }, -- Light snow
+    ['329'] = { "❄", "", "" }, -- Patchy moderate snow
+    ['332'] = { "❄", "", "" }, -- Moderate snow
+    ['335'] = { "❄", "", "" }, -- Patchy heavy snow
+    ['338'] = { "❄", "", "" }, -- Heavy snow
+    ['350'] = { "❄", "", "" }, -- Ice pellets
+    ['353'] = { "☔", "", "" }, -- Light rain shower
+    ['356'] = { "☔", "", "" }, -- Moderate or heavy rain shower
+    ['359'] = { "☔", "", "" }, -- Torrential rain shower
+    ['362'] = { "☔", "", "" }, -- Light sleet showers
+    ['365'] = { "☔", "", "" }, -- Moderate or heavy sleet showers
+    ['368'] = { "❄", "", "" }, -- Light snow showers
+    ['371'] = { "❄", "", "" }, -- Moderate or heavy snow showers
+    ['374'] = { "☔", "", "" }, -- Light showers of ice pellets
+    ['377'] = { "☔", "", "" }, -- Moderate or heavy showers of ice pellets
+    ['386'] = { "⚡", "", "" }, -- Patchy light rain in area with thunder
+    ['389'] = { "⚡", "", "" }, -- Moderate or heavy rain in area with thunder
+    ['392'] = { "⚡", "", "" }, -- Patchy light snow in area with thunder
+    ['395'] = { "⚡", "", "" }, -- Moderate or heavy snow in area with thunder
+}
 
-local function _day_of_week(date)
-    local t = utils.time_from_str(date)
-    if t == nil then return "???" else return os.date("%a", t) end
-end
-
-local function _format_temp(metric, tempC, tempF)
-    return metric and tostring(tempC) .. "℃" or tostring(tempF) .. "℉"
-end
-
--- WMO 4677 codes: [wmo] = { description, wwo_mapping }
-local _wmo_map = {
+-- WMO 4677 code -> { description, wwo_mapping }
+local WMO_MAP = {
     -- 00-09: sky / visibility
     [0] = { "Clear sky", '113' },                      -- Clear/Sunny
     [1] = { "Mainly clear", '113' },                   -- Clear/Sunny
@@ -181,6 +169,18 @@ local _wmo_map = {
 }
 local WMO_FALLBACK = { "Unknown", '119' }              -- fallback for unknown weather codes
 
+local WEATHER_UNITS = {
+    metric   = { temp = "℃", wind = " km/h", precip = " mm" },
+    imperial = { temp = "℉", wind = " mph", precip = " in" },
+}
+
+
+-- helper functions --
+local function _day_of_week(date)
+    local t = utils.time_from_str(date)
+    if t == nil then return "???" else return os.date("%a", t) end
+end
+
 local function _deg_to_compass(deg)
     local dirs = { "N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW" }
     return dirs[math.floor((deg / 22.5) + 0.5) % 16 + 1]
@@ -188,6 +188,7 @@ end
 
 -- weather backend - wttr.in
 local function fetch_weather_wttrin(loc, metric)
+    local u = WEATHER_UNITS[metric and "metric" or "imperial"]
     local url = "https://wttr.in/" .. (loc:lower() == "auto" and "" or loc:gsub("%s+", "+")) .. "?format=j1"
     lcc.log.trace("fetching:", url)
     local w = utils.json.curl(url)
@@ -201,9 +202,9 @@ local function fetch_weather_wttrin(loc, metric)
                 day = _day_of_week(fw.date):upper(),
                 desc = fc.weatherDesc[1].value,
                 code = fc.weatherCode,
-                icon = _weather_icon(fc.weatherCode),
-                maxtemp = _format_temp(metric, fw.maxtempC, fw.maxtempF),
-                mintemp = _format_temp(metric, fw.mintempC, fw.mintempF),
+                icon = WWO_ICONS[fc.weatherCode],
+                maxtemp = (metric and fw.maxtempC or fw.maxtempF) .. u.temp,
+                mintemp = (metric and fw.mintempC or fw.mintempF) .. u.temp,
             }
         end
 
@@ -226,13 +227,13 @@ local function fetch_weather_wttrin(loc, metric)
             loc = actual_loc,
             desc = c.weatherDesc[1].value,
             code = c.weatherCode,
-            icon = _weather_icon(c.weatherCode),
-            temp = _format_temp(metric, c.temp_C, c.temp_F),
+            icon = WWO_ICONS[c.weatherCode],
+            temp = (metric and c.temp_C or c.temp_F) .. u.temp,
             hum = c.humidity,
-            wind = metric and c.windspeedKmph .. " km/h" or c.windspeedMiles .. " mph",
+            wind = (metric and c.windspeedKmph or c.windspeedMiles) .. u.wind,
             winddir = c.winddir16Point,
             has_precip = (tonumber(c.precipMM) or 0) > 0,
-            precip = metric and c.precipMM .. " mm" or c.precipInches .. " in",
+            precip = (metric and c.precipMM or c.precipInches) .. u.precip,
             fc = forecast,
         }
         return weather_data, actual_loc
@@ -261,52 +262,49 @@ local function fetch_weather_openmeteo(loc, metric)
     local geo = utils.reverse_geocode(lat, lon)
     actual_loc = geo and utils.join_strs({ geo.city, geo.principalSubdivision }, ", ") or loc
 
+    local u = WEATHER_UNITS[metric and "metric" or "imperial"]
     local url = string.format(
         "https://api.open-meteo.com/v1/forecast?latitude=%f&longitude=%f"
         .. "&current=temperature_2m,relative_humidity_2m,wind_speed_10m,wind_direction_10m,precipitation,weather_code"
         .. "&daily=temperature_2m_max,temperature_2m_min,weather_code"
-        .. "&timezone=auto&forecast_days=3", lat, lon)
+        .. "&temperature_unit=%s&wind_speed_unit=%s&precipitation_unit=%s"
+        .. "&timezone=auto&forecast_days=3",
+        lat, lon,
+        metric and "celsius" or "fahrenheit",
+        metric and "kmh" or "mph",
+        metric and "mm" or "inch")
     lcc.log.trace("fetching:", url)
     local w = utils.json.curl(url)
     if not w then return end
 
     local c = w.current
     local wmo = c.weather_code
-    local tempC = math.floor(c.temperature_2m + 0.5)
-    local tempF = math.floor(c.temperature_2m * 9 / 5 + 32 + 0.5)
-    local windKmh = math.floor(c.wind_speed_10m + 0.5)
-    local windMph = math.floor(c.wind_speed_10m / 1.609 + 0.5)
-    local precipMM = c.precipitation
+    local precip = c.precipitation
 
     local forecast = {}
     for i = 1, 3 do
         local fc_wmo = w.daily.weather_code[i]
-        local maxC = math.floor(w.daily.temperature_2m_max[i] + 0.5)
-        local minC = math.floor(w.daily.temperature_2m_min[i] + 0.5)
-        local maxF = math.floor(w.daily.temperature_2m_max[i] * 9 / 5 + 32 + 0.5)
-        local minF = math.floor(w.daily.temperature_2m_min[i] * 9 / 5 + 32 + 0.5)
         forecast[i] = {
             day = _day_of_week(w.daily.time[i]):upper(),
-            desc = (_wmo_map[fc_wmo] or WMO_FALLBACK)[1],
+            desc = (WMO_MAP[fc_wmo] or WMO_FALLBACK)[1],
             code = tostring(fc_wmo),
-            icon = _weather_icon((_wmo_map[fc_wmo] or WMO_FALLBACK)[2]),
-            maxtemp = _format_temp(metric, maxC, maxF),
-            mintemp = _format_temp(metric, minC, minF),
+            icon = WWO_ICONS[(WMO_MAP[fc_wmo] or WMO_FALLBACK)[2]],
+            maxtemp = math.floor(w.daily.temperature_2m_max[i] + 0.5) .. u.temp,
+            mintemp = math.floor(w.daily.temperature_2m_min[i] + 0.5) .. u.temp,
         }
     end
 
     local weather_data = {
         loc = actual_loc,
-        desc = (_wmo_map[wmo] or WMO_FALLBACK)[1],
+        desc = (WMO_MAP[wmo] or WMO_FALLBACK)[1],
         code = tostring(wmo),
-        icon = _weather_icon((_wmo_map[wmo] or WMO_FALLBACK)[2]),
-        temp = _format_temp(metric, tempC, tempF),
+        icon = WWO_ICONS[(WMO_MAP[wmo] or WMO_FALLBACK)[2]],
+        temp = math.floor(c.temperature_2m + 0.5) .. u.temp,
         hum = tostring(c.relative_humidity_2m),
-        wind = metric and windKmh .. " km/h" or windMph .. " mph",
+        wind = math.floor(c.wind_speed_10m + 0.5) .. u.wind,
         winddir = _deg_to_compass(c.wind_direction_10m),
-        has_precip = precipMM > 0,
-        precip = metric and string.format("%.1f", precipMM) .. " mm"
-            or string.format("%.1f", precipMM / 25.4) .. " in",
+        has_precip = precip > 0,
+        precip = string.format("%.1f", precip) .. u.precip,
         fc = forecast,
     }
     return weather_data, actual_loc
