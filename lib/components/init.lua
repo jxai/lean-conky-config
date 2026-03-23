@@ -67,6 +67,12 @@ components.weather = require("components.weather")
 -- where `func` can be a component function, or its name (string)
 -- if `func` is a string, the leading "C_." can be omitted for convenience
 function components.build_panel()
+    -- activate demo mode if configured (done here because lcc.config
+    -- is not yet available when this module is first loaded)
+    if lcc.config.demo then
+        require("components.demo").activate()
+    end
+
     local panel = {}
     for i, c in ipairs(lcc.panel) do
         local ok, s = pcall(function()
