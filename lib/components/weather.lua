@@ -201,7 +201,6 @@ local function fetch_weather_wttrin(loc, metric)
             forecast[i] = {
                 day = _day_of_week(fw.date):upper(),
                 desc = fc.weatherDesc[1].value,
-                code = fc.weatherCode,
                 icon = WWO_ICONS[fc.weatherCode],
                 maxtemp = (metric and fw.maxtempC or fw.maxtempF) .. u.temp,
                 mintemp = (metric and fw.mintempC or fw.mintempF) .. u.temp,
@@ -226,7 +225,6 @@ local function fetch_weather_wttrin(loc, metric)
         local weather_data = {
             loc = actual_loc,
             desc = c.weatherDesc[1].value,
-            code = c.weatherCode,
             icon = WWO_ICONS[c.weatherCode],
             temp = (metric and c.temp_C or c.temp_F) .. u.temp,
             hum = c.humidity,
@@ -287,7 +285,6 @@ local function fetch_weather_openmeteo(loc, metric)
         forecast[i] = {
             day = _day_of_week(w.daily.time[i]):upper(),
             desc = (WMO_MAP[fc_wmo] or WMO_FALLBACK)[1],
-            code = tostring(fc_wmo),
             icon = WWO_ICONS[(WMO_MAP[fc_wmo] or WMO_FALLBACK)[2]],
             maxtemp = math.floor(w.daily.temperature_2m_max[i] + 0.5) .. u.temp,
             mintemp = math.floor(w.daily.temperature_2m_min[i] + 0.5) .. u.temp,
@@ -297,7 +294,6 @@ local function fetch_weather_openmeteo(loc, metric)
     local weather_data = {
         loc = actual_loc,
         desc = (WMO_MAP[wmo] or WMO_FALLBACK)[1],
-        code = tostring(wmo),
         icon = WWO_ICONS[(WMO_MAP[wmo] or WMO_FALLBACK)[2]],
         temp = math.floor(c.temperature_2m + 0.5) .. u.temp,
         hum = tostring(c.relative_humidity_2m),
