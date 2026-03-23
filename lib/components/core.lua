@@ -273,15 +273,18 @@ lcc.demo.def(core.cpu, { -- demo: oscillating CPU with top processes
                 "6334", "7721", "4458", "9012", "3367" }
             return pids[tonumber(n)] or "0"
         end },
-        { "%${top cpu (%d+)}", function(n)
-            return string.format("%.2f", utils.oscillate(0.5, 15.0, 15 + tonumber(n) * 5))
-        end },
-        { "%${top mem (%d+)}", function(n)
-            return string.format("%.2f", utils.oscillate(0.5, 8.0, 20 + tonumber(n) * 7))
-        end },
+        { "%${top cpu (%d+)}", "${lua demo_val top_cpu %1}" },
+        { "%${top mem (%d+)}", "${lua demo_val top_mem %1}" },
     },
     vals = {
         cpu = function() return utils.oscillate(15, 85, 30, true) end,
+        top_cpu = function(n)
+            n = tonumber(n)
+            return string.format("%.2f", (11 - n) * 1.4 + utils.oscillate(0, 1.2, 15 + n * 5))
+        end,
+        top_mem = function(n)
+            return string.format("%.2f", utils.oscillate(0.5, 8.0, 20 + tonumber(n) * 7))
+        end,
     },
 })
 
@@ -322,16 +325,19 @@ lcc.demo.def(core.memory, { -- demo: oscillating RAM/swap with top processes
                 "7721", "1204", "9012", "2233", "1156" }
             return pids[tonumber(n)] or "0"
         end },
-        { "%${top_mem cpu (%d+)}", function(n)
-            return string.format("%.2f", utils.oscillate(0.1, 5.0, 25 + tonumber(n) * 6))
-        end },
-        { "%${top_mem mem (%d+)}", function(n)
-            return string.format("%.2f", utils.oscillate(1.0, 12.0, 30 + tonumber(n) * 8))
-        end },
+        { "%${top_mem cpu (%d+)}", "${lua demo_val topmem_cpu %1}" },
+        { "%${top_mem mem (%d+)}", "${lua demo_val topmem_mem %1}" },
     },
     vals = {
-        mem_perc  = function() return utils.oscillate(40, 72, 60, true) end,
-        swap_perc = function() return utils.oscillate(5, 25, 90, true) end,
+        mem_perc   = function() return utils.oscillate(40, 72, 60, true) end,
+        swap_perc  = function() return utils.oscillate(5, 25, 90, true) end,
+        topmem_cpu = function(n)
+            return string.format("%.2f", utils.oscillate(0.1, 5.0, 25 + tonumber(n) * 6))
+        end,
+        topmem_mem = function(n)
+            n = tonumber(n)
+            return string.format("%.2f", (11 - n) * 1.1 + utils.oscillate(0, 0.9, 30 + n * 8))
+        end,
     },
 })
 
@@ -364,18 +370,20 @@ lcc.demo.def(core.storage, { -- demo: mock disks with spiky I/O
             local pids = { "3842", "5102", "6334", "2233", "8891" }
             return pids[tonumber(n)] or "0"
         end },
-        { "%${top_io io_read (%d+)}", function(n)
-            return string.format("%.2f", utils.oscillate(0, 500, 10 + tonumber(n) * 3))
-        end },
-        { "%${top_io io_write (%d+)}", function(n)
-            return string.format("%.2f", utils.oscillate(0, 300, 12 + tonumber(n) * 4))
-        end },
+        { "%${top_io io_read (%d+)}",  "${lua demo_val topio_read %1}" },
+        { "%${top_io io_write (%d+)}", "${lua demo_val topio_write %1}" },
     },
     vals = {
         disk_read    = function() return utils.oscillate(20, 1500, 20, true, true) end,
         disk_write   = function() return utils.oscillate(10, 800, 25, true, true) end,
         disk_read_s  = function() return utils.filesize(utils.oscillate(20, 1500, 20, true, true) * 1024) end,
         disk_write_s = function() return utils.filesize(utils.oscillate(10, 800, 25, true, true) * 1024) end,
+        topio_read   = function(n)
+            return string.format("%.2f", utils.oscillate(20, 1500, 20, true, true) * (6 - tonumber(n)) / 15)
+        end,
+        topio_write  = function(n)
+            return string.format("%.2f", utils.oscillate(10, 800, 25, true, true) * (6 - tonumber(n)) / 15)
+        end,
     },
     conky_funcs = {
         disks = function(_interv)

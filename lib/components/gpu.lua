@@ -113,12 +113,15 @@ lcc.demo.def(gpu.nvidia, { -- demo: mock GPU data with oscillating metrics
             }
             if top_n > 0 then
                 g.processes = {}
-                for i = 1, math.min(top_n, #names) do
+                local n = math.min(top_n, #names)
+                local tw = n * (n + 1) / 2 -- sum of weights: n, n-1, ..., 1
+                for i = 1, n do
+                    local share = (n + 1 - i) / tw
                     table.insert(g.processes, {
                         name = names[i],
                         pid = pids[i],
-                        gpu_mem = utils.oscillate(100 * 1048576, 800 * 1048576, 20 + i * 10, true),
-                        gpu_util = utils.oscillate(1, 30, 15 + i * 7),
+                        gpu_mem = math.floor(g.mem_used * share),
+                        gpu_util = g.gpu_util * share,
                     })
                 end
             end

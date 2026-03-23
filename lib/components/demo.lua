@@ -25,9 +25,9 @@ end
 -- activate demo mode for a component: patches the function and returns it
 function demo.activate(func)
     if not _initialized then
-        _G.conky_demo_val = function(name)
+        _G.conky_demo_val = function(name, ...)
             local fn = _vals[name]
-            return fn and tostring(fn()) or "0"
+            return fn and tostring(fn(...)) or "0"
         end
         _initialized = true
     end
