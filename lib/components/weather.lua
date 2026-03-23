@@ -183,7 +183,7 @@ end
 
 local function _deg_to_compass(deg)
     local dirs = { "N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW" }
-    return dirs[math.floor((deg / 22.5) + 0.5) % 16 + 1]
+    return dirs[utils.round(deg / 22.5) % 16 + 1]
 end
 
 -- weather backend - wttr.in
@@ -286,8 +286,8 @@ local function fetch_weather_openmeteo(loc, metric)
             day = _day_of_week(w.daily.time[i]):upper(),
             desc = (WMO_MAP[fc_wmo] or WMO_FALLBACK)[1],
             icon = WWO_ICONS[(WMO_MAP[fc_wmo] or WMO_FALLBACK)[2]],
-            maxtemp = math.floor(w.daily.temperature_2m_max[i] + 0.5) .. u.temp,
-            mintemp = math.floor(w.daily.temperature_2m_min[i] + 0.5) .. u.temp,
+            maxtemp = utils.round(w.daily.temperature_2m_max[i]) .. u.temp,
+            mintemp = utils.round(w.daily.temperature_2m_min[i]) .. u.temp,
         }
     end
 
@@ -295,9 +295,9 @@ local function fetch_weather_openmeteo(loc, metric)
         loc = actual_loc,
         desc = (WMO_MAP[wmo] or WMO_FALLBACK)[1],
         icon = WWO_ICONS[(WMO_MAP[wmo] or WMO_FALLBACK)[2]],
-        temp = math.floor(c.temperature_2m + 0.5) .. u.temp,
+        temp = utils.round(c.temperature_2m) .. u.temp,
         hum = tostring(c.relative_humidity_2m),
-        wind = math.floor(c.wind_speed_10m + 0.5) .. u.wind,
+        wind = utils.round(c.wind_speed_10m) .. u.wind,
         winddir = _deg_to_compass(c.wind_direction_10m),
         has_precip = precip > 0,
         precip = string.format("%.1f", precip) .. u.precip,
