@@ -27,7 +27,6 @@ function conky_text(pla, text, font, alt_font, alt_text)
         local align, pos_str = pla:lower():match("^([lcr]?)([+-]?%d*%.?%d*%%?)$")
         if not align then return end
 
-        if align == "" then align = nil end
         -- if position not specified, to align against whole width
         if pos_str == "" then
             if align == 'l' then
@@ -305,7 +304,6 @@ end
 
 lcc.demo.def(core.memory, { -- demo: oscillating RAM/swap with top processes
     text_gsub = {
-        -- longer names first to avoid partial match
         { "%${memperc}",  "${lua demo_val mem_perc}" },
         { "%${memmax}",   "16.0 GiB" },
         { "%${membar}",   "${lua_bar demo_val mem_perc}" },
@@ -459,7 +457,7 @@ end
 lcc.demo.def(core.network, { -- demo: mock interfaces with spiky traffic
     text_gsub = {
         { "%${execi 60 ip[^}]*}", "192.168.1.100\n10.0.0.42" },
-        { "%${texeci [^}]*}",     "203.0.113.42" },
+        { "%${texeci [^}]*}",     "203.0.113.42" }, -- RFC 5737 documentation IP
     },
     vals = {
         net_down   = function() return utils.oscillate(5, 600, 15, true, true) end,
