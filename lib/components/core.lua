@@ -314,7 +314,7 @@ end
 lcc.tpl.network = [[
 ${color2}${lua font icon_s { } {✧ } icon_s_alt}${lua font h2 {Local IPs}}${alignr}${lua font h2 {External IP}}${lua font icon_s { } { ✦} icon_s_alt}${font}${color}
 ${execi 60 ip a | grep inet | grep -vw lo | grep -v inet6 | cut -d \/ -f1 | sed 's/[^0-9\.]*//g'}#
-${alignr}${texeci 3600  wget -qO- https://checkip.amazonaws.com; echo}
+${alignr}${texeci 3600  wget -qO- https://checkip.amazonaws.com | sed -Ez '$s/\n+$//'; echo}
 ${voffset $sr{5}}${lua ifaces 10}]]
 function core.network()
     return core.section("NETWORK", "") .. "\n" .. lcc.tpl.network()
@@ -327,10 +327,8 @@ lcc.tpl.ifaces = [[
 ${if_existing /sys/class/net/{%= iface %}/operstate up}#
 ${lua font icon_s  ${voffset $sr{-1}}▼ icon_s_alt}${font}  ${downspeed {%= iface %}} ${alignc $sr{-22}}${lua font h2 {{%= iface %}}}${font}#
 ${alignr}${upspeed {%= iface %}}  ${lua font icon_s  ${voffset $sr{-2}}▲ icon_s_alt}${font}
-${color3}${downspeedgraph {%= iface %} {%= lcc.half_graph_size %}} ${alignr}${upspeedgraph {%= iface %} {%= lcc.half_graph_size %} }${color}#
-${endif}
-{% end %}
-{% else %}
+${color3}${downspeedgraph {%= iface %} {%= lcc.half_graph_size %}} ${alignr}${upspeedgraph {%= iface %} {%= lcc.half_graph_size %} }${color}
+${endif}{% end %}{% else %}
 ${font}(no active network interface found)
 {% end %}]]
 function conky_ifaces(interv)
