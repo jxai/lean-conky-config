@@ -374,4 +374,33 @@ local function weather(args)
     }
 end
 
+lcc.demo.def(weather, { -- demo: London weather with 3-day forecast
+    conky_funcs = {
+        weather = function(_interv, _backend, _loc, _metric)
+            -- minimal subset of WWO icons (from weather.lua WWO_ICONS)
+            local icons = {
+                sunny         = { "☀", "", "" }, -- WWO 113
+                partly_cloudy = { "☁", "", "" }, -- WWO 116
+                light_rain    = { "☔", "", "" }, -- WWO 296
+            }
+            return conky_parse(lcc.tpl.weather { wd = {
+                loc = "London, England",
+                desc = "Partly cloudy",
+                icon = icons.partly_cloudy,
+                temp = "15℃",
+                hum = "72",
+                wind = "15 km/h",
+                winddir = "SW",
+                has_precip = false,
+                precip = "0.0 mm",
+                fc = {
+                    { day = "MON", icon = icons.sunny, maxtemp = "17℃", mintemp = "10℃" },
+                    { day = "TUE", icon = icons.light_rain, maxtemp = "13℃", mintemp = "8℃" },
+                    { day = "WED", icon = icons.partly_cloudy, maxtemp = "15℃", mintemp = "9℃" },
+                },
+            } })
+        end,
+    },
+})
+
 return weather

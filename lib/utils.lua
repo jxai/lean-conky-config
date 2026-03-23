@@ -330,6 +330,9 @@ function utils.round(x, ndigits)
     return math.floor(x * pow + 0.5) / pow
 end
 
+-- pow with fallback, see https://www.lua.org/manual/5.3/manual.html#8.2
+utils.pow = math.pow or (function(a, b) return (a) ^ (b) end)
+
 -- calculate ratio as percentage
 function utils.ratio_perc(x, y, ndigits)
     return utils.round(100.0 * tonumber(x) / tonumber(y), ndigits)
@@ -437,6 +440,20 @@ function utils.reverse_geocode(lat, lon)
     local url = "api-bdc.io/data/reverse-geocode-client?latitude=" ..
         lat .. "&longitude=" .. lon .. "&localityLanguage=en"
     return utils.json.curl(url)
+end
+
+-- oscillating signal generator
+function utils.oscillate(min, max, period, as_int, spiky)
+    local t = os.time()
+    -- sum of incommensurate sine waves for an irregular, non-repeating pattern
+    local v = 0.5
+        + 0.30 * math.sin(2 * math.pi * t / period)
+        + 0.15 * math.sin(2 * math.pi * t / (period * 0.7 + 1))
+        + 0.10 * math.sin(2 * math.pi * t / (period * 0.3 + 2))
+    v = math.max(0, math.min(1, v))
+    if spiky then v = utils.pow(v, 5) end
+    v = min + (max - min) * v
+    return as_int and utils.round(v) or v
 end
 
 return utils

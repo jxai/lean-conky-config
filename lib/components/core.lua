@@ -176,6 +176,15 @@ function core.datetime()
     return lcc.tpl.datetime()
 end
 
+lcc.demo.def(core.datetime, { -- demo: fixed date/time
+    text_gsub = {
+        { "%${time %%b %%%-d}", "{Jun 9}" },
+        { "%${time %%H:%%M}",   "10:08" },
+        { "%${time %%^A}",      "MONDAY" },
+        { "%${time %%Y}",       "2025" },
+    },
+})
+
 lcc.tpl.system = [[
 ${font}${sysname} ${kernel} ${alignr}${machine}
 Host:${alignr}${nodename}
@@ -184,6 +193,18 @@ Processes:${alignr}${running_processes} / ${processes}]]
 function core.system(args)
     return core.section("SYSTEM", "") .. "\n" .. lcc.tpl.system()
 end
+
+lcc.demo.def(core.system, { -- demo: static system info
+    text_gsub = {
+        { "%${sysname}",           "Linux" },
+        { "%${kernel}",            "6.8.0-100-generic" },
+        { "%${machine}",           "x86_64" },
+        { "%${nodename}",          "demo-host" },
+        { "%${uptime}",            "42d 7h 15m" },
+        { "%${running_processes}", "342" },
+        { "%${processes}",         "1024" },
+    },
+})
 
 -- helper to generate conky text for top_x variables, with optional padding
 local function _top_val_text(num, dev, type, padded_len, align)
@@ -238,6 +259,33 @@ function core.cpu(args)
     }
 end
 
+lcc.demo.def(core.cpu, { -- demo: oscillating CPU with top processes
+    text_gsub = {
+        { "%${execi 3600 grep model[^}]*}", "Intel Core i7-12700K" },
+        { "%${cpu cpu0}",                   "${lua demo_val cpu}" },
+        { "%${cpugraph cpu0}",              '${lua_graph "demo_val cpu"}' },
+        { "%${top name (%d+)}", function(n)
+            local names = { "firefox", "code", "python3", "Xorg", "pulseaudio",
+                "docker", "node", "java", "clang", "cargo" }
+            return names[tonumber(n)] or "process"
+        end },
+        { "%${top pid (%d+)}", function(n)
+            local pids = { "3842", "5102", "8891", "1204", "2567",
+                "6334", "7721", "4458", "9012", "3367" }
+            return pids[tonumber(n)] or "0"
+        end },
+        { "%${top cpu (%d+)}", function(n)
+            return string.format("%.2f", utils.oscillate(0.5, 15.0, 15 + tonumber(n) * 5))
+        end },
+        { "%${top mem (%d+)}", function(n)
+            return string.format("%.2f", utils.oscillate(0.5, 8.0, 20 + tonumber(n) * 7))
+        end },
+    },
+    vals = {
+        cpu = function() return utils.oscillate(15, 85, 30, true) end,
+    },
+})
+
 lcc.tpl.memory = [[
 ${color2}${lua font h2 RAM}${font}${color} ${alignc $sr{-16}}${mem} / ${memmax} ${alignr}${memperc}%
 ${color3}${membar}${color}
@@ -255,6 +303,40 @@ function core.memory(args)
     }
 end
 
+lcc.demo.def(core.memory, { -- demo: oscillating RAM/swap with top processes
+    text_gsub = {
+        -- longer names first to avoid partial match
+        { "%${memperc}",  "${lua demo_val mem_perc}" },
+        { "%${memmax}",   "16.0 GiB" },
+        { "%${membar}",   "${lua_bar demo_val mem_perc}" },
+        { "%${mem}",      "8.5 GiB" },
+        { "%${swapperc}", "${lua demo_val swap_perc}" },
+        { "%${swapmax}",  "8.0 GiB" },
+        { "%${swapbar}",  "${lua_bar demo_val swap_perc}" },
+        { "%${swap}",     "1.2 GiB" },
+        { "%${top_mem name (%d+)}", function(n)
+            local names = { "firefox", "code", "java", "docker", "python3",
+                "node", "Xorg", "clang", "mysql", "redis" }
+            return names[tonumber(n)] or "process"
+        end },
+        { "%${top_mem pid (%d+)}", function(n)
+            local pids = { "3842", "5102", "4458", "6334", "8891",
+                "7721", "1204", "9012", "2233", "1156" }
+            return pids[tonumber(n)] or "0"
+        end },
+        { "%${top_mem cpu (%d+)}", function(n)
+            return string.format("%.2f", utils.oscillate(0.1, 5.0, 25 + tonumber(n) * 6))
+        end },
+        { "%${top_mem mem (%d+)}", function(n)
+            return string.format("%.2f", utils.oscillate(1.0, 12.0, 30 + tonumber(n) * 8))
+        end },
+    },
+    vals = {
+        mem_perc  = function() return utils.oscillate(40, 72, 60, true) end,
+        swap_perc = function() return utils.oscillate(5, 25, 90, true) end,
+    },
+})
+
 lcc.tpl.storage = [[
 ${lua disks 5}
 ${voffset $sr{4}}${lua font icon_s {} {Read:}} ${font}${diskio_read} ${alignr}${lua font icon_s {} {Write: }}${font}${diskio_write}${lua font icon_s { } {}}
@@ -269,6 +351,60 @@ function core.storage(args)
         top_io_entries = get_top_entries(top_n, "io", { "name", "pid", "io_read", "io_write" })
     }
 end
+
+lcc.demo.def(core.storage, { -- demo: mock disks with spiky I/O
+    text_gsub = {
+        { "%${diskio_read}",               "${lua demo_val disk_read_s}" },
+        { "%${diskio_write}",              "${lua demo_val disk_write_s}" },
+        { "%${diskiograph_read ([^}]*)}",  '${lua_graph "demo_val disk_read" %1}' },
+        { "%${diskiograph_write ([^}]*)}", '${lua_graph "demo_val disk_write" %1}' },
+        { "%${top_io name (%d+)}", function(n)
+            local names = { "firefox", "code", "docker", "mysql", "python3" }
+            return names[tonumber(n)] or "process"
+        end },
+        { "%${top_io pid (%d+)}", function(n)
+            local pids = { "3842", "5102", "6334", "2233", "8891" }
+            return pids[tonumber(n)] or "0"
+        end },
+        { "%${top_io io_read (%d+)}", function(n)
+            return string.format("%.2f", utils.oscillate(0, 500, 10 + tonumber(n) * 3))
+        end },
+        { "%${top_io io_write (%d+)}", function(n)
+            return string.format("%.2f", utils.oscillate(0, 300, 12 + tonumber(n) * 4))
+        end },
+    },
+    vals = {
+        disk_read    = function() return utils.oscillate(20, 1500, 20, true, true) end,
+        disk_write   = function() return utils.oscillate(10, 800, 25, true, true) end,
+        disk_read_s  = function() return utils.filesize(utils.oscillate(20, 1500, 20, true, true) * 1024) end,
+        disk_write_s = function() return utils.filesize(utils.oscillate(10, 800, 25, true, true) * 1024) end,
+    },
+    conky_funcs = {
+        disks = function(_interv)
+            local disks = {
+                {
+                    name = T_ "${lua font icon_s  ${voffset $sr{-4}}⌂ icon_alt}",
+                    type = "ext4",
+                    used = 180,
+                    size = 500,
+                    used_perc = "36",
+                    used_h = "180.0 GiB",
+                    size_h = "500.0 GiB",
+                },
+                {
+                    name = "Data",
+                    type = "ntfs",
+                    used = 750,
+                    size = 1024,
+                    used_perc = "73",
+                    used_h = "750.0 GiB",
+                    size_h = "1.0 TiB",
+                },
+            }
+            return conky_parse(utils.trim(lcc.tpl.disks { disks = disks }))
+        end,
+    },
+})
 
 -- dynamically show mounted disks
 lcc.tpl.disks = [[
@@ -319,6 +455,37 @@ ${voffset $sr{5}}${lua ifaces 10}]]
 function core.network()
     return core.section("NETWORK", "") .. "\n" .. lcc.tpl.network()
 end
+
+lcc.demo.def(core.network, { -- demo: mock interfaces with spiky traffic
+    text_gsub = {
+        { "%${execi 60 ip[^}]*}", "192.168.1.100\n10.0.0.42" },
+        { "%${texeci [^}]*}",     "203.0.113.42" },
+    },
+    vals = {
+        net_down   = function() return utils.oscillate(5, 600, 15, true, true) end,
+        net_up     = function() return utils.oscillate(2, 150, 18, true, true) end,
+        net_down_s = function() return utils.filesize(utils.oscillate(5, 600, 15, true, true) * 1024) end,
+        net_up_s   = function() return utils.filesize(utils.oscillate(2, 150, 18, true, true) * 1024) end,
+    },
+    conky_funcs = {
+        ifaces = function(_interv)
+            local text = utils.trim(lcc.tpl.ifaces { ifaces = { "eth0", "wlan0" } })
+            local text_gsub = {
+                -- replace if_existing path so the guard always passes (demo ifaces may not exist)
+                { "%${if_existing /sys/class/net/[^}]*}", "${if_existing /proc/uptime}" },
+                -- graph patterns before plain to avoid partial match
+                { "%${downspeedgraph (%S+ )([^}]*)}",     '${lua_graph "demo_val net_down" %2}' },
+                { "%${upspeedgraph (%S+ )([^}]*)}",       '${lua_graph "demo_val net_up" %2}' },
+                { "%${downspeed [^}]*}",                  "${lua demo_val net_down_s}" },
+                { "%${upspeed [^}]*}",                    "${lua demo_val net_up_s}" },
+            }
+            for _, r in ipairs(text_gsub) do
+                text = text:gsub(r[1], r[2])
+            end
+            return conky_parse(text)
+        end,
+    },
+})
 
 -- dynamically show active ifaces
 -- see https://matthiaslee.com/dynamically-changing-conky-network-interface/

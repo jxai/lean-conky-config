@@ -91,4 +91,41 @@ function gpu.nvidia(args)
     }
 end
 
+lcc.demo.def(gpu.nvidia, { -- demo: mock GPU data with oscillating metrics
+    conky_funcs = {
+        nvidia = function(_interv, top_n)
+            top_n       = tonumber(top_n or 0)
+            local names = { "python3", "Xorg", "firefox", "blender", "vlc" }
+            local pids  = { "8891", "1204", "3842", "7123", "5567" }
+            local g     = {
+                model_name = "NVIDIA GeForce RTX 4070",
+                gpu_util = utils.oscillate(20, 90, 25, true),
+                gpu_temp = utils.oscillate(45, 78, 40, true),
+                gpu_temp_thres = 90,
+                fan_speed = utils.oscillate(30, 70, 35, true),
+                power_usage = utils.oscillate(80, 200, 30),
+                power_limit = 250,
+                mem_used = 4 * 1073741824,
+                mem_total = 12 * 1073741824,
+                mem_used_h = utils.filesize(4 * 1073741824),
+                mem_total_h = utils.filesize(12 * 1073741824),
+                mem_util = utils.oscillate(25, 60, 50, true),
+            }
+            if top_n > 0 then
+                g.processes = {}
+                for i = 1, math.min(top_n, #names) do
+                    table.insert(g.processes, {
+                        name = names[i],
+                        pid = pids[i],
+                        gpu_mem = utils.oscillate(100 * 1048576, 800 * 1048576, 20 + i * 10, true),
+                        gpu_util = utils.oscillate(1, 30, 15 + i * 7),
+                    })
+                end
+            end
+            local gpu_info = { g }
+            return conky_parse(utils.trim(lcc.tpl.nvidia_nvml { gpu_info = gpu_info }))
+        end,
+    },
+})
+
 return gpu

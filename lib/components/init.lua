@@ -46,6 +46,9 @@ end
 local components = {}
 C_ = components -- C_: global alias for `components`
 
+-- demo module, mounted on lcc for easy access from component modules
+lcc.demo = require("components.demo")
+
 -------------------------
 -- register components --
 -------------------------
@@ -67,12 +70,6 @@ components.weather = require("components.weather")
 -- where `func` can be a component function, or its name (string)
 -- if `func` is a string, the leading "C_." can be omitted for convenience
 function components.build_panel()
-    -- activate demo mode if configured (done here because lcc.config
-    -- is not yet available when this module is first loaded)
-    if lcc.config.demo then
-        require("components.demo").activate()
-    end
-
     local panel = {}
     for i, c in ipairs(lcc.panel) do
         local ok, s = pcall(function()
@@ -93,6 +90,7 @@ function components.build_panel()
                 func = utils.loadstring("return " .. func)()
             end
             if not func then error("component function not found") end
+            if lcc.config.demo then func = lcc.demo.activate(func) end
             lcc.log.debug("building component [" .. i .. "]: ", name, args)
             return func(utils.table.unpack(args))
         end)
