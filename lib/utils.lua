@@ -88,6 +88,17 @@ function utils.table.lazy(vars)
     return lazy_t
 end
 
+-- check if table `t` contains `val`
+function utils.table.contains(t, val)
+    if type(t) ~= "table" then return false end
+    for _, v in ipairs(t) do
+        if v == val then
+            return true
+        end
+    end
+    return false
+end
+
 -- load Lua file in a separate env to prevent polluting global env
 function utils.load_in_env(path, env)
     local _env = env or {}

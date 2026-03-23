@@ -86,12 +86,20 @@ function components.build_panel()
             end
             local name = type(func) == "string" and func or tostring(func)
             if type(func) == "string" then
-                if string.sub(func, 1, 3) ~= "C_." then func = "C_." .. func end
+                if string.sub(name, 1, 3) == "C_." then
+                    name = string.sub(name, 4)
+                else
+                    func = "C_." .. func
+                end
                 func = utils.loadstring("return " .. func)()
             end
             if not func then error("component function not found") end
-            if lcc.config.demo then func = lcc.demo.activate(func) end
-            lcc.log.debug("building component [" .. i .. "]: ", name, args)
+            local note
+            if utils.table.contains(lcc.config.demo, name) or lcc.config.demo == true then
+                func = lcc.demo.activate(func)
+                note = "(demo)"
+            end
+            lcc.log.debug("building component [" .. i .. "]:", name, note or args)
             return func(utils.table.unpack(args))
         end)
         if not ok then

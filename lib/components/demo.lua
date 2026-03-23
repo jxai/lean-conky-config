@@ -25,7 +25,6 @@ end
 -- activate demo mode for a component: patches the function and returns it
 function demo.activate(func)
     if not _initialized then
-        lcc.log.info("entering demo mode...")
         _G.conky_demo_val = function(name)
             local fn = _vals[name]
             return fn and tostring(fn()) or "0"
