@@ -73,9 +73,9 @@ local DEMO_WEATHER      = {
     has_precip = false,
     precip = "0.0 mm",
     fc = {
-        { day = "TUE", icon = DEMO_ICONS.sunny, maxtemp = "17℃", mintemp = "10℃" },
-        { day = "WED", icon = DEMO_ICONS.light_rain, maxtemp = "13℃", mintemp = "8℃" },
-        { day = "THU", icon = DEMO_ICONS.partly_cloudy, maxtemp = "15℃", mintemp = "9℃" },
+        { day = "MON", icon = DEMO_ICONS.sunny, maxtemp = "17℃", mintemp = "10℃" },
+        { day = "TUE", icon = DEMO_ICONS.light_rain, maxtemp = "13℃", mintemp = "8℃" },
+        { day = "WED", icon = DEMO_ICONS.partly_cloudy, maxtemp = "15℃", mintemp = "9℃" },
     },
 }
 
@@ -155,6 +155,13 @@ local DEMO_PROCS = {
 -- guaranteeing identical layout to normal mode.
 
 local function demoify(text)
+    -- === datetime ===
+    -- braces keep multi-word values as a single arg inside ${lua} calls
+    text = text:gsub("%${time %%b %%%-d}", "{Jun 9}")
+    text = text:gsub("%${time %%H:%%M}", "10:08")
+    text = text:gsub("%${time %%^A}", "MONDAY")
+    text = text:gsub("%${time %%Y}", "2025")
+
     -- === system ===
     text = text:gsub("%${sysname}", "Linux")
     text = text:gsub("%${kernel}", "6.8.0-100-generic")
@@ -276,7 +283,7 @@ function demo.activate()
     end
 
     -- wrap real component functions: call real fn, then demoify its output
-    for _, name in ipairs({ "system", "cpu", "memory", "storage", "network" }) do
+    for _, name in ipairs({ "datetime", "system", "cpu", "memory", "storage", "network" }) do
         local real_fn = C_[name]
         C_[name] = function(args) return demoify(real_fn(args)) end
     end
