@@ -5,6 +5,7 @@ window="conky-lcc"
 out_file="lcc.$(date +%y%m%d-%H%M%S).png"
 conky_only=false
 height=""
+top=0
 out_dir=""
 preview=false
 verbose=false
@@ -21,6 +22,7 @@ usage() {
     echo "Options:"
     echo "  -c            Capture conky-lcc window only (black background)"
     echo "  -H, --height  Height of the captured region"
+    echo "  -t, --top     Offset from the top of the conky window"
     echo "  -o, --output  Output directory for the screenshot"
     echo "  -p, --preview Preview the screenshot with feh"
     echo "  -v, --verbose Show intermediate status"
@@ -35,6 +37,10 @@ while [ $# -gt 0 ]; do
             ;;
         -H|--height)
             height="$2"
+            shift 2
+            ;;
+        -t|--top)
+            top="$2"
             shift 2
             ;;
         -o|--output)
@@ -88,9 +94,11 @@ snap_lcc() {
         mon_y=0
     fi
 
-    # clamp to visible monitor area
+    # clamp to visible monitor area, then apply top offset
     eff_y=$(( y > mon_y ? y : mon_y ))
     h=$(( h - (eff_y - y) ))
+    eff_y=$(( eff_y + top ))
+    h=$(( h - top ))
     max_h=$(( mon_y + mon_h - eff_y ))
     [ "$h" -gt "$max_h" ] && h=$max_h
     log "monitor: ${mon_h}px at y=${mon_y}, eff_y: ${eff_y}, max height: ${max_h}"
@@ -103,7 +111,7 @@ snap_lcc() {
     log "capture: ${w}x${h}"
 
     if [ "$conky_only" = true ]; then
-        import -window ${window} -crop ${w}x${h}+0+0 ${out_file}
+        import -window ${window} -crop ${w}x${h}+0+${top} ${out_file}
     else
         import -window root -crop ${w}x${h}+${x}+${eff_y} ${out_file}
     fi
