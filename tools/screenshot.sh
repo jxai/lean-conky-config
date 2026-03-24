@@ -5,6 +5,8 @@ window="conky-lcc"
 out_file="lcc.$(date +%y%m%d-%H%M%S).png"
 conky_only=false
 height=""
+out_dir=""
+preview=false
 verbose=false
 
 log() {
@@ -19,6 +21,8 @@ usage() {
     echo "Options:"
     echo "  -c            Capture conky-lcc window only (black background)"
     echo "  -H, --height  Height of the captured region"
+    echo "  -o, --output  Output directory for the screenshot"
+    echo "  -p, --preview Preview the screenshot with feh"
     echo "  -v, --verbose Show intermediate status"
     echo "  -h, --help    Show this help message and exit"
 }
@@ -32,6 +36,14 @@ while [ $# -gt 0 ]; do
         -H|--height)
             height="$2"
             shift 2
+            ;;
+        -o|--output)
+            out_dir="$2"
+            shift 2
+            ;;
+        -p|--preview)
+            preview=true
+            shift
             ;;
         -v|--verbose)
             verbose=true
@@ -49,26 +61,55 @@ while [ $# -gt 0 ]; do
     esac
 done
 
+if [ -n "$out_dir" ]; then
+    if [ ! -d "$out_dir" ]; then
+        echo "Error: output directory does not exist: ${out_dir}" >&2
+        exit 1
+    fi
+    out_file="${out_dir%/}/${out_file}"
+fi
+
 snap_lcc() {
+    # parse window region: WxH+X+Y
     region=$(xwininfo -name "$window" -shape | perl -0pe "s/^.*corners\:\s+([^\s]+).*geometry\s+(\d+x\d+).*$/\2\1/si")
     log "region: ${region}"
-    if [ -n "$height" ]; then
-        region=$(echo "$region" | perl -pe "s/^(\d+)x\d+/\${1}x${height}/")
-        log "region (height adjusted): ${region}"
+    set -- $(echo "$region" | perl -pe "s/[x+]/ /g")
+    w=$1 h=$2 x=$3 y=$4
+
+    # find monitor containing the window
+    mon=$(xrandr --query | perl -ne \
+        "if (/\bconnected\b.*?(\d+)x(\d+)\+(\d+)\+(\d+)/) {
+            print \"\$2 \$4\" and exit if $x >= \$3 && $x < \$3 + \$1;
+        }")
+    if [ -n "$mon" ]; then
+        mon_h=${mon% *} mon_y=${mon#* }
+    else
+        mon_h=$(xdpyinfo | perl -0ne "print \$1 if /dimensions:\s+\d+x(\d+)/")
+        mon_y=0
     fi
 
+    # clamp to visible monitor area
+    eff_y=$(( y > mon_y ? y : mon_y ))
+    h=$(( h - (eff_y - y) ))
+    max_h=$(( mon_y + mon_h - eff_y ))
+    [ "$h" -gt "$max_h" ] && h=$max_h
+    log "monitor: ${mon_h}px at y=${mon_y}, eff_y: ${eff_y}, max height: ${max_h}"
+
+    # apply -H height override
+    if [ -n "$height" ]; then
+        [ "$height" -gt "$max_h" ] && log "clamping height ${height} to ${max_h}" && height=$max_h
+        h=$height
+    fi
+    log "capture: ${w}x${h}"
+
     if [ "$conky_only" = true ]; then
-        # conky window only (black background)
-        crop=$(echo "$region" | perl -pe "s/\+.*$/+0+0/")
-        log "crop: ${crop}"
-        import -window ${window} -crop ${crop} ${out_file}
+        import -window ${window} -crop ${w}x${h}+0+0 ${out_file}
     else
-        # desktop background blended with conky
-        import -window root -crop ${region} ${out_file}
+        import -window root -crop ${w}x${h}+${x}+${eff_y} ${out_file}
     fi
 }
 
 xdotool search --name ${window} >/dev/null &&
     snap_lcc &&
     echo "snapped to: ${out_file}" &&
-    feh ${out_file}
+    { [ "$preview" = true ] && feh ${out_file}; true; }
