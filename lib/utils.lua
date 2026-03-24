@@ -469,4 +469,48 @@ function utils.oscillate(min, max, period, as_int, spiky)
     return as_int and utils.round(v) or v
 end
 
+-- conky "specials": variables that create entries in the global specials
+-- linked list during parsing and emit SPECIAL_CHAR (\x01) markers in the output.
+-- stripping them before conky_parse prevents side-effects on the specials list.
+local _conky_specials = {
+    -- color / font families
+    "color%d?", "font%d?",
+    -- positioning / alignment
+    "goto", "alignr", "alignc", "offset", "voffset", "tab",
+    -- lines
+    "hr", "stippled_hr",
+    -- background / outline
+    "shadecolor", "outlinecolor",
+    -- misc
+    "save_coordinates",
+    -- bar / gauge / graph (any variable ending with these suffixes)
+    "[%w_]+bar", "[%w_]+gauge", "[%w_]+graph",
+    -- irregularly named bar
+    "cmus_progress",
+}
+-- build patterns that match ${special ...} or ${special} or $special
+local _conky_special_patterns
+do
+    local pats = {}
+    for _, s in ipairs(_conky_specials) do
+        -- ${special args} or ${special} — word boundary after name prevents
+        -- over-matching
+        pats[#pats + 1] = "%${" .. s .. "%f[^%w_][^}]*}"
+        pats[#pats + 1] = "%${" .. s .. "}"
+        -- $special (bare, no braces) — ends at non-word char
+        pats[#pats + 1] = "%$" .. s .. "%f[^%w_]"
+    end
+    _conky_special_patterns = pats
+end
+-- strip conky specials from an unparsed conky text string.
+-- returns the cleaned text safe for conky_parse without polluting the global
+-- specials list.
+function utils.strip_specials(text)
+    if not text then return text end
+    for _, pat in ipairs(_conky_special_patterns) do
+        text = text:gsub(pat, "")
+    end
+    return text
+end
+
 return utils

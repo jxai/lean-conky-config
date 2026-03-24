@@ -76,15 +76,15 @@ function conky_text(pla, text, font, alt_font, alt_text)
         if not _text then return end
         if not _font then _font = lcc.fonts.default end
 
-        -- !! NOTICE !! parsed `_text` must be pure text, with no special
-        -- instructions embedded, otherwise its rendered width might not be
-        -- measured properly
-        _text = conky_parse(_text)
+        -- !! NOTICE !! clean_text must produce NO specials e.g. ${font},
+        -- ${offset} etc. after conky_parse, otherwise rendering might be
+        -- broken
+        local clean_text = utils.strip_specials(_text)
 
         local s = string.format("${font %s}%s", _font, _text)
         if align then
             local p = conky_window.text_start_x + pos
-            local w = utils.text_width(_text, _font)
+            local w = utils.text_width(conky_parse(clean_text), _font)
             if align == 'c' then
                 p = p - utils.round(w / 2)
             elseif align == 'r' then
