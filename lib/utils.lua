@@ -430,6 +430,8 @@ end
 -- pass `cache=true` to speed up repeated calls on a *constant* string
 local _text_width_cache = {}
 function utils.text_width(text, font_spec, cache)
+    if not text then return end
+
     local cache_key
     if cache then
         cache_key = font_spec .. "\0" .. text

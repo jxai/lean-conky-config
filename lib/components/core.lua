@@ -73,7 +73,14 @@ function conky_text(pla, text, font, alt_font, alt_text)
     local alt_font_res = _resolve_font(alt_font)
 
     local function _render(_text, _font)
+        if not _text then return end
         if not _font then _font = lcc.fonts.default end
+
+        -- !! NOTICE !! parsed `_text` must be pure text, with no special
+        -- instructions embedded, otherwise its rendered width might not be
+        -- measured properly
+        _text = conky_parse(_text)
+
         local s = string.format("${font %s}%s", _font, _text)
         if align then
             local p = conky_window.text_start_x + pos
