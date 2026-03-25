@@ -152,16 +152,12 @@ function _conky_text(pla, font, text, alt_font, alt_text)
         local s = string.format("${font %s}%s", _font, _text)
         if align then
             local p = conky_window.text_start_x + pos
-            _prof_start("conky_parse")
-            local parsed = conky_parse(clean_text)
-            _prof_end("conky_parse")
-            _prof_start("text_width")
-            local w = utils.text_width(parsed, _font)
-            _prof_end("text_width")
-            if align == 'c' then
-                p = p - utils.round(w / 2)
-            elseif align == 'r' then
-                p = p - w
+            if align == 'c' or align == 'r' then
+                if clean_text:find('%$') then
+                    _prof_start("conky_parse"); clean_text = conky_parse(clean_text); _prof_end("conky_parse")
+                end
+                _prof_start("text_width"); local w = utils.text_width(clean_text, _font); _prof_end("text_width")
+                p = p - (align == 'r' and w or utils.round(w / 2))
             end
             s = string.format("${goto %d}", p) .. s
         end
@@ -185,7 +181,9 @@ end
 function conky_tab(font, ...)
     _prof_start("conky_tab")
     local argc = select('#', ...)
-    if argc < 2 then _prof_end("conky_tab"); return end
+    if argc < 2 then
+        _prof_end("conky_tab"); return
+    end
 
     local s = ""
     for i = 1, math.floor(argc / 2) do
@@ -201,7 +199,9 @@ end
 function conky_tab_alt(font, alt_font, ...)
     _prof_start("conky_tab_alt")
     local argc = select('#', ...)
-    if argc < 3 then _prof_end("conky_tab_alt"); return end
+    if argc < 3 then
+        _prof_end("conky_tab_alt"); return
+    end
 
     local s = ""
     for i = 1, math.floor(argc / 3) do
