@@ -34,23 +34,48 @@ def resolve_font(spec):
     return path.strip(), math.ceil(float(px_str)), family.strip()
 
 
-def measure_freetype(path, px, text):
-    import ctypes
+class FreetypeContext:
+    """Manages a FreeType library instance and caches loaded faces."""
 
-    FT = ctypes.CDLL("libfreetype.so.6")
-    lib, face, adv = ctypes.c_void_p(), ctypes.c_void_p(), ctypes.c_long()
-    FT.FT_Init_FreeType(ctypes.byref(lib))
-    FT.FT_New_Face(lib, path.encode(), 0, ctypes.byref(face))
-    FT.FT_Set_Pixel_Sizes(face, 0, px)
-    total = 0
-    for ch in text:
-        FT.FT_Get_Advance(
-            face, FT.FT_Get_Char_Index(face, ord(ch)), 0, ctypes.byref(adv)
-        )
-        total += (adv.value + 0x8000) >> 16  # round 16.16 fixed-point to integer
-    FT.FT_Done_Face(face)
-    FT.FT_Done_FreeType(lib)
-    return total
+    def __init__(self):
+        import ctypes
+
+        self._ctypes = ctypes
+        self._FT = ctypes.CDLL("libfreetype.so.6")
+        self._lib = ctypes.c_void_p()
+        self._FT.FT_Init_FreeType(ctypes.byref(self._lib))
+        self._faces = {}
+        self._adv = ctypes.c_long()
+
+    def measure(self, path, px, text):
+        key = (path, px)
+        if key not in self._faces:
+            face = self._ctypes.c_void_p()
+            self._FT.FT_New_Face(self._lib, path.encode(), 0, self._ctypes.byref(face))
+            self._FT.FT_Set_Pixel_Sizes(face, 0, px)
+            self._faces[key] = face
+        face, FT, adv = self._faces[key], self._FT, self._adv
+        total = 0
+        for ch in text:
+            FT.FT_Get_Advance(
+                face, FT.FT_Get_Char_Index(face, ord(ch)), 0, self._ctypes.byref(adv)
+            )
+            total += (adv.value + 0x8000) >> 16  # round 16.16 fixed-point to integer
+        return total
+
+    def close(self):
+        for face in self._faces.values():
+            self._FT.FT_Done_Face(face)
+        self._faces.clear()
+        self._FT.FT_Done_FreeType(self._lib)
+
+
+def measure_freetype(path, px, text):
+    ctx = FreetypeContext()
+    try:
+        return ctx.measure(path, px, text)
+    finally:
+        ctx.close()
 
 
 def measure_cairo(family, px, text):
@@ -91,6 +116,66 @@ def _dispatch(backend, path, px, family, text, verbose=0):
         return None
 
 
+def serve_mode(backend="auto"):
+    """Persistent serve mode: read 'spec\\ttext' lines from stdin, print widths to stdout.
+    Caches DPI, font resolution, backend selection, and FreeType state across requests.
+    """
+    dpi = display_dpi()
+    font_cache = {}  # spec -> (path, px, family)
+    backend_cache = {}  # spec -> backend_name
+
+    # persistent FreeType context — library and faces are kept alive across requests
+    ft_ctx = [None]  # mutable container to avoid `nonlocal` (Py2 compat idiom)
+
+    def do_measure(name, path, px, family, text):
+        if name == "freetype":
+            if ft_ctx[0] is None:
+                ft_ctx[0] = FreetypeContext()
+            return ft_ctx[0].measure(path, px, text)
+        elif name == "cairo":
+            return measure_cairo(family, px, text)
+        else:
+            return measure_pil(path, px, text)
+
+    def measure(spec, text):
+        if spec not in font_cache:
+            dpi_spec = spec + ":dpi=" + str(dpi)
+            raw = subprocess.check_output(
+                ["fc-match", "--format=%{file}|%{pixelsize}|%{family}", dpi_spec]
+            ).decode()
+            path, px_str, family = raw.split("|", 2)
+            font_cache[spec] = (path.strip(), math.ceil(float(px_str)), family.strip())
+        path, px, family = font_cache[spec]
+
+        if spec in backend_cache:
+            return do_measure(backend_cache[spec], path, px, family, text)
+        # select backend on first use of this spec
+        names = AUTO_ORDER if backend == "auto" else [backend]
+        for name in names:
+            try:
+                result = do_measure(name, path, px, family, text)
+                backend_cache[spec] = name
+                return result
+            except Exception:
+                continue
+        return None
+
+    for line in sys.stdin:
+        line = line.rstrip("\n")
+        if not line:
+            continue
+        parts = line.split("\t", 1)
+        if len(parts) != 2:
+            print("ERR", flush=True)
+            continue
+        spec, text = parts
+        try:
+            result = measure(spec, text)
+            print(result if result is not None else "ERR", flush=True)
+        except Exception:
+            print("ERR", flush=True)
+
+
 def main():
     ap = argparse.ArgumentParser(
         description="Measure rendered pixel width of a string."
@@ -105,9 +190,26 @@ def main():
         default=0,
         help="show resolved font and backend on stderr (repeat for more detail)",
     )
-    ap.add_argument("spec", help="fontconfig pattern, e.g. 'DejaVuSans:normal:size=16'")
-    ap.add_argument("text", help="string to measure")
+    ap.add_argument(
+        "spec", nargs="?", help="fontconfig pattern, e.g. 'DejaVuSans:normal:size=16'"
+    )
+    ap.add_argument(
+        "text", nargs="?", help="string to measure (required unless --serve)"
+    )
+    ap.add_argument(
+        "--serve",
+        action="store_true",
+        help="persistent serve mode: read 'spec\\ttext' lines from stdin, print widths",
+    )
     args = ap.parse_args()
+
+    if args.serve:
+        serve_mode(args.backend)
+        return
+
+    if not args.spec or not args.text:
+        ap.print_usage(sys.stderr)
+        sys.exit(2)
 
     path, px, family = resolve_font(args.spec)
     if args.verbose >= 1:

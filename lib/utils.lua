@@ -427,24 +427,67 @@ function utils.time_from_str(datetime)
 end
 
 -- calculates rendered text width given a fontconfig pattern (with `size`/`pixelsize` specified)
--- pass `cache=true` to speed up repeated calls on a *constant* string
+-- uses a persistent textwidth process for performance (avoids per-call subprocess overhead);
+-- results are cached by (font_spec, text) pair by default; pass `cache=false` to skip
 local _text_width_cache = {}
-function utils.text_width(text, font_spec, cache)
-    if not text then return end
+local _tw_reader, _tw_writer -- persistent textwidth co-process
 
-    local cache_key
-    if cache then
-        cache_key = font_spec .. "\0" .. text
-        if _text_width_cache[cache_key] then return _text_width_cache[cache_key] end
-    end
-
+local function _tw_ensure()
+    if _tw_reader then return true end
     ---@diagnostic disable-next-line: undefined-field
     local script = _G.lcc.root_dir .. "lib/textwidth"
-    local esc = text:gsub("'", "'\\''")
-    local out = utils.sys_call("'" .. script .. "' '" .. font_spec .. "' '" .. esc .. "'", true)
-    local w = tonumber(out)
+    local fifo = os.tmpname()
+    os.remove(fifo)
+    if os.execute("mkfifo '" .. fifo .. "'") == nil then return false end
+    -- start persistent process: reads from FIFO via stdin, writes widths to stdout
+    _tw_reader = io.popen("'" .. script .. "' --serve < '" .. fifo .. "'", "r")
+    -- opening the write end unblocks the reader (POSIX FIFO rendezvous)
+    _tw_writer = io.open(fifo, "w")
+    os.remove(fifo)
+    if not _tw_writer or not _tw_reader then
+        if _tw_writer then
+            _tw_writer:close(); _tw_writer = nil
+        end
+        if _tw_reader then
+            _tw_reader:close(); _tw_reader = nil
+        end
+        return false
+    end
+    return true
+end
 
-    if cache then _text_width_cache[cache_key] = w end
+function utils.text_width(text, font_spec, cache)
+    if not text or text == "" then return 0 end
+
+    local cache_key = font_spec .. "\0" .. text
+    if cache ~= false then
+        local cached = _text_width_cache[cache_key]
+        if cached then return cached end
+    end
+
+    local w
+    if _tw_ensure() then
+        _tw_writer:write(font_spec .. "\t" .. text .. "\n")
+        _tw_writer:flush()
+        local line = _tw_reader:read("*l")
+        w = tonumber(line)
+        if not w then
+            -- process died; reset so next call retries
+            _tw_reader:close(); _tw_writer:close()
+            _tw_reader, _tw_writer = nil, nil
+        end
+    end
+
+    if not w then
+        -- fallback to single-shot subprocess
+        ---@diagnostic disable-next-line: undefined-field
+        local script = _G.lcc.root_dir .. "lib/textwidth"
+        local esc = text:gsub("'", "'\\''")
+        local out = utils.sys_call("'" .. script .. "' '" .. font_spec .. "' '" .. esc .. "'", true)
+        w = tonumber(out)
+    end
+
+    if cache ~= false and w then _text_width_cache[cache_key] = w end
     return w
 end
 
