@@ -419,7 +419,7 @@ lcc.demo.def(core.storage, { -- demo: mock disks with spiky I/O
         disks = function(_interv)
             local disks = {
                 {
-                    name = T_ "${lua font icon_s  ${voffset $sr{-4}}⌂ icon_alt}",
+                    name = lcc.tpl.home_icon(),
                     type = "ext4",
                     used = 180,
                     size = 500,
@@ -452,6 +452,7 @@ ${color3}${lua_bar ratio_perc {%= v.used %} {%= v.size %}}${color}
 {% else %}
 ${font}(no mounted disk found)
 {% end %}]]
+lcc.tpl.home_icon = [[${lua font icon_s  ${voffset $sr{-4}}⌂ icon_alt}]]
 function conky_disks(interv)
     return core._interval_call(interv, function()
         local disks = {}
@@ -465,7 +466,7 @@ function conky_disks(interv)
             if media then
                 name = media
             elseif name == utils.env.HOME then
-                name = T_ "${lua font icon_s  ${voffset $sr{-4}}⌂ icon_alt}"
+                name = lcc.tpl.home_icon()
             end
 
             table.insert(disks, {
