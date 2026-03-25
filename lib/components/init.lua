@@ -113,7 +113,11 @@ function components.build_panel()
         end
         if s then table.insert(panel, s) end
     end
-    return table.concat(panel, core.vspace(lcc.config.spacing))
+    local text = table.concat(panel, core.vspace(lcc.config.spacing))
+    if lcc.config.debug == "prof" then
+        text = text .. "${lua profile}"
+    end
+    return text
 end
 
 return components

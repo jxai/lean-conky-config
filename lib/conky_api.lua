@@ -1,5 +1,65 @@
 local utils = require("utils")
 
+-------------------
+-- debug profile --
+-------------------
+local _prof -- nil when profiling is off
+local _prof_clock
+
+local function _prof_start(name)
+    if not _prof then return end
+    local entry = _prof[name]
+    if not entry then
+        entry = { calls = 0, time = 0 }
+        _prof[name] = entry
+    end
+    entry._t0 = _prof_clock()
+end
+
+local function _prof_end(name)
+    if not _prof then return end
+    local entry = _prof[name]
+    if entry and entry._t0 then
+        entry.calls = entry.calls + 1
+        entry.time = entry.time + (_prof_clock() - entry._t0)
+        entry._t0 = nil
+    end
+end
+
+-- called each conky update cycle (via ${lua profile} in debug mode)
+-- logs accumulated stats and resets for next cycle
+local _prof_cycle_t0
+function conky_profile()
+    if not _prof then
+        -- activate profiling on first call
+        local ok, socket = pcall(require, "socket")
+        _prof_clock = ok and socket.gettime or os.clock
+        _prof = {}
+        _prof_cycle_t0 = _prof_clock()
+        return ""
+    end
+
+    local now = _prof_clock()
+    local cycle_time = now - _prof_cycle_t0
+    _prof_cycle_t0 = now
+
+    local lines = {}
+    for name, e in pairs(_prof) do
+        lines[#lines + 1] = string.format(
+            "  %-20s calls=%-4d  time=%.3fs", name, e.calls, e.time)
+    end
+    table.sort(lines)
+    table.insert(lines, 1, string.format("  %-20s %14.3fs", "CYCLE", cycle_time))
+    lcc.log.trace("conky_api profile:\n" .. table.concat(lines, "\n"))
+
+    -- reset for next cycle
+    for _, e in pairs(_prof) do
+        e.calls = 0
+        e.time = 0
+    end
+    return ""
+end
+
 -------------------------------
 -- conky interface functions --
 -------------------------------
@@ -20,7 +80,10 @@ local utils = require("utils")
 -- NOTE: `font` and `alt_font` may include property overrides following the font key, e.g.
 --       "icon:size=24" or "icon:bold:size=24", which replace all original font properties
 function conky_text(...)
-    return conky_parse(_conky_text(...))
+    _prof_start("conky_text")
+    local r = conky_parse(_conky_text(...))
+    _prof_end("conky_text")
+    return r
 end
 
 function _conky_text(pla, font, text, alt_font, alt_text)
@@ -89,7 +152,12 @@ function _conky_text(pla, font, text, alt_font, alt_text)
         local s = string.format("${font %s}%s", _font, _text)
         if align then
             local p = conky_window.text_start_x + pos
-            local w = utils.text_width(conky_parse(clean_text), _font)
+            _prof_start("conky_parse")
+            local parsed = conky_parse(clean_text)
+            _prof_end("conky_parse")
+            _prof_start("text_width")
+            local w = utils.text_width(parsed, _font)
+            _prof_end("text_width")
             if align == 'c' then
                 p = p - utils.round(w / 2)
             elseif align == 'r' then
@@ -115,13 +183,15 @@ end
 --        each placement acts as a tab stop, positioning its text at a fixed column
 --        e.g. conky_tab("h2", "l", "A", "c33%", "B", "r66%", "D", "r", "E")
 function conky_tab(font, ...)
+    _prof_start("conky_tab")
     local argc = select('#', ...)
-    if argc < 2 then return end
+    if argc < 2 then _prof_end("conky_tab"); return end
 
     local s = ""
     for i = 1, math.floor(argc / 2) do
         s = s .. _conky_text((select(2 * i - 1, ...)), font, (select(2 * i, ...)))
     end
+    _prof_end("conky_tab")
     return conky_parse(s)
 end
 
@@ -129,13 +199,15 @@ end
 -- `font`, `alt_font`: see `conky_text` for font key format and fallback behavior
 -- `...`: variadic triplets of (placement, text, alt_text)
 function conky_tab_alt(font, alt_font, ...)
+    _prof_start("conky_tab_alt")
     local argc = select('#', ...)
-    if argc < 3 then return end
+    if argc < 3 then _prof_end("conky_tab_alt"); return end
 
     local s = ""
     for i = 1, math.floor(argc / 3) do
         s = s .. _conky_text((select(3 * i - 2, ...)), font, (select(3 * i - 1, ...)), alt_font, (select(3 * i, ...)))
     end
+    _prof_end("conky_tab_alt")
     return conky_parse(s)
 end
 
