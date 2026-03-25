@@ -120,7 +120,7 @@ function conky_tab(font, ...)
 
     local s = ""
     for i = 1, math.floor(argc / 2) do
-        s = s .. _conky_text(select(2 * i - 1, ...), font, select(2 * i, ...))
+        s = s .. _conky_text((select(2 * i - 1, ...)), font, (select(2 * i, ...)))
     end
     return conky_parse(s)
 end
@@ -134,7 +134,7 @@ function conky_tab_alt(font, alt_font, ...)
 
     local s = ""
     for i = 1, math.floor(argc / 3) do
-        s = s .. _conky_text(select(3 * i - 2, ...), font, select(3 * i - 1, ...), alt_font, select(3 * i, ...))
+        s = s .. _conky_text((select(3 * i - 2, ...)), font, (select(3 * i - 1, ...)), alt_font, (select(3 * i, ...)))
     end
     return conky_parse(s)
 end
