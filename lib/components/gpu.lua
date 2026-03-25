@@ -26,11 +26,11 @@ ${voffset $sr{-13}}${alignr}${lua format %.1f {%= g.power_usage %}}W
 ${color3}${lua_bar {%= lcc.half_bar_size %} echo {%= g.fan_speed %}} ${color}${alignr}${lua_bar {%= lcc.half_bar_size %} ratio_perc {%= g.power_usage %} {%= g.power_limit %}}
 ${color2}${lua font h2 MEM}${font}${color} ${alignc $sr{-16}}{%= g.mem_used_h %} / {%= g.mem_total_h %} ${alignr}{%= g.mem_util %}% ${lua font icon_s  UT}
 ${color3}${lua_bar ratio_perc {%= g.mem_used %} {%= g.mem_total %}}${color}
-{% if g.processes then %}
-${color2}${lua font h2 {PROCESS ${goto $sr{156}}PID ${goto $sr{194}}MEM%${alignr}GPU%}}${font}${color}#
-{% for _, p in ipairs(g.processes) do +%}
-{%= p.name %} ${goto $sr{156}}{%= p.pid %}${alignr}${offset $sr{-44}}${lua ratio_perc {%= p.gpu_mem %} {%= g.mem_total %} 2}
-${voffset $sr{-13}}${alignr}${lua format %.1f {%= p.gpu_util %}}{% end %}{% end %}
+{% if g.processes then %}{% local p,q=53,83 %}
+${color2}${lua tab h2 l {PROCESS} l{%= p %}% {PID} r{%= q %}% {MEM%} r {GPU%}}${color}#
+{% for _, proc in ipairs(g.processes) do +%}
+${lua tab {} l {{%= proc.name %}} l{%= p %}% {{%= proc.pid %}} r{%= q %}% {${lua ratio_perc {%= proc.gpu_mem %} {%= g.mem_total %} 2}} r {${lua format %.1f {%= proc.gpu_util %}}}}#
+{% end %}{% end %}
 {% end %}]]
 local function _nvidia_nvml(top_n)
     local out, rc = utils.sys_call(lcc.root_dir .. "/lib/components/gpu_nvml 2>/dev/null", true)

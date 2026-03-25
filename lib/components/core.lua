@@ -308,11 +308,11 @@ ${color2}${lua font h2 RAM}${font}${color} ${alignc $sr{-16}}${mem} / ${memmax} 
 ${color3}${membar}${color}
 ${color2}${lua font h2 SWAP}${font}${color} ${alignc $sr{-16}}${swap} / ${swapmax} ${alignr}${swapperc}%
 ${color3}${swapbar}${color}
-{% if top_mem_entries then %}
-${color2}${lua font h2 {PROCESS ${goto $sr{156}}PID ${goto $sr{198}}CPU%${alignr}MEM%}}${font}${color}#
+{% if top_mem_entries then %}{% local p,q=53,83 %}
+${color2}${lua tab h2 l {PROCESS} l{%= p %}% {PID} r{%= q %}% {CPU%} r {MEM%}}${color}#
 {% for _, v in ipairs(top_mem_entries) do +%}
-{%= v.name %} ${goto $sr{156}}{%= v.pid %}${alignr}${offset $sr{-44}}{%= v.cpu %}
-${voffset $sr{-13}}${alignr}{%= v.mem %}{% end %}{% end %}]]
+${lua tab {} l {{%= v.name %}} l{%= p %}% {{%= v.pid %}} r{%= q %}% {{%= v.cpu %}} r {{%= v.mem %}}}#
+{% end %}{% end %}]]
 function core.memory(args)
     local top_n = utils.table.get(args, 'top_n', 5)
     return core.section("MEMORY", "") .. "\n" .. lcc.tpl.memory {
@@ -360,10 +360,11 @@ lcc.tpl.storage = [[
 ${lua disks 5}
 ${voffset $sr{4}}${lua font icon_s {} {Read:}} ${font}${diskio_read} ${alignr}${lua font icon_s {} {Write: }}${font}${diskio_write}${lua font icon_s { } {}}
 ${color3}${diskiograph_read {%= lcc.half_graph_size %}} ${alignr}${diskiograph_write {%= lcc.half_graph_size %}}${color}
-{% if top_io_entries then %}
-${color2}${lua font h2 {PROCESS ${goto $sr{156}}PID ${alignr}READ/WRITE}}${font}${color}#
+{% if top_io_entries then %}{% local p=53 %}
+${color2}${lua tab h2 l {PROCESS} l{%= p %}% {PID} r {READ/WRITE}}${color}#
 {% for _, v in ipairs(top_io_entries) do +%}
-{%= v.name %} ${goto $sr{156}}{%= v.pid %} ${alignr}{%= v.io_read %} / {%= v.io_write %}{% end %}{% end %}]]
+${lua tab {} l {{%= v.name %}} l{%= p %}% {{%= v.pid %}} r {{%= v.io_read %} / {%= v.io_write %}}}#
+{% end %}{% end %}]]
 function core.storage(args)
     local top_n = utils.table.get(args, 'top_n', 5)
     return core.section("STORAGE", "") .. "\n" .. lcc.tpl.storage {
