@@ -10,8 +10,8 @@ local utils = require("utils")
 --        <pos> can be in pixel (scaled) from the left boundary of the rendering area or percentage
 --        e,g, `33.3%`
 --        if neither is provided, string is rendered inline with no specific placement
--- `text`: string to render
 -- `font`: key of the desired font, e.g. "h1"
+-- `text`: string to render
 -- `alt_font`: alternative font if `font `is not found on the system, if neither found or both empty
 --             the default font will be used
 -- `alt_text`: alternative text to be rendered when `font` is unavailable - this offers flexibility
@@ -23,7 +23,7 @@ function conky_text(...)
     return conky_parse(_conky_text(...))
 end
 
-function _conky_text(pla, text, font, alt_font, alt_text)
+function _conky_text(pla, font, text, alt_font, alt_text)
     -- `align`: 'l' - left, 'c' = center, 'r' - right, nil - inline
     -- `pos`: absolute postion of the text in physical (scaled) pixels
     local function _parse_placement(pla)
@@ -120,7 +120,7 @@ function conky_tab(font, ...)
 
     local s = ""
     for i = 1, math.floor(argc / 2) do
-        s = s .. _conky_text(select(2 * i - 1, ...), select(2 * i, ...), font)
+        s = s .. _conky_text(select(2 * i - 1, ...), font, select(2 * i, ...))
     end
     return conky_parse(s)
 end
@@ -134,7 +134,7 @@ function conky_tab_alt(font, alt_font, ...)
 
     local s = ""
     for i = 1, math.floor(argc / 3) do
-        s = s .. _conky_text(select(3 * i - 2, ...), select(3 * i - 1, ...), font, alt_font, select(3 * i, ...))
+        s = s .. _conky_text(select(3 * i - 2, ...), font, select(3 * i - 1, ...), alt_font, select(3 * i, ...))
     end
     return conky_parse(s)
 end
@@ -145,7 +145,7 @@ end
 -- 2. the API will likely undergo an incompatible change with a future release
 -------------------------------------------------------------------------------
 function conky_font(font, text, alt_text, alt_font)
-    return conky_text(nil, text, font, alt_font, alt_text)
+    return conky_text(nil, font, text, alt_font, alt_text)
 end
 
 -- echo arguments (verbatim with no parsing)

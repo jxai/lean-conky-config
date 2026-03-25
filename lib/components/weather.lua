@@ -308,12 +308,12 @@ end
 
 -- weather: implementation
 lcc.tpl.weather = -- p:info offset b:forecast offset s:forecast spacing
-[[{% local p,b,s=$sr{58},49,17 %}${voffset $sr{-6}}${color}${lua text l { } icon_s icon_s_alt {⊙ }}${font}${voffset $sr{-1}}{%= wd.loc %}
-${lua text l {{%= wd.desc %}} default:size=$sc{7}}
-${voffset $sr{5}}${lua text l {%= wd.icon[2] %} icon_l:size=$sr{32} icon_l_alt:size=$sr{30} {%= wd.icon[1] %}}
-${voffset $sr{-64}}${lua text l{%= p %} {{%= wd.temp %}} h1:size=$sr{20}}
-${voffset $sr{-21}}{% if wd.has_precip then +%}${lua text l{%= p %} {${voffset $sr{-1}}} icon_s icon_s_alt {☔${voffset $sr{1}}}}${font} {%= wd.precip %}{% else +%}${lua text l{%= p %} {${voffset $sr{-1}}} icon_s icon_s_alt {◑${voffset $sr{1}}}}${font} {%= wd.hum %}%{% end %}
-${voffset $sr{16}}${lua text l{%= p %} {${voffset $sr{-1}}} icon_s icon_s_alt {≈${voffset $sr{1}}}}${font}${voffset $sr{-1}} {%= wd.wind %} {%= wd.winddir %}${voffset $sr{-84}}
+[[{% local p,b,s=$sr{58},49,17 %}${voffset $sr{-6}}${color}${lua text l icon_s { } icon_s_alt {⊙ }}${font}${voffset $sr{-1}}{%= wd.loc %}
+${lua text l default:size=$sc{7} {{%= wd.desc %}}}
+${voffset $sr{5}}${lua text l icon_l:size=$sr{32} {%= wd.icon[2] %} icon_l_alt:size=$sr{30} {%= wd.icon[1] %}}
+${voffset $sr{-64}}${lua text l{%= p %} h1:size=$sr{20} {{%= wd.temp %}}}
+${voffset $sr{-21}}{% if wd.has_precip then +%}${lua text l{%= p %} icon_s {${voffset $sr{-1}}} icon_s_alt {☔${voffset $sr{1}}}}${font} {%= wd.precip %}{% else +%}${lua text l{%= p %} icon_s {${voffset $sr{-1}}} icon_s_alt {◑${voffset $sr{1}}}}${font} {%= wd.hum %}%{% end %}
+${voffset $sr{16}}${lua text l{%= p %} icon_s {${voffset $sr{-1}}} icon_s_alt {≈${voffset $sr{1}}}}${font}${voffset $sr{-1}} {%= wd.wind %} {%= wd.winddir %}${voffset $sr{-84}}
 ${lua tab {} {% for i, fc in ipairs(wd.fc) do %}r{%= b+i*s %}% {{%= fc.day %}} {% end %}}${voffset $sr{5}}
 ${lua tab_alt icon_l icon_l_alt {% for i, fc in ipairs(wd.fc) do %}r{%= b+i*s %}% {%= fc.icon[2] %} {%= fc.icon[1] %} {% end %}}${voffset $sr{-5}}
 ${lua tab default:size=$sc{7} {% for i, fc in ipairs(wd.fc) do %}r{%= b+i*s %}% {{%= fc.maxtemp %}} {% end %}}${voffset}
