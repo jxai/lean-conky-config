@@ -314,10 +314,10 @@ ${voffset $sr{5}}${lua text l {%= wd.icon[2] %} icon_l:size=$sr{32} icon_l_alt:s
 ${voffset $sr{-64}}${lua text l{%= p %} {{%= wd.temp %}} h1:size=$sr{20}}
 ${voffset $sr{-21}}{% if wd.has_precip then +%}${lua text l{%= p %} {${voffset $sr{-1}}} icon_s icon_s_alt {☔${voffset $sr{1}}}}${font} {%= wd.precip %}{% else +%}${lua text l{%= p %} {${voffset $sr{-1}}} icon_s icon_s_alt {◑${voffset $sr{1}}}}${font} {%= wd.hum %}%{% end %}
 ${voffset $sr{16}}${lua text l{%= p %} {${voffset $sr{-1}}} icon_s icon_s_alt {≈${voffset $sr{1}}}}${font}${voffset $sr{-1}} {%= wd.wind %} {%= wd.winddir %}${voffset $sr{-84}}
-{% for i, fc in ipairs(wd.fc) do +%}${lua text r{%= b+i*s %}% {%= fc.day %}}{% end %}${voffset $sr{5}}
-{% for i, fc in ipairs(wd.fc) do +%}${lua text r{%= b+i*s %}% {%= fc.icon[2] %} icon_l icon_l_alt {%= fc.icon[1] %}}{% end %}${voffset $sr{-5}}
-{% for i, fc in ipairs(wd.fc) do +%}${lua text r{%= b+i*s %}% {{%= fc.maxtemp %}} default:size=$sc{7}}{% end %}${voffset}
-{% for i, fc in ipairs(wd.fc) do +%}${lua text r{%= b+i*s %}% {{%= fc.mintemp %}} default:size=$sc{7}}{% end %}${voffset $sr{7}}]]
+${lua tab {} {% for i, fc in ipairs(wd.fc) do %}r{%= b+i*s %}% {{%= fc.day %}} {% end %}}${voffset $sr{5}}
+${lua tab_alt icon_l icon_l_alt {% for i, fc in ipairs(wd.fc) do %}r{%= b+i*s %}% {%= fc.icon[2] %} {%= fc.icon[1] %} {% end %}}${voffset $sr{-5}}
+${lua tab default:size=$sc{7} {% for i, fc in ipairs(wd.fc) do %}r{%= b+i*s %}% {{%= fc.maxtemp %}} {% end %}}${voffset}
+${lua tab default:size=$sc{7} {% for i, fc in ipairs(wd.fc) do %}r{%= b+i*s %}% {{%= fc.mintemp %}} {% end %}}${voffset $sr{7}}]]
 local function _weather(backend, loc, metric)
     if loc:lower() == "auto" then
         lcc.log.debug("auto detecting geolocation")

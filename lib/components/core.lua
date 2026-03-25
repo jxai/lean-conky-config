@@ -125,6 +125,20 @@ function conky_tab(font, ...)
     return conky_parse(s)
 end
 
+-- variant of `conky_tab` that supports alt font and alt text
+-- `font`, `alt_font`: see `conky_text` for font key format and fallback behavior
+-- `...`: variadic triplets of (placement, text, alt_text)
+function conky_tab_alt(font, alt_font, ...)
+    local argc = select('#', ...)
+    if argc < 3 then return end
+
+    local s = ""
+    for i = 1, math.floor(argc / 3) do
+        s = s .. _conky_text(select(3 * i - 2, ...), select(3 * i - 1, ...), font, alt_font, select(3 * i, ...))
+    end
+    return conky_parse(s)
+end
+
 -------------------------------------------------------------------------------
 -- ! WARNING ! `conky_font`:
 -- 1. it is now a thin wrapper of `conky_text`, which is preferred for text rendering
