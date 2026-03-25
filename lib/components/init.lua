@@ -1,5 +1,8 @@
 local utils = require("utils")
 
+-- conky interface functions (global conky_* API)
+require("conky_api")
+
 -- `lcc.tpl`: a template registry with lazy parsing
 -- NOTE: lazy parsing (i.e. deferring template parsing till the first time it is
 -- accessed) is crucial, otherwise configs such as `scale` might not have been
