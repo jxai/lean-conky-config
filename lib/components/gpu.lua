@@ -96,7 +96,7 @@ lcc.demo.def(gpu.nvidia, { -- demo: mock GPU data with oscillating metrics
         nvidia = function(_interv, top_n)
             top_n       = tonumber(top_n or 0)
             local names = { "python3", "Xorg", "firefox", "blender", "vlc" }
-            local pids  = { "8891", "1204", "3842", "7123", "5567" }
+            local pids  = { "44076", "2518", "7291", "71230", "5567" }
             local g     = {
                 model_name = "NVIDIA GeForce RTX 4070",
                 gpu_util = utils.oscillate(20, 90, 25, true),

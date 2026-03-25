@@ -19,7 +19,11 @@ local core = {}
 --             assumed to be the same as `text`
 -- NOTE: `font` and `alt_font` may include property overrides following the font key, e.g.
 --       "icon:size=24" or "icon:bold:size=24", which replace all original font properties
-function conky_text(pla, text, font, alt_font, alt_text)
+function conky_text(...)
+    return conky_parse(_conky_text(...))
+end
+
+function _conky_text(pla, text, font, alt_font, alt_text)
     -- `align`: 'l' - left, 'c' = center, 'r' - right, nil - inline
     -- `pos`: absolute postion of the text in physical (scaled) pixels
     local function _parse_placement(pla)
@@ -56,6 +60,7 @@ function conky_text(pla, text, font, alt_font, alt_text)
 
     local function _resolve_font(font_arg)
         if not font_arg then return nil end
+        font_arg = utils.unbrace(font_arg)
 
         local p = font_arg:find(":", 1, true)
         local prop = nil
@@ -76,8 +81,8 @@ function conky_text(pla, text, font, alt_font, alt_text)
         if not _text then return end
         if not _font then _font = lcc.fonts.default end
 
-        -- !! NOTICE !! clean_text must produce NO specials e.g. ${font},
-        -- ${offset} etc. after conky_parse, otherwise rendering might be
+        -- !! NOTICE !! clean_text must produce NO specials e.g. ${offset},
+        -- ${font} etc. after being conky_parse'd, otherwise rendering may be
         -- broken
         local clean_text = utils.strip_specials(_text)
 
@@ -92,7 +97,7 @@ function conky_text(pla, text, font, alt_font, alt_text)
             end
             s = string.format("${goto %d}", p) .. s
         end
-        return conky_parse(s)
+        return s
     end
     if font_res then
         return _render(text, font_res)
@@ -101,6 +106,23 @@ function conky_text(pla, text, font, alt_font, alt_text)
     else
         return _render(alt_text)
     end
+end
+
+-- renders text at multiple tab stops on a single line using the same font
+-- `font`: key of the desired font applied to all entries (see `conky_text`
+--         for font key format); if not found, the default font is used.
+-- `...`: variadic pairs of (placement, text) — at least one pair required;
+--        each placement acts as a tab stop, positioning its text at a fixed column
+--        e.g. conky_tab("h2", "l", "A", "c33%", "B", "r66%", "D", "r", "E")
+function conky_tab(font, ...)
+    local argc = select('#', ...)
+    if argc < 2 then return end
+
+    local s = ""
+    for i = 1, math.floor(argc / 2) do
+        s = s .. _conky_text(select(2 * i - 1, ...), select(2 * i, ...), font)
+    end
+    return conky_parse(s)
 end
 
 -------------------------------------------------------------------------------
@@ -112,16 +134,7 @@ function conky_font(font, text, alt_text, alt_font)
     return conky_text(nil, text, font, alt_font, alt_text)
 end
 
--- padding
-function conky_pad(text, max_len, align, char)
-    text = utils.unbrace(text)
-    return utils.padding(utils.trim(conky_parse(text)), max_len, align, char)
-end
-
--- ratio as percentage
-conky_ratio_perc = utils.ratio_perc
-
--- echo arguments
+-- echo arguments (verbatim with no parsing)
 function conky_echo(...)
     return ...
 end
@@ -130,6 +143,16 @@ end
 function conky_format(...)
     return string.format(...)
 end
+
+-- triming surrounding spaces
+-- `text` must be pure text after being conky_parse'd
+function conky_trim(text)
+    return utils.trim(conky_parse(utils.unbrace(text)))
+end
+
+-- ratio as percentage
+conky_ratio_perc = utils.ratio_perc
+
 
 ----------------
 -- components --
@@ -212,38 +235,23 @@ lcc.demo.def(core.system, { -- demo: static system info
     },
 })
 
--- helper to generate conky text for top_x variables, with optional padding
-local function _top_val_text(num, dev, type, padded_len, align)
+-- helper to generate conky text for top_n variables
+local function get_top_entries(top_n, dev, types)
+    if not top_n or top_n <= 0 then return end
+    if top_n > 10 then top_n = 10 end
+
     if dev == "io" or dev == "mem" or dev == "time" then
         dev = "_" .. dev
     else
         dev = ""
     end
-    local s = string.format("${top%s %s %d}", dev, type, num)
-    if padded_len and align then
-        s = string.format("${lua pad {%s} %s %s %s}", s, padded_len, align, " ")
-    else
-        s = string.format("${lua pad {%s}}", s) -- just trim
-    end
-    return s
-    -- NOTE: the padding character here is FIGURE SPACE (U+2007)
-    -- see https://en.wikipedia.org/wiki/Whitespace_character
-end
-
-local function get_top_entries(max, dev, types, padded_len, align)
-    if max == nil or max <= 0 then return nil end
-    if max > 10 then max = 10 end
-
-    local function _p(param, idx)
-        if type(param) == "table" then return param[idx] end
-        return param
-    end
 
     local top_entries = {}
-    for i = 1, max do
+    for i = 1, top_n do
         local v = {}
-        for j, t in ipairs(types) do
-            v[t] = _top_val_text(i, dev, t, _p(padded_len, j), _p(align, j))
+        for _, t in ipairs(types) do
+            -- conky produced top_* values may be padded, trim to align
+            v[t] = string.format("${lua trim ${top%s %s %d}}", dev, t, i)
         end
         table.insert(top_entries, v)
     end
@@ -253,11 +261,11 @@ end
 lcc.tpl.cpu = [[
 ${font}${execi 3600 grep model /proc/cpuinfo | cut -d : -f2 | tail -1 | sed 's/\s//'} ${alignr} ${cpu cpu0}%
 ${color3}${cpugraph cpu0}${color}
-{% if top_cpu_entries then %}
-${color2}${lua font h2 {PROCESS ${goto $sr{156}}PID ${goto $sr{194}}MEM% ${alignr}CPU%}}${font}${color}#
+{% if top_cpu_entries then %}{% local p,q=53,83 %}
+${color2}${lua tab h2 l {PROCESS} l{%= p %}% {PID} r{%= q %}% {MEM%} r {CPU%}}${color}#
 {% for _, v in ipairs(top_cpu_entries) do +%}
-{%= v.name %} ${goto $sr{156}}{%= v.pid %}${alignr}${offset $sr{-44}}{%= v.mem %}
-${voffset $sr{-13}}${alignr}{%= v.cpu %}{% end %}{% end %}]]
+${lua tab {} l {{%= v.name %}} l{%= p %}% {{%= v.pid %}} r{%= q %}% {{%= v.mem %}} r {{%= v.cpu %}}}#
+{% end %}{% end %}]]
 function core.cpu(args)
     local top_n = utils.table.get(args, 'top_n', 5)
     return core.section("CPU", "") .. "\n" .. lcc.tpl.cpu {
@@ -276,8 +284,8 @@ lcc.demo.def(core.cpu, { -- demo: oscillating CPU with top processes
             return names[tonumber(n)] or "process"
         end },
         { "%${top pid (%d+)}", function(n)
-            local pids = { "3842", "5102", "8891", "1204", "2567",
-                "6334", "7721", "4458", "9012", "3367" }
+            local pids = { "7291", "51023", "44076", "2518", "2567",
+                "63350", "772108", "4039", "9012", "3367" }
             return pids[tonumber(n)] or "0"
         end },
         { "%${top cpu (%d+)}", "${lua demo_val top_cpu %1}" },
@@ -328,8 +336,8 @@ lcc.demo.def(core.memory, { -- demo: oscillating RAM/swap with top processes
             return names[tonumber(n)] or "process"
         end },
         { "%${top_mem pid (%d+)}", function(n)
-            local pids = { "3842", "5102", "4458", "6334", "8891",
-                "7721", "1204", "9012", "2233", "1156" }
+            local pids = { "7291", "51023", "4039", "63350", "44076",
+                "772108", "2518", "9012", "2233", "1156" }
             return pids[tonumber(n)] or "0"
         end },
         { "%${top_mem cpu (%d+)}", "${lua demo_val topmem_cpu %1}" },
@@ -374,7 +382,7 @@ lcc.demo.def(core.storage, { -- demo: mock disks with spiky I/O
             return names[tonumber(n)] or "process"
         end },
         { "%${top_io pid (%d+)}", function(n)
-            local pids = { "3842", "5102", "6334", "2233", "8891" }
+            local pids = { "7291", "51023", "63350", "2233", "44076" }
             return pids[tonumber(n)] or "0"
         end },
         { "%${top_io io_read (%d+)}",  "${lua demo_val topio_read %1}" },
