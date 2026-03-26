@@ -429,7 +429,8 @@ end
 -- calculates rendered text width given a fontconfig pattern (with `size`/`pixelsize` specified)
 -- uses a persistent textwidth process for performance (avoids per-call subprocess overhead);
 -- results are cached by (font_spec, text) pair by default; pass `cache=false` to skip
-local _text_width_cache = {}
+local _lru = require("external.lru")
+local _text_width_cache = _lru.new(1024)
 local _tw_reader, _tw_writer -- persistent textwidth co-process
 
 local function _tw_ensure()
@@ -461,7 +462,7 @@ function utils.text_width(text, font_spec, cache)
 
     local cache_key = font_spec .. "\0" .. text
     if cache ~= false then
-        local cached = _text_width_cache[cache_key]
+        local cached = _text_width_cache:get(cache_key)
         if cached then return cached end
     end
 
@@ -487,7 +488,7 @@ function utils.text_width(text, font_spec, cache)
         w = tonumber(out)
     end
 
-    if cache ~= false and w then _text_width_cache[cache_key] = w end
+    if cache ~= false and w then _text_width_cache:set(cache_key, w) end
     return w
 end
 

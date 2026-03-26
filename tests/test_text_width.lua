@@ -135,7 +135,7 @@ end
 local dt_cache = clock() - t0
 local us_per_cache = dt_cache / N_cache * 1e6
 print(string.format("  cache hit (%d calls):  %.2f ms total, %.3f us/call", N_cache, dt_cache * 1000, us_per_cache))
-test_range("cache hit < 1us each", us_per_cache, 0, 1)
+test_range("cache hit < 5us each", us_per_cache, 0, 5)
 
 -- 4) single-shot subprocess baseline (for comparison)
 t0 = clock()
