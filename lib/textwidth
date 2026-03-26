@@ -7,7 +7,7 @@
 #   freetype  ctypes + libfreetype.so.6  (stdlib + always-present system lib)
 #   pil       Pillow                     (python3-pil, needs explicit install)
 #   cairo     pycairo                    (python3-cairo, uses different hinting path)
-import sys, subprocess, math, argparse
+import sys, os, subprocess, math, argparse, select
 
 AUTO_ORDER = ["freetype", "pil", "cairo"]
 
@@ -160,7 +160,17 @@ def serve_mode(backend="auto"):
                 continue
         return None
 
-    for line in sys.stdin:
+    ppid = os.getppid()
+    while True:
+        # wait for input with timeout; exit if parent process dies
+        ready, _, _ = select.select([sys.stdin], [], [], 5.0)
+        if not ready:
+            if os.getppid() != ppid:
+                break
+            continue
+        line = sys.stdin.readline()
+        if not line:
+            break  # EOF
         line = line.rstrip("\n")
         if not line:
             continue
