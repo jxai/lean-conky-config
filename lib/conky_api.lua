@@ -29,6 +29,9 @@ end
 -- called each conky update cycle (via ${lua profile} in debug mode)
 -- logs accumulated stats and resets for next cycle
 local _prof_cycle_t0
+local _prof_cycle_n = 0
+local _prof_cycle_sum = 0
+local _prof_cycle_sum2 = 0 -- sum of squares for std deviation
 function conky_profile()
     if not _prof then
         -- activate profiling on first call
@@ -43,13 +46,22 @@ function conky_profile()
     local cycle_time = now - _prof_cycle_t0
     _prof_cycle_t0 = now
 
+    _prof_cycle_n = _prof_cycle_n + 1
+    _prof_cycle_sum = _prof_cycle_sum + cycle_time
+    _prof_cycle_sum2 = _prof_cycle_sum2 + cycle_time * cycle_time
+    local avg = _prof_cycle_sum / _prof_cycle_n
+    local std = _prof_cycle_n > 1
+        and math.sqrt((_prof_cycle_sum2 - _prof_cycle_sum * avg) / (_prof_cycle_n - 1))
+        or 0
+
     local lines = {}
     for name, e in pairs(_prof) do
         lines[#lines + 1] = string.format(
             "  %-20s calls=%-4d  time=%.3fs", name, e.calls, e.time)
     end
     table.sort(lines)
-    table.insert(lines, 1, string.format("  %-20s %14.3fs", "CYCLE", cycle_time))
+    table.insert(lines, 1, string.format("  %-20s %5.3fs  avg=%.3fs  std=%.3fs  n=%d",
+        "CYCLE", cycle_time, avg, std, _prof_cycle_n))
     lcc.log.trace("conky_api profile:\n" .. table.concat(lines, "\n"))
 
     -- reset for next cycle
