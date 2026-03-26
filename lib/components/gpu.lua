@@ -6,8 +6,7 @@ local gpu = {}
 lcc.tpl.nvidia_conky = [[
 ${font}${nvidia modelname 0} ${alignr} ${nvidia gpuutil 0}%
 ${color3}${nvidiagraph gpuutil 0}${color}
-${color2}${lua font h2 FAN}${goto $sr{148}}${lua font h2 TEMP}${font}${color}${alignr}${offset $sr{-138}}${nvidia fanlevel 0}%
-${voffset $sr{-13}}${alignr}${nvidia gputemp 0}℃
+${color2}${lua tab h2 l FAN 51% TEMP}${color}${lua tab {} r48% ${nvidia fanlevel 0}% r ${nvidia gputemp 0}℃}
 ${color3}${nvidiabar {%= lcc.half_bar_size %} fanlevel 0}${color} ${alignr}${nvidiabar {%= lcc.half_bar_size %} gputemp 0}
 ${color2}${lua font h2 MEM}${font}${color} ${alignc $sr{-16}}${nvidia memused 0} MB / ${nvidia memmax 0} MB ${alignr}${nvidia membwutil 0}% ${lua font icon_s  UT}
 ${color3}${nvidiabar memutil 0}${color}]]
@@ -21,12 +20,11 @@ lcc.tpl.nvidia_nvml = [[
 {% end %}
 ${font}${color}{%= g.gpu_util %}%${alignc $sr{-16}}{% if #gpu_info>1 then %}{%= i %}: {% end %}{%= g.model_name %}${alignr}{%= g.gpu_temp %}℃
 ${color3}${lua_graph "echo {%= g.gpu_util %}" {%= lcc.half_graph_size %}} ${alignr}${lua_graph "echo {%= g.gpu_temp %}" {%= lcc.half_graph_size %}{% if g.gpu_temp>=(0.8*g.gpu_temp_thres) then %} #fb3 #f33 -t{% end %}}${color}
-${color2}${lua font h2 FAN}${goto $sr{148}}${lua font h2 POWER}${font}${color}${alignr}${offset $sr{-138}}{%= g.fan_speed %}%
-${voffset $sr{-13}}${alignr}${lua format %.1f {%= g.power_usage %}}W
+${color2}${lua tab h2 l FAN 51% POWER}${color}${lua tab {} r48% {{%= g.fan_speed %}%} r ${lua format %.1f {%= g.power_usage %}}W}${voffset $sr{-1}}
 ${color3}${lua_bar {%= lcc.half_bar_size %} echo {%= g.fan_speed %}} ${color}${alignr}${lua_bar {%= lcc.half_bar_size %} ratio_perc {%= g.power_usage %} {%= g.power_limit %}}
-${color2}${lua font h2 MEM}${font}${color} ${alignc $sr{-16}}{%= g.mem_used_h %} / {%= g.mem_total_h %} ${alignr}{%= g.mem_util %}% ${lua font icon_s  UT}
+${color2}${lua font h2 MEM}${font}${color} ${alignc $sr{-16}}{%= g.mem_used_h %} / {%= g.mem_total_h %} ${alignr}{%= g.mem_util %}% ${lua font icon_s  UT}${voffset $sr{1}}
 ${color3}${lua_bar ratio_perc {%= g.mem_used %} {%= g.mem_total %}}${color}
-{% if g.processes then %}{% local p,q=52,83 %}
+{% if g.processes then %}{% local p,q=51,83 %}
 ${color2}${lua tab h2 l {PROCESS} l{%= p %}% {PID} r{%= q %}% {MEM%} r {GPU%}}${color}#
 {% for _, proc in ipairs(g.processes) do +%}
 ${lua tab {} l {{%= proc.name %}} l{%= p %}% {{%= proc.pid %}} r{%= q %}% {${lua ratio_perc {%= proc.gpu_mem %} {%= g.mem_total %} 2}} r {${lua format %.1f {%= proc.gpu_util %}}}}#

@@ -109,7 +109,7 @@ end
 lcc.tpl.cpu = [[
 ${font}${execi 3600 grep model /proc/cpuinfo | cut -d : -f2 | tail -1 | sed 's/\s//'} ${alignr} ${cpu cpu0}%
 ${color3}${cpugraph cpu0}${color}
-{% if top_cpu_entries then %}{% local p,q=52,83 %}
+{% if top_cpu_entries then %}{% local p,q=51,83 %}
 ${color2}${lua tab h2 l {PROCESS} l{%= p %}% {PID} r{%= q %}% {MEM%} r {CPU%}}${color}#
 {% for _, v in ipairs(top_cpu_entries) do +%}
 ${lua tab {} l {{%= v.name %}} l{%= p %}% {{%= v.pid %}} r{%= q %}% {{%= v.mem %}} r {{%= v.cpu %}}}#
@@ -156,7 +156,7 @@ ${color2}${lua font h2 RAM}${font}${color} ${alignc $sr{-16}}${mem} / ${memmax} 
 ${color3}${membar}${color}
 ${color2}${lua font h2 SWAP}${font}${color} ${alignc $sr{-16}}${swap} / ${swapmax} ${alignr}${swapperc}%
 ${color3}${swapbar}${color}
-{% if top_mem_entries then %}{% local p,q=52,83 %}
+{% if top_mem_entries then %}{% local p,q=51,83 %}
 ${color2}${lua tab h2 l {PROCESS} l{%= p %}% {PID} r{%= q %}% {CPU%} r {MEM%}}${color}#
 {% for _, v in ipairs(top_mem_entries) do +%}
 ${lua tab {} l {{%= v.name %}} l{%= p %}% {{%= v.pid %}} r{%= q %}% {{%= v.cpu %}} r {{%= v.mem %}}}#
@@ -206,9 +206,9 @@ lcc.demo.def(core.memory, { -- demo: oscillating RAM/swap with top processes
 
 lcc.tpl.storage = [[
 ${lua disks 5}
-${voffset $sr{4}}${lua font icon_s {} {Read:}} ${font}${diskio_read} ${alignr}${lua font icon_s {} {Write: }}${font}${diskio_write}${lua font icon_s { } {}}
+${voffset $sr{4}}${lua font icon_s {${voffset $sr{-1}}} {Read:}} ${font}${diskio_read} ${alignr}${lua font icon_s ${voffset $sr{-3}} {Write: }}${font}${diskio_write}${lua font icon_s { } {}}
 ${color3}${diskiograph_read {%= lcc.half_graph_size %}} ${alignr}${diskiograph_write {%= lcc.half_graph_size %}}${color}
-{% if top_io_entries then %}{% local p=52 %}
+{% if top_io_entries then %}{% local p=51 %}
 ${color2}${lua tab h2 l {PROCESS} l{%= p %}% {PID} r {READ/WRITE}}${color}#
 {% for _, v in ipairs(top_io_entries) do +%}
 ${lua tab {} l {{%= v.name %}} l{%= p %}% {{%= v.pid %}} r {{%= v.io_read %} / {%= v.io_write %}}}#
@@ -286,7 +286,10 @@ ${color3}${lua_bar ratio_perc {%= v.used %} {%= v.size %}}${color}
 {% else %}
 ${font}(no mounted disk found)
 {% end %}]]
+-- fancy icon for home directory
 lcc.tpl.home_icon = [[${lua font icon_s  ${voffset $sr{-4}}⌂ icon_alt}]]
+-- TODO: potential issue - specials inside ${lua text ...}, no harm for now only
+-- because left or non-align entries happen to skip conky_parse
 function conky_disks(interv)
     return core._interval_call(interv, function()
         local disks = {}
@@ -365,7 +368,7 @@ lcc.tpl.ifaces = [[
 ${if_existing /sys/class/net/{%= iface %}/operstate up}#
 ${lua font icon_s  ${voffset $sr{-1}}▼ icon_s_alt}${font}  ${downspeed {%= iface %}} ${alignc $sr{-22}}${lua font h2 {{%= iface %}}}${font}#
 ${alignr}${upspeed {%= iface %}}  ${lua font icon_s  ${voffset $sr{-2}}▲ icon_s_alt}${font}
-${color3}${downspeedgraph {%= iface %} {%= lcc.half_graph_size %}} ${alignr}${upspeedgraph {%= iface %} {%= lcc.half_graph_size %} }${color}
+${voffset $sr{-4}}${color3}${downspeedgraph {%= iface %} {%= lcc.half_graph_size %}} ${alignr}${upspeedgraph {%= iface %} {%= lcc.half_graph_size %} }${color}
 ${endif}{% end %}{% else %}
 ${font}(no active network interface found)
 {% end %}]]
