@@ -6,10 +6,10 @@ Lean Conky Config (LCC) is, well, a lean [Conky](https://github.com/brndnmtthws/
 
 ## Features
 
-- **Simple**: works out of the box, automatically discovers devices (storage, network etc.), resizable to fit any screen resolution with a single config
+- **Simple**: works out of the box, automatically discovers storage, network etc.; supports **any** screen resolution (4K, 2K, 1080p ...) with a **single config**
 - **Elegant**: clean, sleek and functional layout
-- **Customizable**: pick the components you need to build the panel, change colors and fonts the way you like
-- **Extensible**: modular component system, template-based, easy to extend
+- **Customizable**: pick the components you love to build the panel, change colors and fonts with ease
+- **Extensible**: modular system, template-based component design, easy to extend
 
 ## Installation
 
@@ -142,10 +142,12 @@ Check `local.conf.example` for examples. You might notice a special component `v
 
 ### Weather
 
-The `weather` component is based on [wttr.in](https://wttr.in/), supporting following options:
+The `weather` component shows current conditions and a 3-day forecast. It supports the following options:
 
-- `location` (default: `"auto"`): Location to query the weather information for, if "auto" it will be guessed from your IP. If the auto location is not accurate, specify one. There are many ways to specify your location, check [wttr.in's doc](https://github.com/chubin/wttr.in) for details. Under the hood, wttr.in actually calls [OSM Nominatim](https://nominatim.openstreetmap.org/ui/search.html) for geolocation reverse lookup, it might be helpful to test your choice there.
-- `interv` (default: `900`): Interval in seconds to refresh the weather information.
+- `location` (default: `"auto"`): Location to query weather for. If `"auto"`, it is guessed from your IP. If the auto location is not accurate, specify a city name (e.g. `"London"` or `"London, UK"`) or coordinates (e.g. `"51.5,-0.12"`).
+- `interval` (default: `900`): Interval in seconds to refresh weather data.
+- `backend` (default: `"openmeteo"`): Weather data provider. Supported backends are `"openmeteo"` ([Open-Meteo](https://open-meteo.com/)) and `"wttrin"` ([wttr.in](https://wttr.in/)).
+- `metric` (default: `1`): Set to `0` for imperial units (°F, mph, in), or `1` for metric (°C, km/h, mm).
 
 ### GPU support
 
@@ -182,3 +184,7 @@ man -P "less -p 'OBJECTS/VARIABLES'" conky
 ```
 
 Also, here is a great [third-party reference](http://www.ifxgroup.net/conky.htm) with examples.
+
+## Support
+
+If you find this project useful, consider [becoming a sponsor :heart:](https://github.com/sponsors/jxai) to help me keep it maintained and evolving.
