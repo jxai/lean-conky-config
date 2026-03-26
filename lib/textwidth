@@ -13,6 +13,19 @@ AUTO_ORDER = ["freetype", "pil", "cairo"]
 
 
 def display_dpi():
+    # 1. Xft.dpi from X resource database — this is what XFT actually uses for
+    #    font rendering, and xrdb is available on virtually any X11 session
+    #    (x11-xserver-utils on Debian, xorg-x11-server-utils on Fedora)
+    try:
+        out = subprocess.check_output(
+            ["xrdb", "-query"], stderr=subprocess.DEVNULL
+        ).decode()
+        for line in out.splitlines():
+            if line.startswith("Xft.dpi:"):
+                return int(line.split(":", 1)[1].strip())
+    except Exception:
+        pass
+    # 2. xdpyinfo — less commonly installed (x11-utils), but a reliable fallback
     try:
         out = subprocess.check_output(["xdpyinfo"], stderr=subprocess.DEVNULL).decode()
         for line in out.splitlines():
