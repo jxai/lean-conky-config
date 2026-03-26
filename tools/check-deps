@@ -1,0 +1,340 @@
+#!/usr/bin/env python3
+# vim: ft=python:ts=4:sw=4:et:ai:cin
+#
+# Check availability of dependencies required by lean-conky-config.
+# Usage: tools/check-deps [-h] [-q]
+
+import sys
+import os
+import subprocess
+import argparse
+
+# ANSI color codes (suppressed when not a tty)
+_tty = sys.stdout.isatty()
+_R = "\033[31m"  # red      — critical missing
+_Y = "\033[33m"  # yellow   — optional missing
+_G = "\033[32m"  # green    — present
+_B = "\033[1m"  # bold
+_DIM = "\033[2m"  # dim
+_RST = "\033[0m"  # reset
+
+
+def _c(*codes):
+    return "".join(codes) if _tty else ""
+
+
+def _cmd_version(cmd, *args):
+    """Run `cmd args` and return first line of output, or None on failure."""
+    try:
+        out = (
+            subprocess.check_output([cmd, *args], stderr=subprocess.DEVNULL)
+            .decode()
+            .strip()
+        )
+        return out.splitlines()[0] if out else "(ok)"
+    except Exception:
+        return None
+
+
+def _python_module(name):
+    """Return True if the Python module is importable."""
+    try:
+        __import__(name)
+        return True
+    except ImportError:
+        return False
+
+
+def _soname(lib):
+    """Return True if ctypes can load the shared library."""
+    try:
+        import ctypes
+
+        ctypes.CDLL(lib)
+        return True
+    except Exception:
+        return False
+
+
+# ---------------------------------------------------------------------------
+# Dependency definitions
+# ---------------------------------------------------------------------------
+# Each entry: (label, severity, check_fn, note)
+#   severity: "critical" | "optional"
+#   check_fn: callable returning version string (truthy) or None/False
+# ---------------------------------------------------------------------------
+
+
+def _check_conky():
+    v = _cmd_version("conky", "--version")
+    if not v:
+        return None
+    # extract "conky X.Y.Z" from first line
+    for tok in v.split():
+        if tok[0].isdigit():
+            return tok
+    return v
+
+
+def _check_python():
+    v = _cmd_version("python3", "--version")
+    return v.replace("Python ", "") if v else None
+
+
+def _check_lua():
+    v = _cmd_version("lua", "-v")
+    if not v:
+        v = _cmd_version("lua5.1", "-v") or _cmd_version("lua5.3", "-v")
+    return v.split()[1] if v and len(v.split()) > 1 else v
+
+
+def _check_fc_match():
+    return _cmd_version("fc-match", "--version")
+
+
+def _check_xrdb():
+    return _cmd_version("xrdb", "-version")
+
+
+def _check_xdpyinfo():
+    return _cmd_version("xdpyinfo", "-version")
+
+
+def _check_freetype():
+    return "(libfreetype.so.6)" if _soname("libfreetype.so.6") else None
+
+
+def _check_pil():
+    if _python_module("PIL"):
+        try:
+            from PIL import __version__
+
+            return __version__
+        except Exception:
+            return "(ok)"
+    return None
+
+
+def _check_cairo():
+    if _python_module("cairo"):
+        try:
+            import cairo
+
+            return cairo.version
+        except Exception:
+            return "(ok)"
+    return None
+
+
+def _check_mkfifo():
+    return _cmd_version("mkfifo", "--version")
+
+
+def _check_pynvml():
+    if _python_module("pynvml"):
+        try:
+            import pynvml
+            return getattr(pynvml, "__version__", "(ok)")
+        except Exception:
+            return "(ok)"
+    return None
+
+
+def _check_conky_nvidia():
+    """Check if conky was compiled with nvidia support (from `conky --version` features list)."""
+    try:
+        out = subprocess.check_output(
+            ["conky", "--version"], stderr=subprocess.STDOUT
+        ).decode()
+        for line in out.splitlines():
+            if line.strip() == "* nvidia":
+                return "(compiled in)"
+        return None
+    except Exception:
+        return None
+
+
+DEPS = [
+    # ---- runtime core -------------------------------------------------------
+    ("conky", "critical", _check_conky, "the conky binary itself"),
+    ("python3", "critical", _check_python, "runs the textwidth measurement helper"),
+    (
+        "lua",
+        "critical",
+        _check_lua,
+        "scripting engine bundled with conky (or standalone)",
+    ),
+    (
+        "fc-match",
+        "critical",
+        _check_fc_match,
+        "fontconfig font resolution — no fallback if missing",
+    ),
+    # ---- DPI detection (ordered by preference) ------------------------------
+    (
+        "xrdb",
+        "optional",
+        _check_xrdb,
+        "preferred DPI source (Xft.dpi); in x11-xserver-utils / xorg-x11-server-utils",
+    ),
+    (
+        "xdpyinfo",
+        "optional",
+        _check_xdpyinfo,
+        "fallback DPI source; in x11-utils / xdpyinfo — falls back to 96 DPI if absent",
+    ),
+    # ---- text measurement backends (need at least one) ----------------------
+    (
+        "libfreetype.so.6",
+        "critical",
+        _check_freetype,
+        "primary measurement backend (ctypes, no extra install needed)",
+    ),
+    (
+        "python3-pil",
+        "optional",
+        _check_pil,
+        "fallback measurement backend (python3-pil / python3-pillow)",
+    ),
+    (
+        "python3-cairo",
+        "optional",
+        _check_cairo,
+        "fallback measurement backend (python3-cairo / pycairo)",
+    ),
+    # ---- gpu component (optional, nvidia only) ------------------------------
+    (
+        "pynvml",
+        "optional",
+        _check_pynvml,
+        "recommended NVIDIA backend (python3-pynvml / pip install pynvml)",
+    ),
+    (
+        "conky-nvidia",
+        "optional",
+        _check_conky_nvidia,
+        "fallback NVIDIA backend — requires conky built with --enable-nvidia",
+    ),
+    # ---- pipe infrastructure ------------------------------------------------
+    (
+        "mkfifo",
+        "critical",
+        _check_mkfifo,
+        "POSIX named-pipe creation for persistent textwidth process",
+    ),
+]
+
+
+# ---------------------------------------------------------------------------
+# Reporting
+# ---------------------------------------------------------------------------
+
+
+def _severity_label(severity, found):
+    if found:
+        return _c(_G) + "  OK  " + _c(_RST)
+    if severity == "critical":
+        return _c(_R, _B) + "MISS! " + _c(_RST)
+    return _c(_Y) + " miss " + _c(_RST)
+
+
+def run(quiet=False):
+    results = []
+    has_critical_miss = False
+    measurement_ok = False
+    dpi_ok = False
+
+    for label, severity, check_fn, note in DEPS:
+        version = check_fn()
+        found = bool(version)
+        if label in ("libfreetype.so.6", "python3-pil", "python3-cairo") and found:
+            measurement_ok = True
+        if label in ("xrdb", "xdpyinfo") and found:
+            dpi_ok = True
+        if severity == "critical" and not found:
+            has_critical_miss = True
+        results.append((label, severity, found, version, note))
+
+    # special aggregates: need at least one from each group
+    if not measurement_ok:
+        has_critical_miss = True
+    if not dpi_ok:
+        has_critical_miss = True
+
+    col_w = max(len(r[0]) for r in results) + 2
+
+    print(_c(_B) + "lean-conky-config dependency check" + _c(_RST))
+    print(_c(_DIM) + "─" * 60 + _c(_RST))
+
+    sections = [
+        ("Runtime core", ["conky", "python3", "lua", "fc-match"]),
+        ("DPI detection", ["xrdb", "xdpyinfo"]),
+        ("Text measurement", ["libfreetype.so.6", "python3-pil", "python3-cairo"]),
+        ("Infrastructure",  ["mkfifo"]),
+        ("GPU (optional)",  ["pynvml", "conky-nvidia"]),
+    ]
+
+    for section_title, labels in sections:
+        print()
+        print(_c(_B, _DIM) + section_title + _c(_RST))
+        for label, severity, found, version, note in results:
+            if label not in labels:
+                continue
+            if quiet and found:
+                continue
+            badge = _severity_label(severity, found)
+            name_col = (label + " ").ljust(col_w, ".")
+            ver_str = _c(_DIM) + (version if found else "") + _c(_RST)
+            print(f"  [{badge}] {name_col} {ver_str}")
+            if not found and not quiet:
+                print(_c(_DIM) + f"          {note}" + _c(_RST))
+
+    # aggregate warnings
+    if not dpi_ok:
+        print()
+        print(_c(_R, _B) + "ERROR: no DPI detection tool available." + _c(_RST))
+        print(
+            _c(_DIM)
+            + "       Install at least one of: xrdb (x11-xserver-utils), xdpyinfo (x11-utils)\n"
+            "       Without DPI detection font sizes will be wrong, causing misaligned text."
+            + _c(_RST)
+        )
+    if not measurement_ok:
+        print()
+        print(_c(_R, _B) + "ERROR: no text measurement backend available." + _c(_RST))
+        print(
+            _c(_DIM)
+            + "       Install at least one of: python3-pil, python3-pillow, python3-cairo"
+            + _c(_RST)
+        )
+
+    print()
+    print(_c(_DIM) + "─" * 60 + _c(_RST))
+    if has_critical_miss:
+        print(
+            _c(_R, _B)
+            + "Some critical dependencies are missing — LCC may not work correctly."
+            + _c(_RST)
+        )
+    else:
+        print(_c(_G) + "All critical dependencies satisfied." + _c(_RST))
+
+    return 1 if has_critical_miss else 0
+
+
+def main():
+    ap = argparse.ArgumentParser(
+        description="Check lean-conky-config runtime dependencies."
+    )
+    ap.add_argument(
+        "-q",
+        "--quiet",
+        action="store_true",
+        help="only show missing dependencies",
+    )
+    args = ap.parse_args()
+    sys.exit(run(quiet=args.quiet))
+
+
+if __name__ == "__main__":
+    main()
