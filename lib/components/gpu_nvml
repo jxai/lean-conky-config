@@ -108,7 +108,7 @@ with nvml():
 
         if len(processes) > 0:
             timestamp = 0  # list all processes
-            samples = q("nvmlDeviceGetProcessUtilization", timestamp)
+            samples = q("nvmlDeviceGetProcessUtilization", timestamp, default=[])
             for s in samples:
                 if s.pid in processes:
                     processes[s.pid].update(
