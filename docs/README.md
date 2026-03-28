@@ -1,6 +1,6 @@
 # Lean Conky Config
 
-<img align="right" height="800" src="./screenshot.jpg?raw=true">
+<img align="right" height="800" src="./screenshot.jpg">
 
 Lean Conky Config (LCC) is, well, a lean [Conky](https://github.com/brndnmtthws/conky/wiki) config that just works.
 

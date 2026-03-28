@@ -1,0 +1,5 @@
+title: Lean Conky Config
+description: A lean Conky config that just works.
+theme: minima
+url: 'https://jxai.github.io'
+baseurl: '/lean-conky-config'
