@@ -36,13 +36,103 @@ def _cmd_version(cmd, *args):
         return None
 
 
-def _python_module(name):
-    """Return True if the Python module is importable."""
-    try:
-        __import__(name)
-        return True
-    except ImportError:
-        return False
+def _pkgmgr_version(pkg_name):
+    """Return the installed version of pkg_name from dpkg, rpm, or pacman; None if not found."""
+    queries = [
+        # (command, args_template) — {pkg} replaced with pkg_name
+        ("dpkg-query", ["-W", "-f=${{Version}}", "{pkg}"]),
+        ("rpm", ["-q", "--qf", "%{{VERSION}}", "{pkg}"]),
+        ("pacman", ["-Q", "{pkg}"]),
+    ]
+    for cmd, args_tmpl in queries:
+        try:
+            out = (
+                subprocess.check_output(
+                    [cmd, *[a.format(pkg=pkg_name) for a in args_tmpl]],
+                    stderr=subprocess.DEVNULL,
+                    timeout=3,
+                )
+                .decode()
+                .strip()
+            )
+            if out and "not installed" not in out and "no packages" not in out:
+                # strip distro revision suffix (e.g. "12.535.133-1" → "12.535.133")
+                return out.split("-")[0]
+        except Exception:
+            continue
+    return None
+
+
+def _py_pkgmgr_version(import_name):
+    """Look up a Python package via system package managers, trying python3-*, python-*, and the bare name."""
+    for candidate in [f"python3-{import_name}", f"python-{import_name}", import_name]:
+        ver = _pkgmgr_version(candidate)
+        if ver:
+            return ver
+    return None
+
+
+def _check_python_pkg(import_name):
+    """Return '[scope] ver' for a Python package, or None if not importable.
+
+    Scope tags: [user], [venv], [system], or combinations.
+    """
+    # Script prints the version string, or nothing if importable but unknown,
+    # and exits 1 on ImportError so we can distinguish "missing" from "no version".
+    get_ver = (
+        "import sys\n"
+        f"try:\n"
+        f"    import {import_name} as _m\n"
+        f"    ver = getattr(_m, '__version__', None) or getattr(_m, 'version', None)\n"
+        f"    if not ver:\n"
+        f"        try:\n"
+        f"            import importlib.metadata\n"
+        f"            ver = importlib.metadata.version({repr(import_name)})\n"
+        f"        except Exception: pass\n"
+        f"    print(str(ver).strip() if ver else '')\n"
+        f"except ImportError: sys.exit(1)\n"
+    )
+
+    def _run(env=None):
+        """Return version string, '' if importable but unknown, None if not importable."""
+        flags = ["-s"] if env is not None else []
+        try:
+            return (
+                subprocess.check_output(
+                    ["python3", *flags, "-c", get_ver],
+                    stderr=subprocess.DEVNULL,
+                    timeout=5,
+                    env=env,
+                )
+                .decode()
+                .strip()
+            )  # "" is falsy but not None — means importable, no version
+        except subprocess.CalledProcessError:
+            return None  # ImportError in the script
+        except Exception:
+            return None
+
+    ver = _run()
+    if ver is None:
+        return None  # not importable in current shell
+    ver = ver or "(ok)"
+
+    # Empty env: with PATH unset, execvp uses the OS compile-time default (CS_PATH),
+    # giving the bare system python3 without any venv/conda influence.
+    raw = _run(env={})  # None=absent, ""=no ver
+    sys_importable = raw is not None
+    # Falls back to dpkg/rpm/pacman when the system Python finds the package but
+    # exposes no version metadata.
+    sys_ver = raw or _py_pkgmgr_version(import_name) if raw == "" else raw
+
+    scope = "venv" if sys.prefix != sys.base_prefix else "user"
+    if not sys_importable:
+        return f"[{scope}] {ver}"
+    if sys_ver == ver:
+        return f"[{scope}, system] {ver}"
+    if sys_ver:
+        return f"[{scope}] {ver}, [system] {sys_ver}"
+    return f"[{scope}] {ver}, [system] (unknown ver.)"
 
 
 def _soname(lib):
@@ -232,25 +322,11 @@ def _check_freetype():
 
 
 def _check_pil():
-    if _python_module("PIL"):
-        try:
-            from PIL import __version__
-
-            return __version__
-        except Exception:
-            return "(ok)"
-    return None
+    return _check_python_pkg("PIL")
 
 
 def _check_cairo():
-    if _python_module("cairo"):
-        try:
-            import cairo
-
-            return cairo.version
-        except Exception:
-            return "(ok)"
-    return None
+    return _check_python_pkg("cairo")
 
 
 def _check_mkfifo():
@@ -258,14 +334,7 @@ def _check_mkfifo():
 
 
 def _check_pynvml():
-    if _python_module("pynvml"):
-        try:
-            import pynvml
-
-            return getattr(pynvml, "__version__", "(ok)")
-        except Exception:
-            return "(ok)"
-    return None
+    return _check_python_pkg("pynvml")
 
 
 _FONT_FAMILY = "LeanConkyConfig"
@@ -356,23 +425,23 @@ DEPS = [
         "primary measurement backend (ctypes, no extra install needed)",
     ),
     (
-        "python3-pil",
+        "Pillow",
         "optional",
         _check_pil,
-        "fallback measurement backend (python3-pil / python3-pillow)",
+        "fallback measurement backend (apt: python3-pil / pip: Pillow)",
     ),
     (
-        "python3-cairo",
+        "pycairo",
         "optional",
         _check_cairo,
-        "fallback measurement backend (python3-cairo / pycairo)",
+        "fallback measurement backend (apt: python3-cairo / pip: pycairo)",
     ),
     # ---- gpu component (optional, nvidia only) ------------------------------
     (
         "pynvml",
         "optional",
         _check_pynvml,
-        "recommended NVIDIA backend (python3-pynvml / pip install pynvml)",
+        "recommended NVIDIA backend (apt: python3-pynvml / pip: pynvml)",
     ),
     (
         "conky-nvidia",
@@ -419,7 +488,7 @@ def run(quiet=False):
     for label, severity, check_fn, note in DEPS:
         version = check_fn()
         found = bool(version)
-        if label in ("libfreetype.so.6", "python3-pil", "python3-cairo") and found:
+        if label in ("libfreetype.so.6", "Pillow", "pycairo") and found:
             measurement_ok = True
         if label in ("xrdb", "xdpyinfo") and found:
             dpi_ok = True
@@ -449,7 +518,7 @@ def run(quiet=False):
     sections = [
         ("Runtime core", ["conky", "python3", "lua", "fc-match"]),
         ("DPI detection", ["xrdb", "xdpyinfo"]),
-        ("Text measurement", ["libfreetype.so.6", "python3-pil", "python3-cairo"]),
+        ("Text measurement", ["libfreetype.so.6", "Pillow", "pycairo"]),
         ("Infrastructure", ["mkfifo"]),
         ("GPU (optional)", ["pynvml", "conky-nvidia"]),
         ("Font (recommended)", ["LeanConkyConfig"]),
@@ -486,11 +555,7 @@ def run(quiet=False):
     if not measurement_ok:
         print()
         print(_c(_R, _B) + "ERROR: no text measurement backend available." + _c(_RST))
-        print(
-            _c(_DIM)
-            + "       Install at least one of: python3-pil, python3-pillow, python3-cairo"
-            + _c(_RST)
-        )
+        print(_c(_DIM) + "       Install Pillow or pycairo" + _c(_RST))
 
     print()
     print(_c(_DIM) + "─" * 60 + _c(_RST))
