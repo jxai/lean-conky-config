@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # vim: ft=python:ts=4:sw=4:et:ai:cin
 #
-# Check availability of dependencies required by lean-conky-config.
-# Usage: tools/check-deps [-h] [-q]
+# Check LCC (lean-conky-config) environment and runtime dependencies.
+# Usage: tools/check-lcc [-h] [-q]
 
-import sys
 import os
+import sys
 import subprocess
 import argparse
 
@@ -63,6 +63,133 @@ def _soname(lib):
 #   severity: "critical" | "optional"
 #   check_fn: callable returning version string (truthy) or None/False
 # ---------------------------------------------------------------------------
+
+
+_LCC_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def _get_lcc_version():
+    """Return LCC version string, appending short git commit hash if available."""
+    version = None
+    try:
+        with open(os.path.join(_LCC_ROOT, "VERSION")) as f:
+            version = f.read().strip() or None
+    except Exception:
+        pass
+
+    try:
+        commit = (
+            subprocess.check_output(
+                ["git", "-C", _LCC_ROOT, "rev-parse", "--short=6", "HEAD"],
+                stderr=subprocess.DEVNULL,
+            )
+            .decode()
+            .strip()
+        )
+        # also check if working tree is dirty
+        dirty = (
+            subprocess.call(
+                ["git", "-C", _LCC_ROOT, "diff", "--quiet"],
+                stderr=subprocess.DEVNULL,
+            )
+            != 0
+        )
+        suffix = f"{commit}{'*' if dirty else ''}"
+        return f"{version} ({suffix})" if version else suffix
+    except Exception:
+        pass
+
+    return version or "(unknown)"
+
+
+def _read_os_release(path):
+    """Parse a key=value os-release file; return dict or None."""
+    try:
+        info = {}
+        with open(path) as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                k, _, v = line.partition("=")
+                info[k] = v.strip('"')
+        return info or None
+    except Exception:
+        return None
+
+
+def _get_distro():
+    """Return a short distro description string."""
+    # Standard locations (systemd spec); /usr/lib variant used on immutable distros
+    for path in ("/etc/os-release", "/usr/lib/os-release"):
+        info = _read_os_release(path)
+        if info:
+            name = info.get("PRETTY_NAME") or info.get("NAME")
+            if name:
+                return name
+
+    # Distro-specific fallback files (pre-os-release era or minimal installs)
+    _release_files = [
+        (
+            "/etc/redhat-release",
+            None,
+        ),  # RHEL / CentOS / Fedora — file contains full string
+        ("/etc/gentoo-release", None),
+        ("/etc/slackware-version", None),
+        ("/etc/alpine-release", "Alpine Linux"),  # contains only the version number
+        ("/etc/arch-release", "Arch Linux"),  # often empty; just signals Arch
+        ("/etc/debian_version", "Debian"),  # contains only version number
+    ]
+    for path, prefix in _release_files:
+        try:
+            with open(path) as f:
+                content = f.read().strip().splitlines()[0].strip()
+            if content and not prefix:
+                return content
+            if prefix:
+                return f"{prefix} {content}" if content else prefix
+        except Exception:
+            continue
+
+    # Last resort: lsb_release
+    v = _cmd_version("lsb_release", "-d")
+    if v:
+        # strip leading "Description:\t" if present
+        return v.split(":", 1)[-1].strip()
+
+    return "Unknown"
+
+
+def _get_desktop():
+    """Return the current desktop environment name, or None."""
+    env = os.environ
+    # XDG_CURRENT_DESKTOP is the canonical source (may be colon-separated, e.g. "ubuntu:GNOME")
+    de = (
+        env.get("XDG_CURRENT_DESKTOP")
+        or env.get("DESKTOP_SESSION")
+        or env.get("GDMSESSION")
+    )
+    if de:
+        return de
+    # Probe DE-specific env vars as hints when session vars are absent (e.g. run via sudo)
+    if env.get("GNOME_DESKTOP_SESSION_ID"):
+        return "GNOME"
+    if env.get("KDE_FULL_SESSION"):
+        return "KDE"
+    if env.get("SWAYSOCK"):
+        return "sway"
+    if env.get("HYPRLAND_INSTANCE_SIGNATURE"):
+        return "Hyprland"
+    return None
+
+
+def _get_display_server():
+    """Return 'Wayland', 'X11', or None."""
+    if os.environ.get("WAYLAND_DISPLAY"):
+        return "Wayland"
+    if os.environ.get("DISPLAY"):
+        return "X11"
+    return None
 
 
 def _check_conky():
@@ -134,9 +261,47 @@ def _check_pynvml():
     if _python_module("pynvml"):
         try:
             import pynvml
+
             return getattr(pynvml, "__version__", "(ok)")
         except Exception:
             return "(ok)"
+    return None
+
+
+_FONT_FAMILY = "LeanConkyConfig"
+_FONT_DIRS = [
+    os.path.expanduser("~/.local/share/fonts"),
+    "/usr/local/share/fonts",
+    "/usr/share/fonts",
+    os.path.expanduser("~/.fonts"),  # legacy XDG location
+]
+
+
+def _check_lcc_font():
+    """Check if the LeanConkyConfig font is installed via fc-list, falling back to dir scan."""
+    # Preferred: ask fontconfig — works on all distros that have fontconfig
+    try:
+        out = (
+            subprocess.check_output(
+                ["fc-list", _FONT_FAMILY], stderr=subprocess.DEVNULL
+            )
+            .decode()
+            .strip()
+        )
+        if out:
+            return "(installed)"
+    except Exception:
+        pass
+
+    # Fallback: scan common font directories for the .otf file
+    font_file = "lean-conky-config.otf"
+    for d in _FONT_DIRS:
+        try:
+            if any(font_file in files for _, _, files in os.walk(d)):
+                return "(installed)"
+        except Exception:
+            continue
+
     return None
 
 
@@ -222,6 +387,13 @@ DEPS = [
         _check_mkfifo,
         "POSIX named-pipe creation for persistent textwidth process",
     ),
+    # ---- lcc font (optional but recommended) --------------------------------
+    (
+        "LeanConkyConfig",
+        "optional",
+        _check_lcc_font,
+        "LCC custom font — run font/install to enable it",
+    ),
 ]
 
 
@@ -263,18 +435,30 @@ def run(quiet=False):
 
     col_w = max(len(r[0]) for r in results) + 2
 
-    print(_c(_B) + "lean-conky-config dependency check" + _c(_RST))
+    print(_c(_B) + "LCC — environment check" + _c(_RST))
     print(_c(_DIM) + "─" * 60 + _c(_RST))
+    print()
+    print(_c(_B, _DIM) + "Environment" + _c(_RST))
+    print(f"  {'LCC'.ljust(12)} {_get_lcc_version()}")
+    print(f"  {'Distro'.ljust(12)} {_get_distro()}")
+    de = _get_desktop()
+    print(f"  {'Desktop'.ljust(12)} {de if de else _c(_DIM) + '(unknown)' + _c(_RST)}")
+    ds = _get_display_server()
+    print(f"  {'Display'.ljust(12)} {ds if ds else _c(_DIM) + '(unknown)' + _c(_RST)}")
 
     sections = [
         ("Runtime core", ["conky", "python3", "lua", "fc-match"]),
         ("DPI detection", ["xrdb", "xdpyinfo"]),
         ("Text measurement", ["libfreetype.so.6", "python3-pil", "python3-cairo"]),
-        ("Infrastructure",  ["mkfifo"]),
-        ("GPU (optional)",  ["pynvml", "conky-nvidia"]),
+        ("Infrastructure", ["mkfifo"]),
+        ("GPU (optional)", ["pynvml", "conky-nvidia"]),
+        ("Font (recommended)", ["LeanConkyConfig"]),
     ]
 
     for section_title, labels in sections:
+        section_rows = [r for r in results if r[0] in labels]
+        if quiet and all(r[2] for r in section_rows):
+            continue
         print()
         print(_c(_B, _DIM) + section_title + _c(_RST))
         for label, severity, found, version, note in results:
@@ -324,7 +508,7 @@ def run(quiet=False):
 
 def main():
     ap = argparse.ArgumentParser(
-        description="Check lean-conky-config runtime dependencies."
+        description="Check LCC environment and runtime dependencies."
     )
     ap.add_argument(
         "-q",
