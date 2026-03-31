@@ -23,8 +23,8 @@ ${color3}${lua_graph "echo {%= g.gpu_util %}" {%= lcc.half_graph_size %}} ${alig
 ${color2}${lua tab h2 l FAN 51% POWER}${color}${lua tab {} r48% {{%= g.fan_speed %}%} r ${lua format %.1f {%= g.power_usage %}}W}${voffset $sr{-1}}
 ${color3}${lua_bar {%= lcc.half_bar_size %} echo {%= g.fan_speed %}} ${color}${alignr}${lua_bar {%= lcc.half_bar_size %} ratio_perc {%= g.power_usage %} {%= g.power_limit %}}
 ${color2}${lua font h2 MEM}${font}${color} ${alignc $sr{-16}}{%= g.mem_used_h %} / {%= g.mem_total_h %} ${alignr}{%= g.mem_util %}% ${lua font icon_s  UT}${voffset $sr{1}}
-${color3}${lua_bar ratio_perc {%= g.mem_used %} {%= g.mem_total %}}${color}
-{% if g.processes then %}{% local p,q=51,83 %}
+${color3}${lua_bar ratio_perc {%= g.mem_used %} {%= g.mem_total %}}${color}#
+{% if g.processes then %}{% local p,q=51,83 +%}
 ${color2}${lua tab h2 l {PROCESS} l{%= p %}% {PID} r{%= q %}% {MEM%} r {GPU%}}${color}#
 {% for _, proc in ipairs(g.processes) do +%}
 ${lua tab {} l {{%= proc.name %}} l{%= p %}% {{%= proc.pid %}} r{%= q %}% {${lua ratio_perc {%= proc.gpu_mem %} {%= g.mem_total %} 2}} r {${lua format %.1f {%= proc.gpu_util %}}}}#
@@ -48,6 +48,8 @@ local function _nvidia_nvml(top_n)
             while #p > top_n do
                 table.remove(p)
             end
+        else
+            g.processes = nil
         end
     end
     return utils.trim(lcc.tpl.nvidia_nvml { gpu_info = gpu_info })
