@@ -1,5 +1,4 @@
-title: Lean Conky Config
-description: A lean Conky config that just works.
-theme: minima
+remote_theme: 'pages-themes/cayman@v0.2.0'
+show_downloads: true
 url: 'https://jxai.github.io'
 baseurl: '/lean-conky-config'

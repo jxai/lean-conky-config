@@ -1,0 +1,21 @@
+---
+---
+
+@import '{{ site.theme }}';
+
+@media screen {
+  .page-header {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    background-image: linear-gradient(135deg, #f3904f, #0b486b 45%, #1f2651);
+  }
+  .project-name {
+    font-size: 2.25rem;
+  }
+  .btn {
+    padding: 0.25rem 1rem;
+  }
+  .main-content h1 {
+    font-size: 1.75rem;
+  }
+}
