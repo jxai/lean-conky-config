@@ -1,4 +1,4 @@
 remote_theme: 'pages-themes/cayman@v0.2.0'
 show_downloads: true
-url: 'https://jxai.github.io'
-baseurl: '/lean-conky-config'
+url: 'https://getlean.cc'
+baseurl: ''
