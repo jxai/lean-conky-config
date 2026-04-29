@@ -64,4 +64,6 @@ conky.config = {
     -- color1 = "orange", -- heading 1 color
     -- color2 = "dodgerblue", -- heading 2 color
     -- color3 = "limegreen", -- chart color
+    -- === MISC ===
+    -- draw_outline = true, -- true: visibility on any background / false: sharper appearance
 }
