@@ -36,15 +36,25 @@ def display_dpi():
     return 96  # safe fallback
 
 
-def resolve_font(spec):
-    """Ask fontconfig for the matched font file, pixelsize, and family name.
-    DPI is injected so size= (points) converts to the same pixelsize XFT would use."""
-    dpi_spec = spec + ":dpi=" + str(display_dpi())
+def _fc_match(spec, dpi):
+    """Resolve `spec` via fontconfig at the given DPI; return (path, px, family).
+    LC_ALL=C is forced because fc-match formats fractional %{pixelsize} through
+    the locale's decimal separator — under de_DE/fr_FR/etc. it emits "21,3333"
+    and float() raises.
+    Repro: LC_ALL=de_DE.UTF-8 ./lib/textwidth "DejaVu Sans:size=16" "Hi"
+           (size=16 @ 96dpi → 21.3333px)"""
     raw = subprocess.check_output(
-        ["fc-match", "--format=%{file}|%{pixelsize}|%{family}", dpi_spec]
+        ["fc-match", "--format=%{file}|%{pixelsize}|%{family}", f"{spec}:dpi={dpi}"],
+        env={**os.environ, "LC_ALL": "C"},
     ).decode()
     path, px_str, family = raw.split("|", 2)
     return path.strip(), math.ceil(float(px_str)), family.strip()
+
+
+def resolve_font(spec):
+    """Ask fontconfig for the matched font file, pixelsize, and family name.
+    DPI is injected so size= (points) converts to the same pixelsize XFT would use."""
+    return _fc_match(spec, display_dpi())
 
 
 class FreetypeContext:
@@ -152,12 +162,7 @@ def serve_mode(backend="auto"):
 
     def measure(spec, text):
         if spec not in font_cache:
-            dpi_spec = spec + ":dpi=" + str(dpi)
-            raw = subprocess.check_output(
-                ["fc-match", "--format=%{file}|%{pixelsize}|%{family}", dpi_spec]
-            ).decode()
-            path, px_str, family = raw.split("|", 2)
-            font_cache[spec] = (path.strip(), math.ceil(float(px_str)), family.strip())
+            font_cache[spec] = _fc_match(spec, dpi)
         path, px, family = font_cache[spec]
 
         if spec in backend_cache:
