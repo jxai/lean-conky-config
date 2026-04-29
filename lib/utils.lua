@@ -392,8 +392,13 @@ utils.json = {
 function utils.json.curl(url, timeout)
     timeout = timeout or 10
     local out, rc = utils.sys_call('curl --silent "' .. url .. '"', true, timeout)
-    if not rc or rc > 0 or not out then return end
-    local data = utils.json.loads(out)
+    if not rc or rc > 0 or not out or out:match("^%s*$") then return end
+    local ok, data = pcall(utils.json.loads, out)
+    if not ok then
+        lcc.log.warn("json decode failed for " .. url .. ": " .. tostring(data))
+        lcc.log.debug("response body:", out)
+        return
+    end
     return data
 end
 
